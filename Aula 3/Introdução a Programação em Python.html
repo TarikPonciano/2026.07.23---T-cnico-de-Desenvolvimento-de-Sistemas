@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introdução ao Python – SENAC TDS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --accent: #f7c948;
+    --accent2: #4af7a8;
+    --accent3: #f74a7a;
+    --text: #e8eaf2;
+    --muted: #7a7f99;
+    --code-bg: #090b10;
+    --slide-w: 1100px;
+    --slide-h: 620px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 20px 100px;
+  }
+  #nav {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; align-items: center;
+    background: rgba(21,24,32,0.95); border: 1px solid #2a2f45;
+    backdrop-filter: blur(12px); padding: 10px 20px;
+    border-radius: 50px; z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  #nav button {
+    background: none; border: 1px solid #2a2f45; color: var(--text);
+    font-family: 'Space Mono', monospace; font-size: 13px;
+    padding: 6px 18px; border-radius: 30px; cursor: pointer; transition: all .2s;
+  }
+  #nav button:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+  #slide-counter { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); min-width: 80px; text-align: center; }
+  #deck { position: relative; width: var(--slide-w); height: var(--slide-h); }
+  .slide {
+    position: absolute; inset: 0;
+    width: var(--slide-w); height: var(--slide-h);
+    background: var(--surface); border: 1px solid #252a3d;
+    border-radius: 16px; padding: 44px 56px 76px;
+    display: none; flex-direction: column; gap: 18px;
+    overflow: hidden; animation: fadeIn .35s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .slide::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(247,201,72,.10), transparent 70%);
+    pointer-events: none;
+  }
+  .tag { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); opacity:.85; }
+  h1 { font-size:52px; font-weight:800; line-height:1.1; }
+  h2 { font-size:32px; font-weight:800; line-height:1.15; }
+  h3 { font-size:17px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+  p, li { font-size:16px; line-height:1.6; color:#cdd0e3; }
+  ul { padding-left:20px; display:flex; flex-direction:column; gap:6px; }
+  li::marker { color:var(--accent); }
+  pre {
+    background:var(--code-bg); border:1px solid #1e2235; border-left:3px solid var(--accent2);
+    border-radius:10px; padding:15px 20px; font-family:'Space Mono',monospace;
+    font-size:13.5px; line-height:1.7; color:#b8ffd8; overflow-x:auto; flex-shrink:0;
+  }
+  .kw{color:#f7c948;} .fn{color:#4af7a8;} .str{color:#f7a84a;} .cmt{color:#4a5278;font-style:italic;} .var{color:#a48cf7;} .num{color:#f74a7a;}
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1; }
+  .card { background:var(--surface2); border:1px solid #252a3d; border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:8px; }
+  .box { background:var(--surface2); border:1px solid #252a3d; border-radius:12px; padding:14px 18px; }
+  .box.accent { border-left:4px solid var(--accent); }
+  .box.green  { border-left:4px solid var(--accent2); }
+  .box.pink   { border-left:4px solid var(--accent3); }
+  .hl  { color:var(--accent);  font-weight:700; }
+  .hl2 { color:var(--accent2); font-weight:700; }
+  .hl3 { color:var(--accent3); font-weight:700; }
+  #s0 { background:linear-gradient(135deg,#0d0f14 0%,#141829 100%); justify-content:center; }
+  #s0 .logo-row { display:flex; gap:14px; align-items:center; margin-bottom:8px; }
+  #s0 .logo-pill { background:var(--accent); color:#000; font-family:'Space Mono',monospace; font-weight:700; font-size:12px; padding:4px 14px; border-radius:30px; letter-spacing:.08em; }
+  #s0 .subtitle { font-size:17px; color:var(--muted); margin-top:10px; }
+  #s0::after { content:''; position:absolute; bottom:-80px; left:-80px; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle,rgba(74,247,168,.08),transparent 65%); pointer-events:none; }
+  .steps { display:flex; flex-direction:column; gap:10px; }
+  .step { display:flex; gap:14px; align-items:flex-start; }
+  .step-num { width:28px; height:28px; flex-shrink:0; background:var(--accent); color:#000; font-family:'Space Mono',monospace; font-weight:700; font-size:12px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .step p { margin-top:3px; }
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:18px; flex:1; }
+  .compare-col { background:var(--surface2); border-radius:12px; padding:18px 20px; }
+  .compare-col h3 { font-size:16px; margin-bottom:10px; }
+  .compare-col.low h3  { color:var(--accent3); }
+  .compare-col.high h3 { color:var(--accent2); }
+  /* ACTIVITY SLIDES */
+  .act-header { display:flex; align-items:center; gap:16px; }
+  .act-badge { background:var(--accent3); color:#000; font-family:'Space Mono',monospace; font-weight:700; font-size:11px; padding:4px 14px; border-radius:30px; white-space:nowrap; flex-shrink:0; }
+  .act-badge.med  { background:var(--accent); }
+  .act-badge.hard { background:#a48cf7; }
+  .act-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; flex:1; }
+  .act-card { background:var(--surface2); border:1px solid #252a3d; border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:8px; }
+  .act-card h3 { font-size:15px; color:var(--accent2); }
+  .act-card p  { font-size:14px; }
+  .act-num { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent3),#a44a7a); color:#fff; font-family:'Space Mono',monospace; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .act-num.med  { background:linear-gradient(135deg,var(--accent),#c89000); color:#000; }
+  .act-num.hard { background:linear-gradient(135deg,#a48cf7,#5a3cf7); }
+  .act-row { display:flex; gap:14px; align-items:flex-start; }
+  .act-row p { font-size:15px; margin-top:4px; }
+  .diff-pills { display:flex; gap:8px; flex-wrap:wrap; }
+  .pill { font-family:'Space Mono',monospace; font-size:11px; padding:3px 12px; border-radius:20px; font-weight:700; }
+  .pill.easy { background:rgba(247,73,122,.15); color:var(--accent3); border:1px solid var(--accent3); }
+  .pill.med  { background:rgba(247,201,72,.15); color:var(--accent);  border:1px solid var(--accent); }
+  .pill.hard { background:rgba(164,140,247,.15); color:#a48cf7;        border:1px solid #a48cf7; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- SLIDE 0: COVER -->
+<div class="slide active" id="s0">
+  <div class="logo-row">
+    <div class="logo-pill">SENAC</div>
+    <div class="logo-pill" style="background:var(--accent2);">TDS</div>
+  </div>
+  <h1>Introdução ao<br><span class="hl">Python</span></h1>
+  <p class="subtitle">VS Code · Ambiente · Primeiros Passos · Variáveis</p>
+  <div style="margin-top:auto;display:flex;gap:32px;align-items:flex-end;">
+    <div>
+      <p style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;">TURMA</p>
+      <p class="hl2" style="font-size:17px;">Técnico em Desenvolvimento de Sistemas</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 1: AGENDA -->
+<div class="slide" id="s1">
+  <div class="tag">Aula de hoje</div>
+  <h2>O que vamos ver?</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>🛠️ Ferramentas</h3>
+      <ul>
+        <li>VS Code – história e instalação</li>
+        <li>Python – instalação</li>
+        <li>Configuração do ambiente Windows</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>🐍 Python na prática</h3>
+      <ul>
+        <li>Linguagens de programação</li>
+        <li>Comando <span class="hl2">print()</span></li>
+        <li>Variáveis</li>
+        <li>Comando <span class="hl2">input()</span></li>
+        <li>Exibir e montar textos</li>
+      </ul>
+    </div>
+  </div>
+  <div class="box green"><p>📋 Ao final teremos <span class="hl2">8 atividades práticas</span> em 3 níveis de dificuldade!</p></div>
+</div>
+
+<!-- SLIDE 2: VS CODE HISTÓRIA -->
+<div class="slide" id="s2">
+  <div class="tag">Ferramenta 01</div>
+  <h2>Visual Studio Code</h2>
+  <div class="grid2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:11px;">
+      <div class="box accent"><p><span class="hl">2015</span> – Lançado pela <strong>Microsoft</strong> como editor open-source.</p></div>
+      <div class="box accent"><p>Escrito em <span class="hl">TypeScript</span> e baseado no framework <span class="hl">Electron</span>.</p></div>
+      <div class="box accent"><p>Mais de <span class="hl">70%</span> dos desenvolvedores no mundo o utilizam.</p></div>
+      <div class="card" style="flex:1;">
+        <h3>✅ Vantagens</h3>
+        <ul>
+          <li>Leve, rápido e gratuito</li>
+          <li>Extensões para qualquer linguagem</li>
+          <li>Terminal integrado</li>
+          <li>IntelliSense (autocomplete)</li>
+          <li>Multiplataforma: Win, Mac, Linux</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 340 280" xmlns="http://www.w3.org/2000/svg" width="320" height="260">
+        <rect x="0" y="0" width="340" height="280" rx="10" fill="#1e1e2e" stroke="#3a3f5c" stroke-width="1.5"/>
+        <rect x="0" y="0" width="340" height="30" rx="10" fill="#252535"/>
+        <rect x="0" y="20" width="340" height="10" fill="#252535"/>
+        <circle cx="18" cy="15" r="5" fill="#f74a7a"/>
+        <circle cx="34" cy="15" r="5" fill="#f7c948"/>
+        <circle cx="50" cy="15" r="5" fill="#4af7a8"/>
+        <text x="170" y="20" font-family="monospace" font-size="10" fill="#7a7f99" text-anchor="middle">aula01.py — VS Code</text>
+        <rect x="0" y="30" width="42" height="250" fill="#1a1a2a"/>
+        <rect x="10" y="44" width="22" height="3" rx="1.5" fill="#4af7a8"/>
+        <rect x="10" y="50" width="18" height="3" rx="1.5" fill="#4a5278"/>
+        <rect x="10" y="56" width="20" height="3" rx="1.5" fill="#4a5278"/>
+        <rect x="10" y="70" width="22" height="22" rx="3" fill="#252a3d" stroke="#4a5278" stroke-width="1"/>
+        <text x="21" y="85" font-family="monospace" font-size="11" fill="#7a7f99" text-anchor="middle">&#9935;</text>
+        <rect x="10" y="98" width="22" height="22" rx="3" fill="#252a3d" stroke="#4a5278" stroke-width="1"/>
+        <text x="21" y="113" font-family="monospace" font-size="11" fill="#7a7f99" text-anchor="middle">&#9881;</text>
+        <rect x="42" y="30" width="80" height="250" fill="#191927"/>
+        <text x="52" y="48" font-family="monospace" font-size="8" fill="#7a7f99">EXPLORER</text>
+        <text x="52" y="64" font-family="monospace" font-size="8" fill="#cdd0e3">&#128193; projetos</text>
+        <text x="62" y="77" font-family="monospace" font-size="8" fill="#4af7a8">&#128013; aula01.py</text>
+        <text x="62" y="89" font-family="monospace" font-size="8" fill="#7a7f99">  aula02.py</text>
+        <text x="62" y="101" font-family="monospace" font-size="8" fill="#7a7f99">  aula03.py</text>
+        <rect x="122" y="30" width="218" height="200" fill="#1e1e2e"/>
+        <text x="132" y="50"  font-family="monospace" font-size="9" fill="#3a4060">1</text>
+        <text x="132" y="65"  font-family="monospace" font-size="9" fill="#3a4060">2</text>
+        <text x="132" y="80"  font-family="monospace" font-size="9" fill="#3a4060">3</text>
+        <text x="132" y="95"  font-family="monospace" font-size="9" fill="#3a4060">4</text>
+        <text x="132" y="110" font-family="monospace" font-size="9" fill="#3a4060">5</text>
+        <text x="132" y="125" font-family="monospace" font-size="9" fill="#3a4060">6</text>
+        <text x="148" y="50" font-family="monospace" font-size="9" fill="#4a5278"># Olá, turma SENAC!</text>
+        <text x="148" y="65" font-family="monospace" font-size="9"><tspan fill="#a48cf7">nome</tspan><tspan fill="#cdd0e3"> = </tspan><tspan fill="#f7a84a">"Ana"</tspan></text>
+        <text x="148" y="80" font-family="monospace" font-size="9"><tspan fill="#a48cf7">idade</tspan><tspan fill="#cdd0e3"> = </tspan><tspan fill="#f74a7a">17</tspan></text>
+        <text x="148" y="95" font-family="monospace" font-size="9"><tspan fill="#4af7a8">print</tspan><tspan fill="#cdd0e3">(</tspan><tspan fill="#f7a84a">f"Olá, {nome}!"</tspan><tspan fill="#cdd0e3">)</tspan></text>
+        <text x="148" y="110" font-family="monospace" font-size="9"><tspan fill="#4af7a8">print</tspan><tspan fill="#cdd0e3">(</tspan><tspan fill="#f7a84a">"Idade:"</tspan><tspan fill="#cdd0e3">, idade)</tspan></text>
+        <rect x="148" y="120" width="2" height="12" fill="#f7c948" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0;0.8" dur="1.2s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="122" y="230" width="218" height="50" fill="#111118"/>
+        <text x="132" y="244" font-family="monospace" font-size="8" fill="#7a7f99">TERMINAL</text>
+        <text x="132" y="258" font-family="monospace" font-size="9" fill="#4af7a8">PS C:\projetos&gt; python aula01.py</text>
+        <text x="132" y="271" font-family="monospace" font-size="9" fill="#cdd0e3">Olá, Ana!</text>
+        <rect x="0" y="262" width="340" height="18" fill="#0a84ff"/>
+        <text x="130" y="274" font-family="monospace" font-size="8" fill="#fff">Python 3.12.0  UTF-8  Ln 5  Col 1</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: VS CODE INSTALAÇÃO -->
+<div class="slide" id="s3">
+  <div class="tag">VS Code – Instalação</div>
+  <h2>Como instalar</h2>
+  <div class="grid2" style="flex:1;align-items:center;">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Acesse <span class="hl">code.visualstudio.com</span> e clique em <em>Download for Windows</em>.</p></div>
+      <div class="step"><div class="step-num">2</div><p>Execute o instalador <span class="hl">.exe</span> e marque <em>"Adicionar ao PATH"</em> e <em>"Abrir com Code"</em>.</p></div>
+      <div class="step"><div class="step-num">3</div><p>Abra o VS Code e instale a extensão <span class="hl2">Python</span> (Microsoft) via <code>Ctrl+Shift+X</code>.</p></div>
+      <div class="step"><div class="step-num">4</div><p>Use <span class="hl">Ctrl+`</span> para abrir o terminal integrado a qualquer momento.</p></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 300 240" xmlns="http://www.w3.org/2000/svg" width="280" height="230">
+        <rect width="300" height="240" rx="10" fill="#1a1a2a" stroke="#2a2f45" stroke-width="1"/>
+        <rect width="300" height="28" rx="10" fill="#111118"/>
+        <rect y="18" width="300" height="10" fill="#111118"/>
+        <text x="12" y="18" font-family="monospace" font-size="9" fill="#7a7f99">EXTENSIONS: MARKETPLACE</text>
+        <rect x="10" y="35" width="180" height="22" rx="4" fill="#252535" stroke="#3a3f5c" stroke-width="1"/>
+        <text x="18" y="50" font-family="monospace" font-size="9" fill="#7a7f99">&#128269;  Python</text>
+        <!-- Python extension card - highlighted -->
+        <rect x="10" y="64" width="280" height="52" rx="6" fill="#1e2a3a" stroke="#4af7a8" stroke-width="1.5">
+          <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite"/>
+        </rect>
+        <circle cx="32" cy="90" r="14" fill="#1c3a5e"/>
+        <text x="32" y="95" font-family="monospace" font-size="15" text-anchor="middle">&#128013;</text>
+        <text x="54" y="80" font-family="monospace" font-size="10" fill="#4af7a8" font-weight="bold">Python</text>
+        <text x="54" y="92" font-family="monospace" font-size="8" fill="#7a7f99">Microsoft</text>
+        <text x="54" y="104" font-family="monospace" font-size="8" fill="#7a7f99">&#9733;&#9733;&#9733;&#9733;&#9733;  125M installs</text>
+        <rect x="222" y="78" width="58" height="22" rx="4" fill="#4af7a8"/>
+        <text x="251" y="93" font-family="monospace" font-size="9" fill="#000" font-weight="bold" text-anchor="middle">Install</text>
+        <!-- Pylance -->
+        <rect x="10" y="122" width="280" height="44" rx="6" fill="#252535" stroke="#2a2f45" stroke-width="1"/>
+        <rect x="16" y="133" width="28" height="22" rx="3" fill="#6e40c9"/>
+        <text x="30" y="148" font-family="monospace" font-size="11" fill="#fff" text-anchor="middle">&#9889;</text>
+        <text x="52" y="138" font-family="monospace" font-size="9" fill="#cdd0e3">Pylance</text>
+        <text x="52" y="150" font-family="monospace" font-size="8" fill="#7a7f99">Microsoft  &#9733;&#9733;&#9733;&#9733;&#9733;</text>
+        <!-- Debugger -->
+        <rect x="10" y="172" width="280" height="44" rx="6" fill="#252535" stroke="#2a2f45" stroke-width="1"/>
+        <rect x="16" y="183" width="28" height="22" rx="3" fill="#e44b23"/>
+        <text x="30" y="198" font-family="monospace" font-size="11" fill="#fff" text-anchor="middle">&#128027;</text>
+        <text x="52" y="188" font-family="monospace" font-size="9" fill="#cdd0e3">Python Debugger</text>
+        <text x="52" y="200" font-family="monospace" font-size="8" fill="#7a7f99">Microsoft  &#9733;&#9733;&#9733;&#9733;&#9734;</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: LINGUAGEM DE PROGRAMAÇÃO -->
+<div class="slide" id="s4">
+  <div class="tag">Conceito fundamental</div>
+  <h2>O que é uma linguagem de programação?</h2>
+  <p>É um conjunto de <span class="hl">regras e símbolos</span> para dar instruções ao computador. O computador só entende <span class="hl3">0s e 1s</span> — a linguagem traduz nossas ideias para a máquina.</p>
+  <div class="compare">
+    <div class="compare-col low">
+      <h3>&#9881;&#65039; Baixo Nível</h3>
+      <ul>
+        <li>Próxima do hardware</li>
+        <li>Assembly, C</li>
+        <li>Controle total da memória</li>
+        <li>Difícil de ler e escrever</li>
+        <li>Sistemas embarcados, OS</li>
+      </ul>
+    </div>
+    <div class="compare-col high">
+      <h3>&#128640; Alto Nível</h3>
+      <ul>
+        <li>Próxima do humano</li>
+        <li>Python, JavaScript, Java</li>
+        <li>Sintaxe legível</li>
+        <li>Fácil de aprender</li>
+        <li>Apps, web, IA</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: PYTHON INTRO -->
+<div class="slide" id="s5">
+  <div class="tag">Ferramenta 02</div>
+  <h2>Python &#128013;</h2>
+  <div class="grid2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="box green"><p>Criado por <span class="hl2">Guido van Rossum</span> em <span class="hl2">1991</span>.</p></div>
+      <div class="box green"><p>Linguagem de <span class="hl2">alto nível</span>, interpretada e de tipagem dinâmica.</p></div>
+      <div class="box green"><p>Usada em <span class="hl2">IA, ciência de dados, web e automação</span>.</p></div>
+      <div class="box green"><p>Nome inspirado no grupo <em>Monty Python</em> &#127917;</p></div>
+      <div class="card" style="flex:1;">
+        <h3>&#128229; Instalação</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><p>Acesse <span class="hl2">python.org</span> → Downloads.</p></div>
+          <div class="step"><div class="step-num">2</div><p>Baixe a versão mais recente para Windows.</p></div>
+          <div class="step"><div class="step-num">3</div><p>&#9888;&#65039; Marque <span class="hl">"Add Python to PATH"</span>!</p></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 300 260" xmlns="http://www.w3.org/2000/svg" width="280" height="240">
+        <rect width="300" height="260" rx="10" fill="#111118" stroke="#2a2f45" stroke-width="1"/>
+        <!-- orbit lines -->
+        <circle cx="150" cy="110" r="72" fill="none" stroke="#1e2235" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Python logo center -->
+        <circle cx="150" cy="110" r="44" fill="#1a2a3a" stroke="#3776AB" stroke-width="2"/>
+        <path d="M138 88 C138 82 142 78 150 78 L158 78 C162 78 164 80 164 85 L164 100 L150 100 L150 104 L164 104 L164 118 C164 123 162 125 158 125 L142 125 C138 125 136 123 136 118 L136 110 L150 110 L150 106 L136 106 Z" fill="#3776AB"/>
+        <path d="M162 132 C162 138 158 142 150 142 L142 142 C138 142 136 140 136 135 L136 120 L150 120 L150 116 L136 116 L136 102 C136 97 138 95 142 95 L158 95 C162 95 164 97 164 102 L164 110 L150 110 L150 114 L164 114 Z" fill="#FFD43B"/>
+        <circle cx="140" cy="89" r="3" fill="#FFD43B"/>
+        <circle cx="160" cy="131" r="3" fill="#3776AB"/>
+        <!-- IA node -->
+        <circle cx="60" cy="55" r="26" fill="#1a2a1a" stroke="#4af7a8" stroke-width="1.5"/>
+        <text x="60" y="51" font-family="sans-serif" font-size="14" fill="#4af7a8" text-anchor="middle">&#129302;</text>
+        <text x="60" y="67" font-family="monospace" font-size="8" fill="#4af7a8" text-anchor="middle">IA / ML</text>
+        <line x1="83" y1="74" x2="112" y2="92" stroke="#4af7a8" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <!-- Web node -->
+        <circle cx="240" cy="55" r="26" fill="#1a1a2a" stroke="#a48cf7" stroke-width="1.5"/>
+        <text x="240" y="51" font-family="sans-serif" font-size="14" fill="#a48cf7" text-anchor="middle">&#127758;</text>
+        <text x="240" y="67" font-family="monospace" font-size="8" fill="#a48cf7" text-anchor="middle">Web</text>
+        <line x1="217" y1="74" x2="188" y2="92" stroke="#a48cf7" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <!-- Dados node -->
+        <circle cx="60" cy="180" r="26" fill="#1a1a2a" stroke="#f7c948" stroke-width="1.5"/>
+        <text x="60" y="176" font-family="sans-serif" font-size="14" fill="#f7c948" text-anchor="middle">&#128202;</text>
+        <text x="60" y="192" font-family="monospace" font-size="8" fill="#f7c948" text-anchor="middle">Dados</text>
+        <line x1="83" y1="163" x2="112" y2="136" stroke="#f7c948" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <!-- Auto node -->
+        <circle cx="240" cy="180" r="26" fill="#1a1a2a" stroke="#f74a7a" stroke-width="1.5"/>
+        <text x="240" y="176" font-family="sans-serif" font-size="14" fill="#f74a7a" text-anchor="middle">&#9881;&#65039;</text>
+        <text x="240" y="192" font-family="monospace" font-size="8" fill="#f74a7a" text-anchor="middle">Auto.</text>
+        <line x1="217" y1="163" x2="188" y2="136" stroke="#f74a7a" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <!-- install reminder -->
+        <text x="150" y="226" font-family="monospace" font-size="9" fill="#7a7f99" text-anchor="middle">python.org → Download → Windows</text>
+        <rect x="80" y="234" width="140" height="18" rx="4" fill="#3776AB"/>
+        <text x="150" y="247" font-family="monospace" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">Add Python to PATH ✓</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: AMBIENTE WINDOWS -->
+<div class="slide" id="s6">
+  <div class="tag">Configuração</div>
+  <h2>Ambiente no Windows</h2>
+  <div class="grid2" style="flex:1;align-items:center;">
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><p>Crie uma pasta: <span class="hl">C:\projetos\python</span></p></div>
+      <div class="step"><div class="step-num">2</div><p>Abra no VS Code: <span class="hl">Arquivo → Abrir Pasta</span></p></div>
+      <div class="step"><div class="step-num">3</div><p>Crie um arquivo <span class="hl2">aula01.py</span></p></div>
+      <div class="step"><div class="step-num">4</div><p>Rode com <span class="hl">▶ Run</span> ou no terminal: <code>python aula01.py</code></p></div>
+      <div class="step"><div class="step-num">5</div><p>Verifique: <span class="hl2">python --version</span> no terminal</p></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" width="285" height="210">
+        <rect width="300" height="220" rx="8" fill="#0c0c0c" stroke="#2a2f45" stroke-width="1"/>
+        <rect width="300" height="28" rx="8" fill="#1a1a2a"/>
+        <rect y="18" width="300" height="10" fill="#1a1a2a"/>
+        <circle cx="16" cy="14" r="5" fill="#f74a7a"/>
+        <circle cx="32" cy="14" r="5" fill="#f7c948"/>
+        <circle cx="48" cy="14" r="5" fill="#4af7a8"/>
+        <text x="150" y="19" font-family="monospace" font-size="9" fill="#7a7f99" text-anchor="middle">Windows PowerShell</text>
+        <text x="14" y="48"  font-family="monospace" font-size="10" fill="#cdd0e3">PS C:\Users\aluno&gt; <tspan fill="#f7c948">python --version</tspan></text>
+        <text x="14" y="64"  font-family="monospace" font-size="10" fill="#4af7a8">Python 3.12.4</text>
+        <text x="14" y="84"  font-family="monospace" font-size="10" fill="#cdd0e3">PS C:\Users\aluno&gt; <tspan fill="#f7c948">cd C:\projetos\python</tspan></text>
+        <text x="14" y="104" font-family="monospace" font-size="10" fill="#cdd0e3">PS C:\projetos\python&gt; <tspan fill="#f7c948">code .</tspan></text>
+        <text x="14" y="120" font-family="monospace" font-size="10" fill="#4a5278"># VS Code abre automaticamente...</text>
+        <text x="14" y="144" font-family="monospace" font-size="10" fill="#cdd0e3">PS C:\projetos\python&gt; <tspan fill="#f7c948">python aula01.py</tspan></text>
+        <text x="14" y="160" font-family="monospace" font-size="10" fill="#4af7a8">Olá, Mundo!</text>
+        <text x="14" y="180" font-family="monospace" font-size="10" fill="#cdd0e3">PS C:\projetos\python&gt;</text>
+        <rect x="186" y="170" width="7" height="12" fill="#fff" opacity="0.8">
+          <animate attributeName="opacity" values="0.8;0;0.8" dur="1s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="0" y="208" width="300" height="12" rx="0" fill="#1a2a1a"/>
+        <rect x="0" y="208" width="210" height="12" rx="0" fill="#4af7a8" opacity="0.25"/>
+        <text x="150" y="218" font-family="monospace" font-size="7" fill="#4af7a8" text-anchor="middle">ambiente configurado ✓</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: PRINT -->
+<div class="slide" id="s7">
+  <div class="tag">Primeiros passos</div>
+  <h2>Comando <span class="hl2">print()</span></h2>
+  <p>O <span class="hl2">print()</span> é usado para <span class="hl">exibir informações</span> na tela. É a primeira função que todo programador aprende!</p>
+  <pre><span class="cmt"># Exibindo uma mensagem simples</span>
+<span class="fn">print</span>(<span class="str">"Olá, Mundo!"</span>)
+
+<span class="cmt"># Exibindo números</span>
+<span class="fn">print</span>(<span class="num">42</span>)      <span class="cmt"># inteiro</span>
+<span class="fn">print</span>(<span class="num">3.14</span>)    <span class="cmt"># decimal</span>
+
+<span class="cmt"># Exibindo várias coisas juntas</span>
+<span class="fn">print</span>(<span class="str">"Resultado:"</span>, <span class="num">10</span> + <span class="num">5</span>)   <span class="cmt"># → Resultado: 15</span></pre>
+  <div class="box green"><p>&#128161; Tudo que está dentro dos parênteses será mostrado no terminal.</p></div>
+</div>
+
+<!-- SLIDE 8: VARIÁVEIS -->
+<div class="slide" id="s8">
+  <div class="tag">Conceito</div>
+  <h2>Variáveis</h2>
+  <p>Uma variável é um <span class="hl">espaço na memória</span> com um nome para armazenar valores. Pense como uma <span class="hl">caixa com etiqueta</span>.</p>
+  <pre><span class="cmt"># Criando variáveis</span>
+<span class="var">nome</span>     = <span class="str">"Ana"</span>
+<span class="var">idade</span>    = <span class="num">17</span>
+<span class="var">nota</span>     = <span class="num">9.5</span>
+<span class="var">aprovado</span> = <span class="kw">True</span>
+
+<span class="fn">print</span>(<span class="var">nome</span>)    <span class="cmt"># Ana</span>
+<span class="fn">print</span>(<span class="var">idade</span>)   <span class="cmt"># 17</span></pre>
+  <div class="grid2">
+    <div class="box accent"><p><span class="hl">str</span> – texto &nbsp; ex: <code>"Ana"</code></p></div>
+    <div class="box accent"><p><span class="hl">int</span> – inteiro &nbsp; ex: <code>17</code></p></div>
+    <div class="box accent"><p><span class="hl">float</span> – decimal &nbsp; ex: <code>9.5</code></p></div>
+    <div class="box accent"><p><span class="hl">bool</span> – lógico &nbsp; ex: <code>True / False</code></p></div>
+  </div>
+</div>
+
+<!-- SLIDE 9: INPUT -->
+<div class="slide" id="s9">
+  <div class="tag">Interação com usuário</div>
+  <h2>Comando <span class="hl2">input()</span></h2>
+  <p>O <span class="hl2">input()</span> permite que o programa <span class="hl">receba dados digitados</span> pelo usuário no terminal.</p>
+  <pre><span class="cmt"># Lendo o nome do usuário</span>
+<span class="var">nome</span> = <span class="fn">input</span>(<span class="str">"Digite seu nome: "</span>)
+<span class="fn">print</span>(<span class="str">"Olá,"</span>, <span class="var">nome</span>)
+
+<span class="cmt"># Lendo um número (converter com int)</span>
+<span class="var">idade</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Qual sua idade? "</span>))
+<span class="fn">print</span>(<span class="str">"Você tem"</span>, <span class="var">idade</span>, <span class="str">"anos."</span>)</pre>
+  <div class="box pink"><p>&#9888;&#65039; <span class="hl3">Atenção:</span> o <span class="hl2">input()</span> sempre retorna <strong>texto (str)</strong>. Para usar como número, use <span class="hl">int()</span> ou <span class="hl">float()</span>.</p></div>
+</div>
+
+<!-- SLIDE 10: F-STRING -->
+<div class="slide" id="s10">
+  <div class="tag">Montando textos</div>
+  <h2>Exibindo variáveis e montando textos</h2>
+  <p>Três formas de montar textos com variáveis em Python:</p>
+  <pre><span class="var">nome</span>  = <span class="str">"Carlos"</span>
+<span class="var">idade</span> = <span class="num">18</span>
+
+<span class="cmt"># 1. Vírgula no print</span>
+<span class="fn">print</span>(<span class="str">"Aluno:"</span>, <span class="var">nome</span>, <span class="str">"- Idade:"</span>, <span class="var">idade</span>)
+
+<span class="cmt"># 2. Concatenação com +</span>
+<span class="fn">print</span>(<span class="str">"Aluno: "</span> + <span class="var">nome</span> + <span class="str">" - Idade: "</span> + <span class="fn">str</span>(<span class="var">idade</span>))
+
+<span class="cmt"># 3. f-string  ← mais moderno e recomendado ✨</span>
+<span class="fn">print</span>(<span class="str">f"Aluno: {<span class="var">nome</span>} - Idade: {<span class="var">idade</span>}"</span>)</pre>
+  <div class="box green"><p>&#128161; A <span class="hl2">f-string</span> é a forma mais elegante: coloque <span class="hl2">f</span> antes das aspas e use <span class="hl2">{variavel}</span> direto no texto.</p></div>
+</div>
+
+<!-- SLIDE 11: F-STRING FORMATAÇÕES -->
+<div class="slide" id="s11_fstr">
+  <div class="tag">f-string em detalhe</div>
+  <h2>Formatações com <span class="hl2">f-string</span></h2>
+  <div class="grid2" style="flex:1;">
+    <pre style="font-size:12.5px;"><span class="var">preco</span>  = <span class="num">9.5</span>
+<span class="var">nome</span>   = <span class="str">"ana"</span>
+<span class="var">nota</span>   = <span class="num">8.333333</span>
+<span class="var">qtd</span>    = <span class="num">42</span>
+
+<span class="cmt"># Decimais: .2f → 2 casas</span>
+<span class="fn">print</span>(<span class="str">f"Preço: R$ {<span class="var">preco</span>:.2f}"</span>)
+<span class="cmt"># → Preço: R$ 9.50</span>
+
+<span class="cmt"># Arredondar nota</span>
+<span class="fn">print</span>(<span class="str">f"Nota: {<span class="var">nota</span>:.1f}"</span>)
+<span class="cmt"># → Nota: 8.3</span>
+
+<span class="cmt"># Maiúsculas / minúsculas</span>
+<span class="fn">print</span>(<span class="str">f"{<span class="var">nome</span>.upper()}"</span>)   <span class="cmt"># → ANA</span>
+<span class="fn">print</span>(<span class="str">f"{<span class="var">nome</span>.title()}"</span>)   <span class="cmt"># → Ana</span>
+
+<span class="cmt"># Largura mínima (alinhamento)</span>
+<span class="fn">print</span>(<span class="str">f"{<span class="var">qtd</span>:05d}"</span>)   <span class="cmt"># → 00042</span></pre>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="box green">
+        <h3 style="margin-bottom:6px;">&#128221; Referência rápida</h3>
+        <table style="width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:12px;">
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{valor:.2f}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">2 casas decimais</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{valor:.0f}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">sem decimal (arredonda)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{texto.upper()}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">TUDO MAIÚSCULO</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{texto.lower()}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">tudo minúsculo</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{texto.title()}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">Primeira Maiúscula</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:5px 8px;color:var(--accent2);">{num:05d}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">preenche com zeros</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;color:var(--accent2);">{num:,}</td>
+            <td style="padding:5px 8px;color:#cdd0e3;">separador de milhar</td>
+          </tr>
+        </table>
+      </div>
+      <div class="box accent"><p>&#128161; Você pode usar <strong>expressões</strong> direto no <code>{}</code>: <code>f"{2 + 2}"</code> → <code>4</code></p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 12: PRINT MULTI-LINHA -->
+<div class="slide" id="s11_multi">
+  <div class="tag">print() avançado</div>
+  <h2>Impressão multi-linha</h2>
+  <p>Às vezes precisamos exibir textos longos ou formatados em várias linhas. Python oferece três formas:</p>
+  <div class="grid2" style="flex:1;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <pre style="font-size:12.5px;"><span class="cmt"># 1. \n dentro da string — pula linha</span>
+<span class="fn">print</span>(<span class="str">"Linha 1\nLinha 2\nLinha 3"</span>)
+
+<span class="cmt"># 2. Vários print() seguidos</span>
+<span class="fn">print</span>(<span class="str">"Nome:   Ana"</span>)
+<span class="fn">print</span>(<span class="str">"Turma:  TDS"</span>)
+<span class="fn">print</span>(<span class="str">"Cidade: Fortaleza"</span>)
+
+<span class="cmt"># 3. Triple-quote — exibe exatamente como escrito</span>
+<span class="fn">print</span>(<span class="str">"""
+=== FICHA DO ALUNO ===
+Nome  : Ana
+Turma : TDS
+Nota  : 9.5
+======================
+"""</span>)</pre>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="box green">
+        <h3 style="margin-bottom:8px;">&#128260; Caracteres especiais em strings</h3>
+        <table style="width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:13px;">
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:6px 8px;color:var(--accent2);">\n</td>
+            <td style="padding:6px 8px;color:#cdd0e3;">nova linha</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:6px 8px;color:var(--accent2);">\t</td>
+            <td style="padding:6px 8px;color:#cdd0e3;">tabulação (tab)</td>
+          </tr>
+          <tr style="border-bottom:1px solid #252a3d;">
+            <td style="padding:6px 8px;color:var(--accent2);">\\</td>
+            <td style="padding:6px 8px;color:#cdd0e3;">barra invertida</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;color:var(--accent2);">\"</td>
+            <td style="padding:6px 8px;color:#cdd0e3;">aspas dentro da string</td>
+          </tr>
+        </table>
+      </div>
+      <div class="box accent">
+        <h3 style="margin-bottom:6px;">&#128161; Triple-quote + f-string</h3>
+        <pre style="border:none;padding:0;font-size:12px;background:transparent;"><span class="fn">print</span>(<span class="str">f"""
+Olá, {<span class="var">nome</span>}!
+Nota: {<span class="var">nota</span>:.1f}
+"""</span>)</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADES – VISÃO GERAL -->
+<div class="slide" id="s_act0">
+  <div class="tag">Hora de praticar &#128187;</div>
+  <h2>Atividades da Aula</h2>
+  <div class="diff-pills" style="margin-top:2px;">
+    <span class="pill easy">&#128997; Fácil – 3 atividades</span>
+    <span class="pill med">&#128999; Médio – 3 atividades</span>
+    <span class="pill hard">&#128995; Desafio – 2 atividades</span>
+  </div>
+  <div class="act-grid">
+    <div class="act-card">
+      <h3>&#127919; Objetivo</h3>
+      <p>Praticar <code>print()</code>, variáveis, <code>input()</code>, f-strings e formatação de saída. Foco total em <span class="hl2">coletar e exibir dados</span> — sem estruturas de decisão.</p>
+    </div>
+    <div class="act-card">
+      <h3>&#128193; Organização</h3>
+      <p>Crie cada atividade em um arquivo separado: <code>ativ01.py</code>, <code>ativ02.py</code>... na pasta de projetos no VS Code.</p>
+    </div>
+    <div class="act-card">
+      <h3>&#9201;&#65039; Tempo sugerido</h3>
+      <p>Fáceis: <span class="hl">5–7 min</span> cada &nbsp;·&nbsp; Médias: <span class="hl">10 min</span> &nbsp;·&nbsp; Desafio: <span class="hl">15 min</span></p>
+    </div>
+    <div class="act-card">
+      <h3>&#128161; Como testar</h3>
+      <p>Rode com <span class="hl2">▶ Run</span> ou <code>python ativXX.py</code> no terminal. Leia a mensagem de erro — ela mostra a linha do problema!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 1 -->
+<div class="slide" id="s_a1">
+  <div class="act-header">
+    <div class="tag">Atividade 1 de 8</div>
+    <div class="act-badge">&#128997; Fácil</div>
+  </div>
+  <h2>Apresentação pessoal <span style="font-size:22px;color:var(--muted);">— ativ01.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Declare quatro variáveis: <span class="hl">nome</span> (str), <span class="hl">idade</span> (int), <span class="hl">curso</span> (str) e <span class="hl">cidade</span> (str) com seus próprios dados.</p>
+        <p style="margin-top:8px;">Em seguida, use <code>print()</code> com f-string para exibir cada informação em uma linha separada, com uma etiqueta antes do valor.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> declaração de variáveis <code>str</code>/<code>int</code>, múltiplos <code>print()</code>, f-string básica com <code>{variavel}</code></p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:13px;border-left-color:var(--accent);color:#e8eaf2;">Nome:   Ana Silva
+Idade:  17 anos
+Curso:  Técnico em Desenvolvimento de Sistemas
+Cidade: Fortaleza</pre>
+      <div class="box" style="border-left:3px solid var(--muted);">
+        <p style="font-size:13px;color:var(--muted);">&#128161; Dica: <code>f"Nome:\t{nome}"</code> usa <code>\t</code> para alinhar os valores.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 2 -->
+<div class="slide" id="s_a2">
+  <div class="act-header">
+    <div class="tag">Atividade 2 de 8</div>
+    <div class="act-badge">&#128997; Fácil</div>
+  </div>
+  <h2>Olá, usuário! <span style="font-size:22px;color:var(--muted);">— ativ02.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Use <code>input()</code> para pedir o <span class="hl">nome</span> e a <span class="hl">cidade</span> do usuário. Armazene cada resposta em uma variável.</p>
+        <p style="margin-top:8px;">Em seguida, exiba uma saudação usando f-string com as duas variáveis na mesma mensagem.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> <code>input()</code> com mensagem de prompt, armazenar resultado em variável, f-string com duas variáveis na mesma string</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:13px;border-left-color:var(--accent);color:#e8eaf2;"><span style="color:var(--muted);">Digite seu nome: </span>Carlos
+<span style="color:var(--muted);">De qual cidade você é? </span>Fortaleza
+
+Olá, Carlos! Seja bem-vindo(a) de Fortaleza.</pre>
+      <div class="box" style="border-left:3px solid var(--muted);">
+        <p style="font-size:13px;color:var(--muted);">&#128161; Dica: o texto dentro do <code>input("...")</code> é a pergunta que aparece para o usuário digitar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 3 -->
+<div class="slide" id="s_a3">
+  <div class="act-header">
+    <div class="tag">Atividade 3 de 8</div>
+    <div class="act-badge">&#128997; Fácil</div>
+  </div>
+  <h2>Tabuada do número <span style="font-size:22px;color:var(--muted);">— ativ03.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Peça um número inteiro ao usuário com <code>input()</code> e converta com <code>int()</code>. Armazene na variável <span class="hl">n</span>.</p>
+        <p style="margin-top:8px;">Escreva <strong>cinco</strong> <code>print()</code>s com f-string, um para cada linha da tabuada (de 1 a 5), no formato: <code>n x 1 = resultado</code>. Calcule o resultado direto dentro do <code>{}</code>.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> <code>int(input())</code>, multiplicação <code>*</code>, expressão dentro do <code>{}</code> da f-string — ex: <code>f"{n * 1}"</code></p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:13px;border-left-color:var(--accent);color:#e8eaf2;"><span style="color:var(--muted);">Digite um número: </span>4
+
+4 x 1 = 4
+4 x 2 = 8
+4 x 3 = 12
+4 x 4 = 16
+4 x 5 = 20</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 4 -->
+<div class="slide" id="s_a4">
+  <div class="act-header">
+    <div class="tag">Atividade 4 de 8</div>
+    <div class="act-badge med">&#128999; Médio</div>
+  </div>
+  <h2>Conversor de temperatura <span style="font-size:22px;color:var(--muted);">— ativ04.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Peça a temperatura em <span class="hl">Celsius</span> com <code>float(input())</code>. Armazene em <code>celsius</code>.</p>
+        <p style="margin-top:6px;">Calcule e armazene em variáveis separadas:</p>
+        <ul style="margin-top:4px;margin-left:16px;gap:3px;">
+          <li><code>fahrenheit = celsius * 1.8 + 32</code></li>
+          <li><code>kelvin = celsius + 273.15</code></li>
+        </ul>
+        <p style="margin-top:8px;">Exiba os três valores com <strong>2 casas decimais</strong> usando <code>:.2f</code> no f-string.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> <code>float(input())</code>, múltiplas variáveis de cálculo, formatação <code>:.2f</code> na f-string</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:13px;border-left-color:var(--accent2);color:#e8eaf2;"><span style="color:var(--muted);">Temperatura em Celsius: </span>25
+
+Celsius:    25.00 °C
+Fahrenheit: 77.00 °F
+Kelvin:     298.15 K</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 5 -->
+<div class="slide" id="s_a5">
+  <div class="act-header">
+    <div class="tag">Atividade 5 de 8</div>
+    <div class="act-badge med">&#128999; Médio</div>
+  </div>
+  <h2>Calculadora de média <span style="font-size:22px;color:var(--muted);">— ativ05.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Peça com <code>input()</code>: o <span class="hl">nome</span> do aluno e as três notas (<span class="hl">n1</span>, <span class="hl">n2</span>, <span class="hl">n3</span>) usando <code>float(input())</code> para cada.</p>
+        <p style="margin-top:8px;">Calcule a média: <code>media = (n1 + n2 + n3) / 3</code> e armazene em uma variável.</p>
+        <p style="margin-top:8px;">Exiba uma linha com todos os dados: nome, as três notas e a média com <strong>1 casa decimal</strong> usando <code>:.1f</code>.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> quatro <code>input()</code>s encadeados, cálculo de média, <code>:.1f</code> na f-string</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:13px;border-left-color:var(--accent2);color:#e8eaf2;"><span style="color:var(--muted);">Nome do aluno: </span>Pedro
+<span style="color:var(--muted);">Nota 1: </span>8.0
+<span style="color:var(--muted);">Nota 2: </span>7.5
+<span style="color:var(--muted);">Nota 3: </span>9.0
+
+Aluno: Pedro | Notas: 8.0 / 7.5 / 9.0 | Média: 8.2</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 6 -->
+<div class="slide" id="s_a6">
+  <div class="act-header">
+    <div class="tag">Atividade 6 de 8</div>
+    <div class="act-badge med">&#128999; Médio</div>
+  </div>
+  <h2>Ficha de cadastro <span style="font-size:22px;color:var(--muted);">— ativ06.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Colete com <code>input()</code> quatro dados: <span class="hl">nome</span>, <span class="hl">idade</span>, <span class="hl">telefone</span> e <span class="hl">email</span>.</p>
+        <p style="margin-top:8px;">Exiba a ficha usando <strong>triple-quote com f-string</strong> (<code>f"""..."""</code>). Use <code>=</code> repetido para criar separadores.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> quatro <code>input()</code>s, f-string com triple-quote <code>f"""..."""</code>.
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:12.5px;border-left-color:var(--accent2);color:#e8eaf2;">======= FICHA DE CADASTRO =======
+Nome:      Maria Oliveira
+Idade:     16 anos
+Telefone:  (85) 99999-0000
+E-mail:    maria@email.com
+=================================</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 7 -->
+<div class="slide" id="s_a7">
+  <div class="act-header">
+    <div class="tag">Atividade 7 de 8</div>
+    <div class="act-badge hard">&#128995; Desafio</div>
+  </div>
+  <h2>Calculadora de IMC <span style="font-size:22px;color:var(--muted);">— ativ07.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Colete com <code>input()</code>: <span class="hl">nome</span> (str), <span class="hl">peso</span> em kg e <span class="hl">altura</span> em metros (ambos <code>float</code>).</p>
+        <p style="margin-top:6px;">Calcule: <code>imc = peso / altura ** 2</code> e armazene.</p>
+        <p style="margin-top:6px;">Declare a variável:<br><code>tabela = "Abaixo: &lt;18.5 | Normal: 18.5–24.9\nSobrepeso: 25–29.9 | Obeso: ≥30"</code></p>
+        <p style="margin-top:6px;">Exiba tudo em uma ficha com <code>f"""..."""</code>: nome, peso, altura, IMC com <code>:.2f</code> e a tabela abaixo.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> <code>float(input())</code>, operador <code>**</code>, variável <code>str</code> com <code>\n</code>, triple-quote, <code>:.2f</code></p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:12px;border-left-color:#a48cf7;color:#e8eaf2;">===== RESULTADO DO IMC =====
+Nome:    João
+Peso:    72.00 kg
+Altura:  1.75 m
+IMC:     23.51
+
+--- Tabela de referência ---
+Abaixo: &lt;18.5 | Normal: 18.5–24.9
+Sobrepeso: 25–29.9 | Obeso: ≥30
+============================</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ATIVIDADE 8 -->
+<div class="slide" id="s_a8">
+  <div class="act-header">
+    <div class="tag">Atividade 8 de 8</div>
+    <div class="act-badge hard">&#128995; Desafio</div>
+  </div>
+  <h2>Recibo de compra <span style="font-size:22px;color:var(--muted);">— ativ08.py</span></h2>
+  <div class="grid2" style="flex:1;gap:24px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="box accent">
+        <h3 style="margin-bottom:8px;">&#128221; O que fazer</h3>
+        <p>Colete com <code>input()</code>: <span class="hl">cliente</span> (str), <span class="hl">produto</span> (str), <span class="hl">preco</span> (<code>float</code>) e <span class="hl">qtd</span> (<code>int</code>).</p>
+        <p style="margin-top:6px;">Calcule: <code>total = preco * qtd</code> e armazene.</p>
+        <p style="margin-top:6px;">Exiba um recibo formatado usando <code>f"""..."""</code> com separadores <code>=====</code> e os valores monetários com <code>:.2f</code>.</p>
+      </div>
+      <div class="box green">
+        <p style="font-size:13px;">&#128295; <strong>Conceitos:</strong> <code>float()</code> e <code>int(input())</code>, multiplicação, f-string triple-quote completa, <code>:.2f</code> para valores em reais</p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;">&#128250; Saída esperada no terminal</p>
+      <pre style="font-size:12px;border-left-color:#a48cf7;color:#e8eaf2;">======== RECIBO DE COMPRA ========
+Cliente:  Lucas Mendes
+Produto:  Caderno
+Preço un: R$ 12.50
+Qtd:      3
+---------------------------------
+TOTAL:    R$ 37.50
+=================================</pre>
+      <div class="box green"><p style="font-size:13px;">&#127942; Terminou? Una as atividades 7 e 8 em um único programa!</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 15: ENCERRAMENTO -->
+<div class="slide" id="s15">
+  <div class="tag">Recapitulando</div>
+  <h2>Resumo da aula</h2>
+  <div class="grid2" style="flex:1;">
+    <div class="card">
+      <h3>&#128736;&#65039; Ferramentas</h3>
+      <ul>
+        <li>VS Code instalado e configurado</li>
+        <li>Python com PATH configurado</li>
+        <li>Extensão Python no VS Code</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>&#128013; Python</h3>
+      <ul>
+        <li><span class="hl2">print()</span> – exibir na tela</li>
+        <li>Variáveis: str, int, float, bool</li>
+        <li><span class="hl2">input()</span> – receber dados</li>
+        <li>f-string para montar textos</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>&#128221; Atividades</h3>
+      <ul>
+        <li><span class="hl3">Fácil:</span> apresentação, boas-vindas, tabuada</li>
+        <li><span class="hl">Médio:</span> temperatura, média, ficha</li>
+        <li><span style="color:#a48cf7;font-weight:700;">Desafio:</span> IMC, recibo</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>&#128680; Próxima aula</h3>
+      <ul>
+
+        <li>Tipos de Dados <code>int / float / bool / str</code> e outros</li>
+        <li>Condicionais <code>if / elif / else</code></li>
+        <li>Tomada de decisão em programas</li>
+        <li>Retomaremos as atividades!</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- #deck -->
+
+<div id="nav">
+  <button onclick="go(-1)">&#8592; Anterior</button>
+  <span id="slide-counter">1 / ?</span>
+  <button onclick="go(1)">Próximo &#8594;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  const counter = document.getElementById('slide-counter');
+  const total = slides.length;
+  counter.textContent = `1 / ${total}`;
+  function show(n) {
+    slides[cur].classList.remove('active');
+    cur = (n + total) % total;
+    slides[cur].classList.add('active');
+    counter.textContent = `${cur + 1} / ${total}`;
+  }
+  function go(d) { show(cur + d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  });
+</script>
+</body>
+</html>
