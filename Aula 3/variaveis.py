@@ -11,6 +11,10 @@
 # Olá, {nome}. Você tem {idade} anos de idade!
 
 nome = "Vovó Juju"
+
 idade = 67
 
+# print(f"Olá, {nome}. Você tem {idade} anos de idade!")
+
 print(f"Olá, {nome}. Você tem {idade} anos de idade!")
+
