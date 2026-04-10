@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Fundamentos — SENAC TDS</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --card: #1c2030;
+    --border: #2a3050;
+    --accent: #4af0a4;
+    --accent2: #5b8cff;
+    --accent3: #ff6b6b;
+    --accent4: #ffd166;
+    --text: #e8eaf0;
+    --muted: #7a839a;
+    --code-bg: #111520;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── TOP BAR ─── */
+  #topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .logo { font-weight: 800; font-size: 1rem; letter-spacing: 2px; color: var(--accent); }
+  .logo span { color: var(--muted); }
+  #slide-counter { font-family: 'JetBrains Mono', monospace; font-size: .85rem; color: var(--muted); }
+
+  /* ─── PROGRESS ─── */
+  #progress-bar {
+    height: 3px; background: var(--border); flex-shrink: 0;
+  }
+  #progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ─── MAIN ─── */
+  #stage {
+    flex: 1; overflow: hidden; position: relative;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 48px 60px;
+    opacity: 0; transform: translateX(60px);
+    transition: opacity .45s ease, transform .45s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+  .slide.active {
+    opacity: 1; transform: translateX(0); pointer-events: all;
+  }
+  .slide.exit {
+    opacity: 0; transform: translateX(-60px);
+  }
+
+  /* ─── TYPOGRAPHY ─── */
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+    border: 1px solid var(--accent); border-radius: 4px; padding: 3px 10px;
+    display: inline-block;
+  }
+  .tag.blue  { color: var(--accent2); border-color: var(--accent2); }
+  .tag.red   { color: var(--accent3); border-color: var(--accent3); }
+  .tag.yellow{ color: var(--accent4); border-color: var(--accent4); }
+
+  h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.1; text-align: center; }
+  h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; margin-bottom: 28px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+  p, li { font-size: clamp(.9rem, 1.6vw, 1.05rem); line-height: 1.75; color: #c8cdd8; }
+  li { margin-bottom: 6px; }
+  ul { list-style: none; padding-left: 0; }
+  ul li::before { content: "▸ "; color: var(--accent); }
+
+  /* ─── GRID HELPERS ─── */
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 900px; }
+  .cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; max-width: 960px; }
+  .cols4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; width: 100%; max-width: 960px; }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px;
+  }
+  .card.accent-green  { border-color: #2a6045; }
+  .card.accent-blue   { border-color: #2a3a6e; }
+  .card.accent-red    { border-color: #6e2a2a; }
+  .card.accent-yellow { border-color: #6e5a2a; }
+
+  /* ─── CODE BLOCKS ─── */
+  pre, code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 22px;
+    font-size: clamp(.72rem, 1.3vw, .88rem); line-height: 1.7;
+    overflow-x: auto; width: 100%; max-width: 860px;
+    color: #cdd6f4;
+  }
+  .kw  { color: #cba6f7; } /* keyword */
+  .fn  { color: #89b4fa; } /* function */
+  .st  { color: #a6e3a1; } /* string */
+  .nm  { color: #fab387; } /* number */
+  .cm  { color: #585b70; font-style: italic; } /* comment */
+  .op  { color: #89dceb; } /* operator */
+  .var { color: #f38ba8; } /* variable */
+
+  /* ─── TYPE BADGE ─── */
+  .type-badge {
+    border-radius: 8px; padding: 14px 18px; text-align: center;
+    font-family: 'JetBrains Mono', monospace; font-size: .85rem;
+  }
+  .type-badge .type-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .type-badge .type-example { font-size: .75rem; color: var(--muted); }
+
+  /* ─── OPERATOR TABLE ─── */
+  table { border-collapse: collapse; width: 100%; max-width: 860px; font-size: .9rem; }
+  th { background: var(--card); padding: 10px 16px; text-align: left; color: var(--accent); font-family: 'JetBrains Mono', monospace; border-bottom: 2px solid var(--border); }
+  td { padding: 9px 16px; border-bottom: 1px solid var(--border); color: #c8cdd8; font-family: 'JetBrains Mono', monospace; }
+  tr:hover td { background: #1c2030; }
+  td:last-child { color: var(--accent4); }
+
+  /* ─── COVER DECORATION ─── */
+  .cover-bg {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .cover-bg::before {
+    content: '';
+    position: absolute; width: 500px; height: 500px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,240,164,.07) 0%, transparent 70%);
+    top: -100px; right: -100px;
+  }
+  .cover-bg::after {
+    content: '';
+    position: absolute; width: 400px; height: 400px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(91,140,255,.07) 0%, transparent 70%);
+    bottom: -80px; left: -80px;
+  }
+
+  .subtitle { font-size: 1.1rem; color: var(--muted); margin-top: 10px; }
+  .course-badge {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 20px; font-size: .85rem;
+    color: var(--muted); margin-top: 24px; letter-spacing: 1px;
+  }
+
+  /* ─── EXERCISE CARDS ─── */
+  .ex-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px; width: 100%; max-width: 860px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--accent2);
+  }
+  .ex-num { font-family: 'JetBrains Mono', monospace; color: var(--accent2); font-size: .8rem; margin-bottom: 6px; }
+  .ex-card p { color: #d0d5e8; }
+
+  /* ─── NAV BUTTONS ─── */
+  #nav {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 14px 28px; background: var(--surface); border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 28px; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+  }
+  .nav-btn:hover { background: var(--border); }
+  .nav-btn.primary { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+  .nav-btn.primary:hover { background: #38d990; }
+  .nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+  /* ─── TOC ─── */
+  .toc-list { list-style: none; padding: 0; width: 100%; max-width: 640px; }
+  .toc-list li { padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; gap: 14px; transition: color .2s; }
+  .toc-list li:hover { color: var(--accent); }
+  .toc-list li .toc-num { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size: .8rem; min-width: 30px; }
+
+  /* ─── HIGHLIGHT ─── */
+  .hl-green  { color: var(--accent); font-weight: 700; }
+  .hl-blue   { color: var(--accent2); font-weight: 700; }
+  .hl-red    { color: var(--accent3); font-weight: 700; }
+  .hl-yellow { color: var(--accent4); font-weight: 700; }
+
+  /* ─── OUTPUT BLOCK ─── */
+  .output-block {
+    background: #0a1a10;
+    border: 1px solid #1e4a2a;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(.68rem, 1.2vw, .82rem);
+    line-height: 1.7;
+    color: #a6e3a1;
+    width: 100%;
+    max-width: 860px;
+    margin-top: -2px;
+  }
+  .output-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .65rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--accent); opacity: .7; margin-bottom: 3px;
+  }
+  .output-input { color: #89b4fa; }  /* user-typed input shown in blue */
+  .output-block-ex {
+    background: #0a1020;
+    border: 1px solid #1e2a5a;
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(.68rem, 1.2vw, .82rem);
+    line-height: 1.7;
+    color: #89b4fa;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .io-wrap { width: 100%; }
+  .io-wrap pre { border-radius: 8px 8px 0 0; margin-bottom: 0; }
+  .io-wrap .output-block { border-radius: 0 0 8px 8px; border-top: none; margin-top: 0; }
+  .io-wrap .output-block-ex { border-radius: 0 0 8px 8px; border-top: none; margin-top: 0; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ─── KEYBOARD HINT ─── */
+  .key-hint { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--muted); }
+  kbd { border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; background: var(--card); }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">SENAC <span>// TDS</span></div>
+  <div id="slide-counter">01 / 12</div>
+</div>
+<div id="progress-bar"><div id="progress-fill" style="width:8.3%"></div></div>
+
+<div id="stage">
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 01 — CAPA
+  ═══════════════════════════════════════════ -->
+  <div class="slide active" id="s1">
+    <div class="cover-bg"></div>
+    <div class="tag">Python · Fundamentos</div>
+    <h1>Entrada de Dados<br>&amp; Tipos em<br><span class="hl-green">Python</span></h1>
+    <p class="subtitle">Input · Tipos · Conversão · Operadores</p>
+    <div class="course-badge">Técnico em Desenvolvimento de Sistemas — SENAC</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 02 — SUMÁRIO
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s2">
+    <div class="tag blue">Sumário</div>
+    <h2>O que vamos ver hoje?</h2>
+    <ul class="toc-list">
+      <li onclick="goTo(3)"><span class="toc-num">01</span> Input de informação com <code>input()</code></li>
+      <li onclick="goTo(4)"><span class="toc-num">02</span> Tipos de dados em Python</li>
+      <li onclick="goTo(5)"><span class="toc-num">03</span> Conversão de tipos (Type Casting)</li>
+      <li onclick="goTo(6)"><span class="toc-num">04</span> Operadores Aritméticos</li>
+      <li onclick="goTo(7)"><span class="toc-num">05</span> Operadores Lógicos &amp; Relacionais</li>
+      <li onclick="goTo(8)"><span class="toc-num">06</span> Outros operadores úteis</li>
+      <li onclick="goTo(9)"><span class="toc-num">07</span> Exemplos práticos</li>
+      <li onclick="goTo(10)"><span class="toc-num">08</span> Exemplos combinados</li>
+      <li onclick="goTo(11)"><span class="toc-num">09–12</span> Exercícios</li>
+    </ul>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 03 — INPUT
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s3">
+    <div class="tag">Input de Informação</div>
+    <h2>A função <code style="color:var(--accent)">input()</code></h2>
+    <div class="cols2" style="max-width:860px;">
+      <div>
+        <p>A função <span class="hl-green">input()</span> pausa o programa e aguarda o usuário digitar algo. O valor digitado é <span class="hl-yellow">sempre retornado como string</span>.</p>
+        <br>
+        <ul>
+          <li>Aceita um argumento de <strong>prompt</strong> (mensagem)</li>
+          <li>Lê até o usuário pressionar <kbd>Enter</kbd></li>
+          <li>Retorna tipo <code>str</code> sempre</li>
+          <li>Pode ser combinada com conversão de tipo</li>
+        </ul>
+      </div>
+      <div>
+        <pre><span class="cm"># Sintaxe básica</span>
+<span class="var">variavel</span> <span class="op">=</span> <span class="fn">input</span>(<span class="st">"mensagem: "</span>)
+
+<span class="cm"># Exemplos</span>
+<span class="var">nome</span> <span class="op">=</span> <span class="fn">input</span>(<span class="st">"Seu nome: "</span>)
+<span class="var">idade</span> <span class="op">=</span> <span class="fn">input</span>(<span class="st">"Sua idade: "</span>)
+
+<span class="fn">print</span>(<span class="st">"Olá, "</span> <span class="op">+</span> <span class="var">nome</span>)
+<span class="fn">print</span>(<span class="st">f"Você tem </span><span class="op">{</span><span class="var">idade</span><span class="op">}</span><span class="st"> anos"</span>)
+
+<span class="cm"># ⚠ idade é str, não int!</span>
+<span class="fn">type</span>(<span class="var">idade</span>)  <span class="cm"># &lt;class 'str'&gt;</span></pre>
+      </div>
+    </div>
+    <br>
+    <div class="card accent-yellow" style="max-width:860px; padding:14px 20px;">
+      <p>⚠ <strong>Atenção:</strong> <code>input()</code> sempre retorna <code>str</code>. Para fazer cálculos, converta o valor!</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 04 — TIPOS DE DADOS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s4">
+    <div class="tag blue">Tipos de Dados</div>
+    <h2>Tipos primitivos em Python</h2>
+    <div class="cols4" style="max-width:960px;">
+      <div class="type-badge card accent-green">
+        <div class="type-name hl-green">int</div>
+        <div>Inteiro</div>
+        <div class="type-example">42 &nbsp;·&nbsp; -7 &nbsp;·&nbsp; 0</div>
+      </div>
+      <div class="type-badge card accent-blue">
+        <div class="type-name hl-blue">float</div>
+        <div>Decimal</div>
+        <div class="type-example">3.14 &nbsp;·&nbsp; -0.5 &nbsp;·&nbsp; 1.0</div>
+      </div>
+      <div class="type-badge card accent-red">
+        <div class="type-name hl-red">str</div>
+        <div>Texto</div>
+        <div class="type-example">"oi" &nbsp;·&nbsp; 'SENAC'</div>
+      </div>
+      <div class="type-badge card accent-yellow">
+        <div class="type-name hl-yellow">bool</div>
+        <div>Booleano</div>
+        <div class="type-example">True &nbsp;·&nbsp; False</div>
+      </div>
+    </div>
+    <br>
+    <pre style="max-width:860px;"><span class="cm"># Verificando o tipo com type()</span>
+<span class="fn">print</span>(<span class="fn">type</span>(<span class="nm">42</span>))       <span class="cm"># &lt;class 'int'&gt;</span>
+<span class="fn">print</span>(<span class="fn">type</span>(<span class="nm">3.14</span>))     <span class="cm"># &lt;class 'float'&gt;</span>
+<span class="fn">print</span>(<span class="fn">type</span>(<span class="st">"Python"</span>)) <span class="cm"># &lt;class 'str'&gt;</span>
+<span class="fn">print</span>(<span class="fn">type</span>(<span class="kw">True</span>))      <span class="cm"># &lt;class 'bool'&gt;</span>
+
+<span class="cm"># Tipos compostos (ver próximas aulas)</span>
+<span class="var">lista</span>  <span class="op">=</span> [<span class="nm">1</span>, <span class="nm">2</span>, <span class="nm">3</span>]         <span class="cm"># list</span>
+<span class="var">tupla</span>  <span class="op">=</span> (<span class="nm">1</span>, <span class="nm">2</span>)             <span class="cm"># tuple</span>
+<span class="var">dicio</span>  <span class="op">=</span> {<span class="st">"chave"</span>: <span class="st">"valor"</span>} <span class="cm"># dict</span></pre>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 05 — CONVERSÃO DE TIPOS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s5">
+    <div class="tag yellow">Conversão de Tipos</div>
+    <h2>Type Casting</h2>
+    <div class="cols2" style="max-width:860px;">
+      <div>
+        <h3>Funções de conversão</h3>
+        <table>
+          <tr><th>Função</th><th>Converte para</th></tr>
+          <tr><td>int(x)</td><td>Inteiro</td></tr>
+          <tr><td>float(x)</td><td>Decimal</td></tr>
+          <tr><td>str(x)</td><td>Texto</td></tr>
+          <tr><td>bool(x)</td><td>Booleano</td></tr>
+        </table>
+        <br>
+        <div class="card accent-red" style="padding:12px 16px;">
+          <p style="font-size:.85rem;">⚠ <strong>Erro comum:</strong> converter uma string não numérica para <code>int</code> gera <span class="hl-red">ValueError</span>.</p>
+        </div>
+      </div>
+      <div>
+        <pre><span class="cm"># str → int (mais comum com input)</span>
+<span class="var">idade</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"Idade: "</span>))
+
+<span class="cm"># str → float</span>
+<span class="var">altura</span> <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Altura: "</span>))
+
+<span class="cm"># int → str</span>
+<span class="var">msg</span> <span class="op">=</span> <span class="st">"Tenho "</span> <span class="op">+</span> <span class="fn">str</span>(<span class="var">idade</span>) <span class="op">+</span> <span class="st">" anos"</span>
+
+<span class="cm"># Qualquer valor → bool</span>
+<span class="fn">bool</span>(<span class="nm">0</span>)      <span class="cm"># False</span>
+<span class="fn">bool</span>(<span class="nm">1</span>)      <span class="cm"># True</span>
+<span class="fn">bool</span>(<span class="st">""</span>)     <span class="cm"># False</span>
+<span class="fn">bool</span>(<span class="st">"oi"</span>)  <span class="cm"># True</span>
+
+<span class="cm"># ERRO!</span>
+<span class="fn">int</span>(<span class="st">"abc"</span>)  <span class="cm"># ❌ ValueError</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 06 — OPERADORES ARITMÉTICOS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s6">
+    <div class="tag">Operadores Aritméticos</div>
+    <h2>Matemática com Python</h2>
+    <div class="cols2" style="max-width:860px; align-items:start;">
+      <table>
+        <tr><th>Operador</th><th>Operação</th><th>Exemplo</th></tr>
+        <tr><td>+</td><td>Adição</td><td>5 + 3 → 8</td></tr>
+        <tr><td>-</td><td>Subtração</td><td>10 - 4 → 6</td></tr>
+        <tr><td>*</td><td>Multiplicação</td><td>3 * 4 → 12</td></tr>
+        <tr><td>/</td><td>Divisão real</td><td>7 / 2 → 3.5</td></tr>
+        <tr><td>//</td><td>Divisão inteira</td><td>7 // 2 → 3</td></tr>
+        <tr><td>%</td><td>Módulo (resto)</td><td>7 % 2 → 1</td></tr>
+        <tr><td>**</td><td>Potência</td><td>2 ** 8 → 256</td></tr>
+      </table>
+      <div>
+        <pre><span class="var">a</span>, <span class="var">b</span> <span class="op">=</span> <span class="nm">10</span>, <span class="nm">3</span>
+
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">+</span>  <span class="var">b</span>)   <span class="cm"># 13</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">-</span>  <span class="var">b</span>)   <span class="cm"># 7</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">*</span>  <span class="var">b</span>)   <span class="cm"># 30</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">/</span>  <span class="var">b</span>)   <span class="cm"># 3.333...</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">//</span> <span class="var">b</span>)   <span class="cm"># 3</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">%</span>  <span class="var">b</span>)   <span class="cm"># 1</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="op">**</span> <span class="var">b</span>)   <span class="cm"># 1000</span>
+
+<span class="cm"># Precedência: ** > * / // % > + -</span>
+<span class="fn">print</span>(<span class="nm">2</span> <span class="op">+</span> <span class="nm">3</span> <span class="op">*</span> <span class="nm">4</span>)   <span class="cm"># 14, não 20!</span>
+<span class="fn">print</span>((<span class="nm">2</span> <span class="op">+</span> <span class="nm">3</span>) <span class="op">*</span> <span class="nm">4</span>) <span class="cm"># 20</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 07 — OPERADORES LÓGICOS E RELACIONAIS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s7">
+    <div class="tag blue">Operadores Lógicos &amp; Relacionais</div>
+    <h2>Comparações e condições</h2>
+    <div class="cols2" style="max-width:860px; align-items:start;">
+      <div>
+        <h3 style="color:var(--accent2)">Relacionais (retornam bool)</h3>
+        <table>
+          <tr><th>Op.</th><th>Significado</th></tr>
+          <tr><td>==</td><td>igual a</td></tr>
+          <tr><td>! = (junto)</td><td>diferente de</td></tr>
+          <tr><td>&gt;</td><td>maior que</td></tr>
+          <tr><td>&lt;</td><td>menor que</td></tr>
+          <tr><td>&gt;=</td><td>maior ou igual</td></tr>
+          <tr><td>&lt;=</td><td>menor ou igual</td></tr>
+        </table>
+        <br>
+        <h3 style="color:var(--accent2)">Lógicos</h3>
+        <table>
+          <tr><th>Op.</th><th>Significado</th></tr>
+          <tr><td>and</td><td>E lógico</td></tr>
+          <tr><td>or</td><td>OU lógico</td></tr>
+          <tr><td>not</td><td>NEGAÇÃO</td></tr>
+        </table>
+      </div>
+      <div>
+        <pre><span class="var">x</span> <span class="op">=</span> <span class="nm">10</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op">></span> <span class="nm">5</span>)       <span class="cm"># True</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op">==</span> <span class="nm">10</span>)     <span class="cm"># True</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op">!=</span> <span class="nm">3</span>)      <span class="cm"># True</span>
+
+<span class="cm"># and — ambas devem ser True</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op">></span> <span class="nm">5</span> <span class="kw">and</span> <span class="var">x</span> <span class="op"><</span> <span class="nm">20</span>)   <span class="cm"># True</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op">></span> <span class="nm">5</span> <span class="kw">and</span> <span class="var">x</span> <span class="op">></span> <span class="nm">50</span>)  <span class="cm"># False</span>
+
+<span class="cm"># or — basta uma ser True</span>
+<span class="fn">print</span>(<span class="var">x</span> <span class="op"><</span> <span class="nm">5</span> <span class="kw">or</span>  <span class="var">x</span> <span class="op">></span> <span class="nm">8</span>)   <span class="cm"># True</span>
+
+<span class="cm"># not — inverte o booleano</span>
+<span class="fn">print</span>(<span class="kw">not</span> (<span class="var">x</span> <span class="op">></span> <span class="nm">5</span>))         <span class="cm"># False</span>
+
+<span class="cm"># Encadeamento</span>
+<span class="fn">print</span>(<span class="nm">5</span> <span class="op"><</span> <span class="var">x</span> <span class="op"><</span> <span class="nm">15</span>)         <span class="cm"># True (Pythônico!)</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 08 — OUTROS OPERADORES
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s8">
+    <div class="tag yellow">Outros Operadores</div>
+    <h2>Atribuição, identidade &amp; pertencimento</h2>
+    <div class="cols2" style="max-width:860px; align-items:start;">
+      <div>
+        <h3 style="color:var(--accent4)">Atribuição composta</h3>
+        <table>
+          <tr><th>Op.</th><th>Equivale a</th></tr>
+          <tr><td>x += 5</td><td>x = x + 5</td></tr>
+          <tr><td>x -= 3</td><td>x = x - 3</td></tr>
+          <tr><td>x *= 2</td><td>x = x * 2</td></tr>
+          <tr><td>x /= 4</td><td>x = x / 4</td></tr>
+          <tr><td>x **= 2</td><td>x = x ** 2</td></tr>
+          <tr><td>x %= 3</td><td>x = x % 3</td></tr>
+        </table>
+        <br>
+        <h3 style="color:var(--accent4)">Identidade &amp; Pertencimento</h3>
+        <table>
+          <tr><th>Op.</th><th>Descrição</th></tr>
+          <tr><td>is / is not</td><td>mesmo objeto</td></tr>
+          <tr><td>in / not in</td><td>pertence a coleção</td></tr>
+        </table>
+      </div>
+      <div>
+        <pre><span class="cm"># Atribuição composta</span>
+<span class="var">pontos</span> <span class="op">=</span> <span class="nm">0</span>
+<span class="var">pontos</span> <span class="op">+=</span> <span class="nm">10</span>   <span class="cm"># pontos = 10</span>
+<span class="var">pontos</span> <span class="op">*=</span> <span class="nm">2</span>    <span class="cm"># pontos = 20</span>
+
+<span class="cm"># in / not in</span>
+<span class="var">frutas</span> <span class="op">=</span> [<span class="st">"maçã"</span>, <span class="st">"banana"</span>]
+<span class="fn">print</span>(<span class="st">"banana"</span> <span class="kw">in</span> <span class="var">frutas</span>)      <span class="cm"># True</span>
+<span class="fn">print</span>(<span class="st">"uva"</span> <span class="kw">not in</span> <span class="var">frutas</span>)   <span class="cm"># True</span>
+
+<span class="cm"># in em strings</span>
+<span class="fn">print</span>(<span class="st">"py"</span> <span class="kw">in</span> <span class="st">"python"</span>)         <span class="cm"># True</span>
+
+<span class="cm"># is / is not</span>
+<span class="var">a</span> <span class="op">=</span> <span class="kw">None</span>
+<span class="fn">print</span>(<span class="var">a</span> <span class="kw">is</span> <span class="kw">None</span>)               <span class="cm"># True</span>
+
+<span class="cm"># Walrus :=  (Python 3.8+)</span>
+<span class="kw">if</span> (<span class="var">n</span> <span class="op">:=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"N: "</span>))) <span class="op">></span> <span class="nm">0</span>:
+    <span class="fn">print</span>(<span class="st">f"positivo: </span><span class="op">{</span><span class="var">n</span><span class="op">}</span><span class="st">"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 09 — EXEMPLOS PRÁTICOS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s9">
+    <div class="tag">Exemplos Práticos</div>
+    <h2>Do input ao resultado</h2>
+    <div class="cols2" style="max-width:860px; align-items:start;">
+      <div>
+        <h3>💰 Calculadora de troco</h3>
+        <div class="io-wrap">
+          <pre><span class="var">preco</span>   <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Preço: R$ "</span>))
+<span class="var">pago</span>    <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Pagou:  R$ "</span>))
+<span class="var">troco</span>   <span class="op">=</span> <span class="var">pago</span> <span class="op">-</span> <span class="var">preco</span>
+<span class="fn">print</span>(<span class="st">f"Troco: R$ </span><span class="op">{</span><span class="var">troco</span><span class="op">:.2f</span><span class="op">}</span><span class="st">"</span>)</pre>
+          <div class="output-block">
+            <div class="output-label">▶ saída (ex: preço=7.50, pagou=10.00)</div>
+Preço: R$ <span class="output-input">7.50</span>
+Pagou:  R$ <span class="output-input">10.00</span>
+Troco: R$ 2.50</div>
+        </div>
+        <br>
+        <h3>📐 Área do círculo</h3>
+        <div class="io-wrap">
+          <pre><span class="kw">import</span> math
+<span class="var">r</span> <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Raio: "</span>))
+<span class="var">area</span> <span class="op">=</span> math.pi <span class="op">*</span> <span class="var">r</span> <span class="op">**</span> <span class="nm">2</span>
+<span class="fn">print</span>(<span class="st">f"Área = </span><span class="op">{</span><span class="var">area</span><span class="op">:.4f</span><span class="op">}</span><span class="st">"</span>)</pre>
+          <div class="output-block">
+            <div class="output-label">▶ saída (ex: raio=5)</div>
+Raio: <span class="output-input">5</span>
+Área = 78.5398</div>
+        </div>
+      </div>
+      <div>
+        <h3>🎂 Verificador de maioridade</h3>
+        <div class="io-wrap">
+          <pre><span class="var">idade</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"Sua idade: "</span>))
+<span class="var">maior</span> <span class="op">=</span> <span class="var">idade</span> <span class="op">>=</span> <span class="nm">18</span>
+<span class="fn">print</span>(<span class="st">"Maior de idade:"</span>, <span class="var">maior</span>)</pre>
+          <div class="output-block">
+            <div class="output-label">▶ saída (ex: idade=20)</div>
+Sua idade: <span class="output-input">20</span>
+Maior de idade: True</div>
+        </div>
+        <br>
+        <h3>🔢 Verificar número par</h3>
+        <div class="io-wrap">
+          <pre><span class="var">n</span> <span class="op">=</span> <span class="fn">int</span>(<span class="fn">input</span>(<span class="st">"Digite um número: "</span>))
+<span class="var">par</span> <span class="op">=</span> <span class="var">n</span> <span class="op">%</span> <span class="nm">2</span> <span class="op">==</span> <span class="nm">0</span>
+<span class="fn">print</span>(<span class="st">"É par?"</span>, <span class="var">par</span>)</pre>
+          <div class="output-block">
+            <div class="output-label">▶ saída (ex: n=8 e n=7)</div>
+Digite um número: <span class="output-input">8</span>
+É par? True
+<br>Digite um número: <span class="output-input">7</span>
+É par? False</div>
+        </div>
+        <br>
+        <h3>📊 Média de notas</h3>
+        <div class="io-wrap">
+          <pre><span class="var">n1</span> <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Nota 1: "</span>))
+<span class="var">n2</span> <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Nota 2: "</span>))
+<span class="var">media</span> <span class="op">=</span> (<span class="var">n1</span> <span class="op">+</span> <span class="var">n2</span>) <span class="op">/</span> <span class="nm">2</span>
+<span class="fn">print</span>(<span class="st">f"Média: </span><span class="op">{</span><span class="var">media</span><span class="op">}</span><span class="st">"</span>)</pre>
+          <div class="output-block">
+            <div class="output-label">▶ saída (ex: 8.0 e 6.0)</div>
+Nota 1: <span class="output-input">8.0</span>
+Nota 2: <span class="output-input">6.0</span>
+Média: 7.0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 10 — EXEMPLOS COMBINADOS
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s10">
+    <div class="tag blue">Exemplo Completo</div>
+    <h2>Unindo tudo: IMC</h2>
+    <div class="cols2" style="max-width:860px; align-items:start;">
+      <pre style="flex:1;"><span class="cm"># Calculadora de IMC — exemplo completo</span>
+<span class="cm"># input, conversão, operadores aritméticos e lógicos</span>
+
+<span class="var">nome</span>   <span class="op">=</span> <span class="fn">input</span>(<span class="st">"Nome: "</span>)
+<span class="var">peso</span>   <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Peso (kg): "</span>))
+<span class="var">altura</span> <span class="op">=</span> <span class="fn">float</span>(<span class="fn">input</span>(<span class="st">"Altura (m): "</span>))
+
+<span class="var">imc</span>    <span class="op">=</span> <span class="var">peso</span> <span class="op">/</span> (<span class="var">altura</span> <span class="op">**</span> <span class="nm">2</span>)
+
+<span class="var">baixo_peso</span>   <span class="op">=</span> <span class="var">imc</span> <span class="op">&lt;</span> <span class="nm">18.5</span>
+<span class="var">normal</span>       <span class="op">=</span> <span class="var">imc</span> <span class="op">&gt;=</span> <span class="nm">18.5</span> <span class="kw">and</span> <span class="var">imc</span> <span class="op">&lt;</span> <span class="nm">25.0</span>
+<span class="var">sobrepeso</span>    <span class="op">=</span> <span class="var">imc</span> <span class="op">&gt;=</span> <span class="nm">25.0</span> <span class="kw">and</span> <span class="var">imc</span> <span class="op">&lt;</span> <span class="nm">30.0</span>
+<span class="var">obesidade</span>    <span class="op">=</span> <span class="var">imc</span> <span class="op">&gt;=</span> <span class="nm">30.0</span>
+
+<span class="fn">print</span>(<span class="st">f"\n--- Resultado para </span><span class="op">{</span><span class="var">nome</span><span class="op">}</span><span class="st"> ---"</span>)
+<span class="fn">print</span>(<span class="st">f"IMC: </span><span class="op">{</span><span class="var">imc</span><span class="op">:.2f</span><span class="op">}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Baixo peso?  </span><span class="op">{</span><span class="var">baixo_peso</span><span class="op">}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Normal?      </span><span class="op">{</span><span class="var">normal</span><span class="op">}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Sobrepeso?   </span><span class="op">{</span><span class="var">sobrepeso</span><span class="op">}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Obesidade?   </span><span class="op">{</span><span class="var">obesidade</span><span class="op">}</span><span class="st">"</span>)</pre>
+      <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+        <div class="output-block" style="border-radius:8px; border-left-width:3px;">
+          <div class="output-label">▶ saída (ex: Ana, 70kg, 1.70m)</div>
+Nome: <span class="output-input">Ana</span>
+Peso (kg): <span class="output-input">70</span>
+Altura (m): <span class="output-input">1.70</span>
+
+--- Resultado para Ana ---
+IMC: 24.22
+Baixo peso?  False
+Normal?      True
+Sobrepeso?   False
+Obesidade?   False</div>
+        <div class="card accent-green" style="padding:12px 16px;">
+          <p style="font-size:.85rem;">✅ Conceitos: <span class="hl-green">input()</span>, <span class="hl-blue">float()</span>, <span class="hl-yellow">**</span>, <span class="hl-green">/</span>, <span class="hl-blue">>=</span>, <span class="hl-yellow">and</span>, <span class="hl-red">f-strings</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 11 — EXERCÍCIOS (1–3)
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s11">
+    <div class="tag red">Exercícios</div>
+    <h2>Hora de praticar! 💪</h2>
+    <div class="ex-card">
+      <div class="ex-num">EXERCÍCIO 01 — BÁSICO</div>
+      <p>Solicite ao usuário seu <strong>nome</strong> e sua <strong>cidade natal</strong>. Exiba a saudação abaixo.</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: Carlos / Fortaleza)</div>
+Nome: <span style="color:#cdd6f4;">Carlos</span>
+Cidade natal: <span style="color:#cdd6f4;">Fortaleza</span>
+Olá, Carlos! Você é de Fortaleza.</div>
+    </div>
+    <div class="ex-card">
+      <div class="ex-num">EXERCÍCIO 02 — ARITMÉTICA</div>
+      <p>Peça dois números inteiros e exiba: soma, subtração, multiplicação, divisão real, divisão inteira, resto e potência.</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: a=10 / b=3)</div>
+Número A: <span style="color:#cdd6f4;">10</span>   |   Número B: <span style="color:#cdd6f4;">3</span>
+Soma:            13
+Subtração:        7
+Multiplicação:   30
+Divisão real:     3.3333333333333335
+Divisão inteira:  3
+Resto:            1
+Potência (A^B):  1000</div>
+    </div>
+    <div class="ex-card">
+      <div class="ex-num">EXERCÍCIO 03 — CONVERSÃO</div>
+      <p>Leia um valor em <strong>metros</strong> (float) e converta para <strong>centímetros</strong> (int) e <strong>milímetros</strong> (int).</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: 1.75 m)</div>
+Valor em metros: <span style="color:#cdd6f4;">1.75</span>
+1.75 metros  =  175 centímetros  =  1750 milímetros</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 12 — EXERCÍCIOS (4–6)
+  ═══════════════════════════════════════════ -->
+  <div class="slide" id="s12">
+    <div class="tag red">Exercícios</div>
+    <h2>Desafios! 🚀</h2>
+    <div class="ex-card">
+      <div class="ex-num">EXERCÍCIO 04 — LÓGICO</div>
+      <p>Leia um número inteiro e exiba: se é <strong>par</strong>, se é <strong>positivo</strong>, e se é <strong>par E positivo</strong> ao mesmo tempo.</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: n=8)</div>
+Digite um número inteiro: <span style="color:#cdd6f4;">8</span>
+É par?            True
+É positivo?       True
+É par e positivo? True</div>
+    </div>
+    <div class="ex-card">
+      <div class="ex-num">EXERCÍCIO 05 — MÉDIA</div>
+      <p>Solicite <strong>3 notas</strong> (float). Calcule a média e exiba se o aluno está <strong>aprovado</strong> (média &gt;= 7.0).</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: 8.0 / 6.5 / 7.5)</div>
+Nota 1: <span style="color:#cdd6f4;">8.0</span>   Nota 2: <span style="color:#cdd6f4;">6.5</span>   Nota 3: <span style="color:#cdd6f4;">7.5</span>
+Média: 7.33
+Aprovado? True</div>
+    </div>
+    <div class="ex-card" style="border-color: var(--accent4);">
+      <div class="ex-num" style="color:var(--accent4);">EXERCÍCIO 06 — DESAFIO 🌟</div>
+      <p>Calculadora de gorjeta: leia o valor da conta e o % desejado. Exiba a gorjeta, o total e se o total supera R$ 100.</p>
+      <div class="output-block-ex" style="margin-top:8px; border-radius:8px; border-color:#3a4a2a;">
+        <div class="output-label" style="color:var(--accent2);">▶ saída esperada (ex: R$85.00 / 15%)</div>
+Valor da conta: R$ <span style="color:#cdd6f4;">85.00</span>
+Percentual de gorjeta (%): <span style="color:#cdd6f4;">15</span>
+Gorjeta:        R$ 12.75
+Total a pagar:  R$ 97.75
+Total &gt; R$100?  False</div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<!-- NAV -->
+<div id="nav">
+  <button class="nav-btn" id="btnPrev" onclick="prevSlide()" disabled>← Anterior</button>
+  <span class="key-hint"><kbd>←</kbd> <kbd>→</kbd></span>
+  <button class="nav-btn primary" id="btnNext" onclick="nextSlide()">Próximo →</button>
+</div>
+
+<script>
+  const total = 12;
+  let current = 1;
+
+  function goTo(n) {
+    if (n < 1 || n > total) return;
+    const prev = document.getElementById('s' + current);
+    prev.classList.remove('active');
+    prev.classList.add('exit');
+    setTimeout(() => prev.classList.remove('exit'), 500);
+
+    current = n;
+    const next = document.getElementById('s' + current);
+    next.classList.add('active');
+
+    // update UI
+    document.getElementById('slide-counter').textContent =
+      String(current).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+    document.getElementById('progress-fill').style.width =
+      ((current / total) * 100) + '%';
+    document.getElementById('btnPrev').disabled = current === 1;
+    document.getElementById('btnNext').disabled = current === total;
+  }
+
+  function nextSlide() { goTo(current + 1); }
+  function prevSlide() { goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prevSlide();
+  });
+</script>
+</body>
+</html>
