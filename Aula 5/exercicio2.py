@@ -1,0 +1,1 @@
+#Revisão 2: Faça um programa de cadastro de funcionário onde são pedidos 5 informações de um funcionário (você escolhe as informações). Pelo menos uma informação deve ser número inteiro e outra informação deve ser número decimal(float). Ao final imprima a ficha do funcionário (sugestão use multi-linha)

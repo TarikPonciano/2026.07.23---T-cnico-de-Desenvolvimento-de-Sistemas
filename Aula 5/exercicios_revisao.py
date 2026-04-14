@@ -4,20 +4,22 @@
 
 #Informações fruta 1
 nome_fruta1 = input("Digite o nome da primeira fruta:")
-cor_fruta1 = 
+cor_fruta1 = input("Digite a cor da primeira fruta:")
 
 #Informações fruta 2
-= input("Digite o nome da segunda fruta:")
-cor_fruta2 =
+nome_fruta2 = input("Digite o nome da segunda fruta:")
+cor_fruta2 = input("Digite a cor da segunda fruta:")
 
 #Informações fruta 3
+nome_fruta3 = input("Digite o nome da fruta")
+cor_fruta3 = input("Digite a cor da fruta")
 
 
 #Saída do programa
-print(f"A fruta {} tem cor {}")
+print(f"A fruta {nome_fruta1} tem cor {cor_fruta1}")
 print(f"A fruta {nome_fruta2} tem cor {cor_fruta2}")
 #Falta fruta 3
-
+print(f"A fruta {nome_fruta3} tem cor {cor_fruta3}")
 
 #Revisão 2: Faça um programa de cadastro de funcionário onde são pedidos 5 informações de um funcionário (você escolhe as informações). Pelo menos uma informação deve ser número inteiro e outra informação deve ser número decimal(float). Ao final imprima a ficha do funcionário (use multi-linha)
 
