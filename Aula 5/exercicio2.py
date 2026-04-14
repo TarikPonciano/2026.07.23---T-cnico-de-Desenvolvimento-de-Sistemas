@@ -16,7 +16,7 @@ Ficha do Funcionário:
       
       Nome: {func_nome}
       CPF: {func_cpf}
-      Idade: {func_idade}
+      Idade: {func_idade} anos
       Cargo: {func_cargo}
       Salário: R$ {func_salario:.2f}
 
