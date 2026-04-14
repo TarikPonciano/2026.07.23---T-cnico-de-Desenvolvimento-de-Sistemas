@@ -1,4 +1,4 @@
-# Acesse a aula5 no github para melhor ler os enunciados
+# Acesse a aula 5 no github para melhor ler os enunciados
 
 # Revisão 1: O programa abaixo deve perguntar o nome de 3 frutas, sua cor e imprimir uma frase correspondente. Complete o código abaixo para que o código funcione corretamente:
 
@@ -19,4 +19,5 @@ print(f"A fruta {nome_fruta2} tem cor {cor_fruta2}")
 #Falta fruta 3
 
 
-#Revisão 2: Faça um programa de cadastro de funcionário onde são pedidos 5 informações de um funcionário. Pelo menos uma informação deve ser número inteiro e outra informação deve ser número decimal(float). Ao final imprima a ficha do funcionário (use multi-linha)
+#Revisão 2: Faça um programa de cadastro de funcionário onde são pedidos 5 informações de um funcionário (você escolhe as informações). Pelo menos uma informação deve ser número inteiro e outra informação deve ser número decimal(float). Ao final imprima a ficha do funcionário (use multi-linha)
+
