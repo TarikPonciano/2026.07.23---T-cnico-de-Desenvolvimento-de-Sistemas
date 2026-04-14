@@ -1,0 +1,1 @@
+#Revisão 5: Crie um programa que recebe as 5 notas de uma escola de samba e exiba na tela a média dessas 5 notas:
