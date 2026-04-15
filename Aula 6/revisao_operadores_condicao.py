@@ -27,3 +27,4 @@ or -> "OU" Precisa que PELO MENOS UMA afirmação seja verdadeira
 # 3. Crie um programa que pede um número inteiro e verifique se ele é par. Imprima na tela o resultado da verificação:
 
 #Ex: "Par: {True/False}"
+
