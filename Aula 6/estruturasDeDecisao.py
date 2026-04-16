@@ -37,5 +37,5 @@ else:
 
 #media maior ou igual a 7 e media menor ou igual a 10: aprovado
 #media menor que 7 e media maior ou igual a 4: recuperação
-#media menor que 4 e maior ou igual a 0: reprovado
+#media menor que 4 e media maior ou igual a 0: reprovado
 
