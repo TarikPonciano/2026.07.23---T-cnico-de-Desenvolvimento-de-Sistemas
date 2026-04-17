@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estruturas de Decisão em Python — Senac TDS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --surface2: #1e2230;
+    --border: #2a2f45;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a259ff;
+    --green: #39d98a;
+    --yellow: #ffd460;
+    --text: #e8ecf4;
+    --muted: #7b82a0;
+    --font-mono: 'Space Mono', monospace;
+    --font-sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  .deck { width: 100%; height: 100%; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 52px 72px 40px;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity .45s ease, transform .45s ease;
+  }
+  .slide.active {
+    display: flex;
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .slide.exit {
+    opacity: 0;
+    transform: translateX(-40px);
+    pointer-events: none;
+    display: flex !important;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width .4s ease;
+    z-index: 100;
+  }
+
+  /* ── SLIDE COUNTER ── */
+  #counter {
+    position: fixed;
+    bottom: 22px; right: 36px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    z-index: 100;
+  }
+
+  /* ── NAV BUTTONS ── */
+  .nav {
+    position: fixed;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 12px;
+    z-index: 100;
+  }
+  .nav button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 8px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .nav button:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .slide-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -.02em;
+  }
+  h2 {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    margin-bottom: 28px;
+  }
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    letter-spacing: .05em;
+  }
+  p, li {
+    font-size: clamp(.9rem, 1.4vw, 1.05rem);
+    line-height: 1.72;
+    color: var(--text);
+  }
+  ul { list-style: none; }
+  ul li::before {
+    content: '›';
+    color: var(--accent2);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  strong { color: var(--yellow); }
+  em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  /* ── CODE BLOCK ── */
+  .code-wrap {
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    position: relative;
+  }
+  .code-wrap::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px; right: 14px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  pre {
+    font-family: var(--font-mono);
+    font-size: clamp(.78rem, 1.2vw, .9rem);
+    line-height: 1.8;
+    white-space: pre;
+  }
+  /* syntax colors */
+  .kw  { color: #ff79c6; }
+  .fn  { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .num { color: #bd93f9; }
+  .cmt { color: #6272a4; font-style: italic; }
+  .op  { color: var(--accent2); }
+  .var { color: var(--text); }
+
+  /* ── GRID LAYOUTS ── */
+  .two-col  { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .three-col{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 22px;
+  }
+  .card.accent-cyan  { border-top: 3px solid var(--accent); }
+  .card.accent-orange{ border-top: 3px solid var(--accent2); }
+  .card.accent-purple{ border-top: 3px solid var(--accent3); }
+  .card.accent-green { border-top: 3px solid var(--green); }
+  .card.accent-yellow{ border-top: 3px solid var(--yellow); }
+
+  /* ── TAG / BADGE ── */
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+  .badge.hl { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+  /* ── HERO SLIDE ── */
+  .hero-bg {
+    position: absolute; inset: 0; overflow: hidden; z-index: 0;
+  }
+  .hero-bg svg { position: absolute; right: -60px; top: -60px; opacity: .07; }
+  .hero-content { position: relative; z-index: 1; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    font-family: var(--font-mono); font-size: .78rem;
+  }
+  .flow-box {
+    padding: 8px 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    text-align: center;
+    min-width: 160px;
+    color: var(--text);
+  }
+  .flow-box.diamond {
+    transform: rotate(0deg);
+    background: #1a1530;
+    border-color: var(--accent3);
+    color: var(--accent3);
+    font-weight: 700;
+  }
+  .flow-box.green-b { border-color: var(--green); color: var(--green); background: #0d1f16; }
+  .flow-box.orange-b{ border-color: var(--accent2); color: var(--accent2); background: #1f1309; }
+  .flow-arrow {
+    width: 2px; height: 20px;
+    background: var(--border);
+    position: relative;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .flow-arrow::after {
+    content: '▼';
+    position: absolute; bottom: -6px;
+    color: var(--muted); font-size: 8px;
+  }
+  .flow-branches { display: flex; gap: 40px; align-items: flex-start; }
+  .flow-branch { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .branch-label { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
+
+  /* ── QUESTOES SLIDE ── */
+  .question-list { counter-reset: q; display: flex; flex-direction: column; gap: 10px; }
+  .question-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 16px;
+  }
+  .q-num {
+    font-family: var(--font-mono); font-size: .75rem;
+    background: var(--accent3); color: var(--bg);
+    min-width: 26px; height: 26px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .question-item p { font-size: .88rem; line-height: 1.5; }
+
+  /* scrollable body on tall slides */
+  .slide-body { flex: 1; overflow-y: auto; }
+  .slide-body::-webkit-scrollbar { width: 4px; }
+  .slide-body::-webkit-scrollbar-track { background: transparent; }
+  .slide-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* gap helpers */
+  .gap-12 { margin-top: 12px; }
+  .gap-18 { margin-top: 18px; }
+  .gap-24 { margin-top: 24px; }
+
+  /* senac top-bar */
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 32px;
+  }
+  .senac-tag {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .2em;
+    color: var(--muted); text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="counter">1 / 10</div>
+
+<div class="deck" id="deck">
+
+  <!-- ══════════════════ SLIDE 1 — CAPA ══════════════════ -->
+  <div class="slide active" id="s1">
+    <div class="hero-bg">
+      <svg width="520" height="520" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="260,20 500,150 500,370 260,500 20,370 20,150" stroke="#00e5ff" stroke-width="1.5" fill="none"/>
+        <polygon points="260,70 460,175 460,345 260,450 60,345 60,175" stroke="#a259ff" stroke-width="1" fill="none"/>
+        <polygon points="260,120 420,200 420,320 260,400 100,320 100,200" stroke="#ff6b35" stroke-width=".8" fill="none"/>
+      </svg>
+    </div>
+    <div class="hero-content" style="margin-top: auto; margin-bottom: auto;">
+      <div class="slide-label">Técnico em Desenvolvimento de Sistemas · Senac</div>
+      <h1>Estruturas<br>de <span style="color:var(--accent)">Decisão</span><br>em Python</h1>
+      <p class="gap-24" style="color:var(--muted); max-width:560px">
+        Como seu programa <strong>escolhe caminhos</strong> diferentes com base em condições — o fundamento da lógica computacional.
+      </p>
+      <div class="gap-24">
+        <span class="badge hl">if</span>
+        <span class="badge hl">elif</span>
+        <span class="badge hl">else</span>
+        <span class="badge hl">match / case</span>
+        <span class="badge">Python 3.x</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 2 — O QUE SÃO? ══════════════════ -->
+  <div class="slide" id="s2">
+    <div class="top-bar">
+      <div class="slide-label">Conceito Base</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>O que são Estruturas de Decisão?</h2>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <p>Na vida real, tomamos decisões o tempo todo com base em condições:</p>
+          <ul class="gap-18">
+            <li><em>Se</em> estiver chovendo, levo guarda-chuva.</li>
+            <li><em>Se</em> a nota for ≥ 7, aprovado; <em>senão</em>, reprovado.</li>
+            <li><em>Se</em> o saldo for positivo, exibo o valor; caso contrário, exibo alerta.</li>
+          </ul>
+          <p class="gap-18">Em Python, usamos as palavras-chave <strong>if</strong>, <strong>elif</strong> e <strong>else</strong> para traduzir essa lógica para o código. Elas permitem que o programa <strong>execute blocos diferentes</strong> dependendo do resultado de uma expressão booleana (<em>True</em> ou <em>False</em>).</p>
+          <p class="gap-12">Sem estruturas de decisão, um programa sempre faria a mesma coisa — <strong>seria linear e sem inteligência</strong>.</p>
+        </div>
+        <div>
+          <div class="flow">
+            <div class="flow-box" style="border-color:var(--accent); color:var(--accent)">Início do programa</div>
+            <div class="flow-arrow"></div>
+            <div class="flow-box diamond">Condição é verdadeira?</div>
+            <div class="gap-12" style="display:flex; gap:50px; align-items:flex-start; margin-top:4px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+                <div class="branch-label" style="color:var(--green)">✓ Sim</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-box green-b">Bloco <strong>if</strong></div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+                <div class="branch-label" style="color:var(--accent2)">✗ Não</div>
+                <div class="flow-arrow"></div>
+                <div class="flow-box orange-b">Bloco <strong>else</strong></div>
+              </div>
+            </div>
+            <div class="flow-arrow" style="margin-top:20px"></div>
+            <div class="flow-box" style="border-color:var(--accent); color:var(--accent)">Continua…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 3 — IF SIMPLES ══════════════════ -->
+  <div class="slide" id="s3">
+    <div class="top-bar">
+      <div class="slide-label">Estrutura 01</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>O <span style="color:var(--accent)">if</span> Simples</h2>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <p>O <strong>if</strong> avalia uma expressão booleana. Se o resultado for <em>True</em>, o bloco indentado é executado. Se for <em>False</em>, o bloco é simplesmente ignorado.</p>
+          <div class="card accent-cyan gap-18">
+            <h3>Sintaxe</h3>
+            <div class="code-wrap" data-lang="python">
+<pre><span class="kw">if</span> <span class="var">condição</span><span class="op">:</span>
+    <span class="cmt"># bloco executado se True</span>
+    <span class="var">instrução_1</span>
+    <span class="var">instrução_2</span>
+
+<span class="cmt"># código fora do if (sempre executa)</span></pre>
+            </div>
+          </div>
+          <div class="card accent-yellow gap-18">
+            <h3>⚠ Indentação é obrigatória</h3>
+            <p style="font-size:.88rem">Python usa <strong>4 espaços</strong> (ou 1 Tab) para definir o escopo. Errar a indentação causa <em>IndentationError</em>.</p>
+          </div>
+        </div>
+        <div>
+          <h3>Exemplo Prático</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="var">temperatura</span> <span class="op">=</span> <span class="num">38.5</span>
+
+<span class="kw">if</span> <span class="var">temperatura</span> <span class="op">></span> <span class="num">37.5</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Febre detectada!"</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Procure um médico."</span><span class="op">)</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">"Verificação concluída."</span><span class="op">)</span></pre>
+          </div>
+          <div class="card accent-green gap-18">
+            <h3>Saída</h3>
+            <div class="code-wrap" data-lang="output">
+<pre><span class="green">Febre detectada!
+Procure um médico.
+Verificação concluída.</span></pre>
+            </div>
+          </div>
+          <p class="gap-12" style="font-size:.88rem; color:var(--muted)">Se <code style="color:var(--accent)">temperatura = 36.0</code>, as duas primeiras linhas <strong>não</strong> seriam impressas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 4 — IF/ELSE ══════════════════ -->
+  <div class="slide" id="s4">
+    <div class="top-bar">
+      <div class="slide-label">Estrutura 02</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>O <span style="color:var(--accent)">if</span> / <span style="color:var(--accent2)">else</span></h2>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <p>O <strong>else</strong> define o bloco que será executado quando a condição do <em>if</em> for <em>False</em>. Garante que <strong>sempre</strong> um dos dois caminhos seja percorrido.</p>
+          <div class="code-wrap gap-18" data-lang="python">
+<pre><span class="kw">if</span> <span class="var">condição</span><span class="op">:</span>
+    <span class="cmt"># executa se True</span>
+    <span class="var">bloco_A</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="cmt"># executa se False</span>
+    <span class="var">bloco_B</span></pre>
+          </div>
+          <div class="card accent-purple gap-18">
+            <h3>Dica Didática</h3>
+            <p style="font-size:.88rem">Pense no <em>else</em> como a tradução literal de <strong>"caso contrário"</strong>. O else não tem condição — ele é o "balde" que captura tudo o que o if não capturou.</p>
+          </div>
+        </div>
+        <div>
+          <h3>Exemplo — Aprovação Escolar</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="var">nota</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Digite a nota: "</span><span class="op">))</span>
+
+<span class="kw">if</span> <span class="var">nota</span> <span class="op">>=</span> <span class="num">7.0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"✅ Aprovado!"</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"❌ Reprovado."</span><span class="op">)</span></pre>
+          </div>
+          <h3 class="gap-18">Exemplo — Par ou Ímpar</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="var">numero</span> <span class="op">=</span> <span class="fn">int</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Digite um número: "</span><span class="op">))</span>
+
+<span class="kw">if</span> <span class="var">numero</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="var">numero</span><span class="op">,</span> <span class="str">"é PAR"</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="var">numero</span><span class="op">,</span> <span class="str">"é ÍMPAR"</span><span class="op">)</span></pre>
+          </div>
+          <p class="gap-12" style="font-size:.83rem; color:var(--muted)">O operador <strong style="color:var(--accent2)">%</strong> retorna o <em>resto da divisão</em>. Se o resto por 2 for 0, o número é par.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 5 — ELIF ══════════════════ -->
+  <div class="slide" id="s5">
+    <div class="top-bar">
+      <div class="slide-label">Estrutura 03</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>O <span style="color:var(--accent3)">elif</span> — Múltiplas Condições</h2>
+    <div class="slide-body">
+      <p>Quando há mais de dois caminhos possíveis, usamos <strong>elif</strong> (abreviação de <em>"else if"</em>). Python avalia as condições <strong>de cima para baixo</strong> e executa apenas o <em>primeiro bloco verdadeiro</em>.</p>
+      <div class="two-col gap-18">
+        <div class="code-wrap" data-lang="python">
+<pre><span class="var">nota</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Nota: "</span><span class="op">))</span>
+
+<span class="kw">if</span> <span class="var">nota</span> <span class="op">>=</span> <span class="num">9.0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Conceito A — Excelente"</span><span class="op">)</span>
+<span class="kw">elif</span> <span class="var">nota</span> <span class="op">>=</span> <span class="num">7.0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Conceito B — Bom"</span><span class="op">)</span>
+<span class="kw">elif</span> <span class="var">nota</span> <span class="op">>=</span> <span class="num">5.0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Conceito C — Regular"</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Conceito D — Insuficiente"</span><span class="op">)</span></pre>
+        </div>
+        <div>
+          <div class="card accent-orange">
+            <h3>Como Python avalia</h3>
+            <ul>
+              <li>nota = <strong>9.5</strong> → bloco <em>if</em> → <strong>"Conceito A"</strong></li>
+              <li>nota = <strong>8.0</strong> → if falso → <em>elif</em> → <strong>"Conceito B"</strong></li>
+              <li>nota = <strong>5.5</strong> → dois falsos → 2º <em>elif</em> → <strong>"Conceito C"</strong></li>
+              <li>nota = <strong>3.0</strong> → todos falsos → <em>else</em> → <strong>"Conceito D"</strong></li>
+            </ul>
+          </div>
+          <div class="card accent-cyan gap-18">
+            <h3>Regra de Ouro</h3>
+            <p style="font-size:.88rem">Apenas <strong>um bloco</strong> é executado. Assim que uma condição verdadeira é encontrada, Python pula todos os outros <em>elif</em> e <em>else</em>.</p>
+          </div>
+          <div class="card accent-yellow gap-12">
+            <h3>Quantidade</h3>
+            <p style="font-size:.88rem">Você pode ter <strong>quantos elif quiser</strong>, mas apenas <strong>um if</strong> e <strong>um else</strong> por estrutura.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 6 — OPERADORES ══════════════════ -->
+  <div class="slide" id="s6">
+    <div class="top-bar">
+      <div class="slide-label">Fundamentos</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>Operadores de Comparação e Lógicos</h2>
+    <div class="slide-body">
+      <div class="two-col">
+        <div>
+          <h3>Comparação — retornam True/False</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="op">==</span>   <span class="cmt"># igual a</span>
+<span class="op">!=</span>   <span class="cmt"># diferente de</span>
+<span class="op">></span>    <span class="cmt"># maior que</span>
+<span class="op"><</span>    <span class="cmt"># menor que</span>
+<span class="op">>=</span>   <span class="cmt"># maior ou igual</span>
+<span class="op"><=</span>   <span class="cmt"># menor ou igual</span></pre>
+          </div>
+          <h3 class="gap-18">Lógicos — combinam condições</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="kw">and</span>  <span class="cmt"># AMBAS devem ser True</span>
+<span class="kw">or</span>   <span class="cmt"># PELO MENOS UMA True</span>
+<span class="kw">not</span>  <span class="cmt"># INVERTE o resultado</span></pre>
+          </div>
+        </div>
+        <div>
+          <h3>Exemplos Combinados</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="var">idade</span> <span class="op">=</span> <span class="num">20</span>
+<span class="var">tem_habilitacao</span> <span class="op">=</span> <span class="kw">True</span>
+
+<span class="cmt"># and: as duas precisam ser True</span>
+<span class="kw">if</span> <span class="var">idade</span> <span class="op">>=</span> <span class="num">18</span> <span class="kw">and</span> <span class="var">tem_habilitacao</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Pode dirigir!"</span><span class="op">)</span>
+
+<span class="var">hora</span> <span class="op">=</span> <span class="num">22</span>
+
+<span class="cmt"># or: basta uma ser True</span>
+<span class="kw">if</span> <span class="var">hora</span> <span class="op"><</span> <span class="num">6</span> <span class="kw">or</span> <span class="var">hora</span> <span class="op">></span> <span class="num">22</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Silêncio — hora de dormir."</span><span class="op">)</span>
+
+<span class="var">logado</span> <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cmt"># not: inverte</span>
+<span class="kw">if</span> <span class="kw">not</span> <span class="var">logado</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Faça login primeiro!"</span><span class="op">)</span></pre>
+          </div>
+        </div>
+      </div>
+      <div class="three-col gap-18">
+        <div class="card accent-cyan">
+          <h3>and</h3>
+          <p style="font-size:.82rem">T <strong>and</strong> T = <span style="color:var(--green)">True</span><br>T and F = <span style="color:var(--accent2)">False</span><br>F and F = <span style="color:var(--accent2)">False</span></p>
+        </div>
+        <div class="card accent-orange">
+          <h3>or</h3>
+          <p style="font-size:.82rem">T <strong>or</strong> F = <span style="color:var(--green)">True</span><br>F or T = <span style="color:var(--green)">True</span><br>F or F = <span style="color:var(--accent2)">False</span></p>
+        </div>
+        <div class="card accent-purple">
+          <h3>not</h3>
+          <p style="font-size:.82rem"><strong>not</strong> True = <span style="color:var(--accent2)">False</span><br><strong>not</strong> False = <span style="color:var(--green)">True</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 7 — ANINHAMENTO ══════════════════ -->
+  <div class="slide" id="s7">
+    <div class="top-bar">
+      <div class="slide-label">Avançando</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>Estruturas Aninhadas <span style="color:var(--muted); font-size:1.4rem">(nested)</span></h2>
+    <div class="slide-body">
+      <p>É possível colocar um <strong>if dentro de outro if</strong>. Isso permite verificar condições em cascata — situações em que uma segunda verificação só faz sentido se a primeira já for verdadeira.</p>
+      <div class="two-col gap-18">
+        <div class="code-wrap" data-lang="python">
+<pre><span class="var">idade</span> <span class="op">=</span> <span class="num">17</span>
+<span class="var">acompanhado</span> <span class="op">=</span> <span class="kw">True</span>
+
+<span class="kw">if</span> <span class="var">idade</span> <span class="op">>=</span> <span class="num">18</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Acesso liberado."</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="cmt"># if aninhado dentro do else</span>
+    <span class="kw">if</span> <span class="var">acompanhado</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Menor — acesso com responsável."</span><span class="op">)</span>
+    <span class="kw">else</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Acesso negado."</span><span class="op">)</span></pre>
+        </div>
+        <div>
+          <div class="card accent-yellow">
+            <h3>⚠ Cuidado com o aninhamento excessivo</h3>
+            <p style="font-size:.88rem">Muitos níveis de indentação tornam o código difícil de ler. Quando isso acontece, considere usar <strong>operadores lógicos</strong> (<em>and</em>, <em>or</em>) para simplificar, ou extrair lógica para <strong>funções</strong>.</p>
+          </div>
+          <h3 class="gap-18">Equivalente com <em>and</em></h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Versão mais limpa</span>
+<span class="kw">if</span> <span class="var">idade</span> <span class="op"><</span> <span class="num">18</span> <span class="kw">and</span> <span class="var">acompanhado</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Menor — acesso com responsável."</span><span class="op">)</span>
+<span class="kw">elif</span> <span class="var">idade</span> <span class="op">>=</span> <span class="num">18</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Acesso liberado."</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"Acesso negado."</span><span class="op">)</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 8 — MATCH/CASE ══════════════════ -->
+  <div class="slide" id="s8">
+    <div class="top-bar">
+      <div class="slide-label">Python 3.10+</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>O <span style="color:var(--green)">match</span> / <span style="color:var(--green)">case</span></h2>
+    <div class="slide-body">
+      <p>Introduzido no Python <strong>3.10</strong>, o <em>match/case</em> é a resposta pythônica ao <em>switch/case</em> de outras linguagens. Ideal quando você compara <strong>um valor contra múltiplas opções fixas</strong>.</p>
+      <div class="two-col gap-18">
+        <div class="code-wrap" data-lang="python">
+<pre><span class="var">dia</span> <span class="op">=</span> <span class="fn">int</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Dia da semana (1-7): "</span><span class="op">))</span>
+
+<span class="kw">match</span> <span class="var">dia</span><span class="op">:</span>
+    <span class="kw">case</span> <span class="num">1</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Segunda-feira"</span><span class="op">)</span>
+    <span class="kw">case</span> <span class="num">2</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Terça-feira"</span><span class="op">)</span>
+    <span class="kw">case</span> <span class="num">6</span> <span class="op">|</span> <span class="num">7</span><span class="op">:</span>  <span class="cmt"># múltiplos valores</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Final de semana! 🎉"</span><span class="op">)</span>
+    <span class="kw">case</span> <span class="var">_</span><span class="op">:</span>      <span class="cmt"># coringa (padrão)</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Dia de semana comum"</span><span class="op">)</span></pre>
+        </div>
+        <div>
+          <div class="card accent-green">
+            <h3>Destaques do match/case</h3>
+            <ul>
+              <li>O <strong>_</strong> (underscore) funciona como o <em>else</em> — captura qualquer valor não correspondido</li>
+              <li>O <strong>|</strong> permite listar <em>múltiplos valores</em> no mesmo case</li>
+              <li>Muito mais legível que muitos <em>elif</em> consecutivos</li>
+              <li>Suporta <em>pattern matching</em> avançado (tuplas, classes)</li>
+            </ul>
+          </div>
+          <div class="card accent-purple gap-18">
+            <h3>Quando usar?</h3>
+            <p style="font-size:.88rem">Prefira <strong>match/case</strong> quando comparar o <em>mesmo valor</em> contra várias opções discretas. Use <strong>if/elif</strong> para intervalos numéricos ou condições compostas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 9 — EXEMPLO COMPLETO ══════════════════ -->
+  <div class="slide" id="s9">
+    <div class="top-bar">
+      <div class="slide-label">Projeto Prático</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>Calculadora de <span style="color:var(--accent2)">IMC</span></h2>
+    <div class="slide-body">
+      <p>Vamos unir tudo que aprendemos em um programa real que calcula o <strong>Índice de Massa Corporal</strong> e classifica o resultado.</p>
+      <div class="two-col gap-18">
+        <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># ── Calculadora de IMC ──────────────────</span>
+<span class="var">peso</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Peso (kg): "</span><span class="op">))</span>
+<span class="var">altura</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Altura (m): "</span><span class="op">))</span>
+
+<span class="kw">if</span> <span class="var">altura</span> <span class="op"><=</span> <span class="num">0</span> <span class="kw">or</span> <span class="var">peso</span> <span class="op"><=</span> <span class="num">0</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"❌ Valores inválidos!"</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>
+    <span class="var">imc</span> <span class="op">=</span> <span class="var">peso</span> <span class="op">/</span> <span class="op">(</span><span class="var">altura</span> <span class="op">**</span> <span class="num">2</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"IMC: {imc:.2f}"</span><span class="op">)</span>
+
+    <span class="kw">if</span> <span class="var">imc</span> <span class="op"><</span> <span class="num">18.5</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Abaixo do peso"</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">imc</span> <span class="op"><</span> <span class="num">25.0</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"✅ Peso normal"</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">imc</span> <span class="op"><</span> <span class="num">30.0</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Sobrepeso"</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">imc</span> <span class="op"><</span> <span class="num">35.0</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Obesidade grau I"</span><span class="op">)</span>
+    <span class="kw">else</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Obesidade grau II ou III"</span><span class="op">)</span></pre>
+        </div>
+        <div>
+          <div class="card accent-orange">
+            <h3>O que este programa usa?</h3>
+            <ul>
+              <li><strong>if simples</strong> para validar entradas</li>
+              <li><strong>else</strong> para o caminho principal</li>
+              <li><strong>if/elif/else aninhado</strong> para classificar</li>
+              <li><strong>Operador lógico or</strong> para checar dois erros de uma vez</li>
+              <li><strong>f-string</strong> com formatação <em>:.2f</em> para 2 casas decimais</li>
+            </ul>
+          </div>
+          <div class="card accent-cyan gap-18">
+            <h3>Tabela OMS — IMC</h3>
+            <p style="font-family:var(--font-mono); font-size:.78rem; line-height:2">
+              <span style="color:var(--accent)">&lt; 18.5</span>  → Abaixo do peso<br>
+              <span style="color:var(--green)">18.5 – 24.9</span> → Normal<br>
+              <span style="color:var(--yellow)">25.0 – 29.9</span> → Sobrepeso<br>
+              <span style="color:var(--accent2)">30.0 – 34.9</span> → Obesidade I<br>
+              <span style="color:#ff4b6e)">≥ 35.0</span>  → Obesidade II/III
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SLIDE 10 — QUESTÕES ══════════════════ -->
+  <div class="slide" id="s10">
+    <div class="top-bar">
+      <div class="slide-label">Fixação</div>
+      <div class="senac-tag">Senac TDS · Python</div>
+    </div>
+    <h2>Lista de <span style="color:var(--yellow)">Questões</span> para Praticar</h2>
+    <div class="slide-body">
+      <div class="question-list">
+        <div class="question-item">
+          <div class="q-num">1</div>
+          <p>Escreva um programa que leia um número inteiro e informe se ele é <strong>positivo</strong>, <strong>negativo</strong> ou <strong>zero</strong>.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">2</div>
+          <p>Leia dois números e exiba qual é o <strong>maior</strong>. Se forem iguais, informe isso ao usuário.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">3</div>
+          <p>Crie um programa que leia a <strong>velocidade de um veículo</strong> e exiba a multa correspondente: até 80 km/h → sem multa; 80–100 → R$ 130; 100–120 → R$ 195; acima de 120 → R$ 880 + suspensão da habilitação.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">4</div>
+          <p>Leia o <strong>ano de nascimento</strong> do usuário e informe se ele é <em>menor de idade</em>, <em>adulto</em> ou <em>idoso</em> (≥ 60 anos). Use o ano atual calculado dinamicamente.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">5</div>
+          <p>Implemente uma <strong>calculadora simples</strong> com as 4 operações (+, −, ×, ÷). Utilize <em>match/case</em> para selecionar a operação e trate a divisão por zero.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">6</div>
+          <p>Um cinema cobra: R$ 20 inteira; <strong>50% de desconto</strong> para menores de 12 anos ou maiores de 65; <strong>25% de desconto</strong> para estudantes (com carteirinha). Escreva o programa de bilheteria.</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">7</div>
+          <p>Leia três números e exiba-os em <strong>ordem crescente</strong> usando apenas estruturas <em>if/elif/else</em> (sem usar <code style="color:var(--accent)">sort()</code>).</p>
+        </div>
+        <div class="question-item">
+          <div class="q-num">8</div>
+          <p><strong>Desafio:</strong> Crie um programa de <em>login simples</em>. O usuário tem <strong>3 tentativas</strong> para acertar usuário e senha. Após 3 erros, exiba "Conta bloqueada". (Use <em>if</em> dentro de um <em>while</em>).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)">◀ Anterior</button>
+  <button id="nextBtn" onclick="navigate(1)">Próximo ▶</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function updateUI() {
+    document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+    const pct = ((current + 1) / total) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next < 0 || next >= total) return;
+
+    slides[current].classList.add('exit');
+    slides[current].classList.remove('active');
+
+    setTimeout(() => {
+      slides[current - dir] && slides[current - dir].classList.remove('exit');
+    }, 450);
+
+    current = next;
+    slides[current].style.display = 'flex';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        slides[current].classList.add('active');
+      });
+    });
+
+    updateUI();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+    if (e.key === 'ArrowLeft') navigate(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>
