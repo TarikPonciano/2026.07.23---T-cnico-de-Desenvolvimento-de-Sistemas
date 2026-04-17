@@ -18,7 +18,7 @@ Exercícios de Revisão:
 
 2. Crie um programa que pede a altura de uma pessoa. Se a altura for maior que 1.40m imprima "Entrada Liberada" se não imprima "Entrada Negada".
 
-3. Crie um programa que pede o nome de uma fruta e imprime uma mensagem específica para cada fruta. Crie mensagens para 5 frutas à sua escolha e exiba somente a mensagem da fruta correta quando o programa for executado.
+3. Crie um programa que pede o nome de uma fruta e imprime uma mensagem específica para cada fruta. Crie mensagens para 5 frutas à sua escolha e exiba somente a mensagem da fruta escolhida pelo usuário quando o programa for executado.
 
 4. Crie um programa que pede a idade de uma pessoa e imprima a faixa etária dessa pessoa seguindo as regras:
 
