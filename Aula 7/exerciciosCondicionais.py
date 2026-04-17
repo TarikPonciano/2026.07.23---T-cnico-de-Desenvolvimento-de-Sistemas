@@ -14,7 +14,7 @@ Sempre lembre da identação dos blocos de código!
 """
 Exercícios de Revisão:
 
-1. Crie um programa que pede um número inteiro. Imprima na tela uma mensagem que indica se o número é Par ou Impar.
+1. Crie um programa que pede um número inteiro. Imprima na tela uma mensagem informando se o número é Par ou Impar.
 
 2. Crie um programa que pede a altura de uma pessoa. Se a altura for maior que 1.40m imprima "Entrada Liberada" se não imprima "Entrada Negada".
 
