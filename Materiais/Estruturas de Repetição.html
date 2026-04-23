@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estruturas de Repetição em Python — Senac TDS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #faf7f2;
+  --surface:  #ffffff;
+  --surface2: #f0ebe1;
+  --border:   #e2d9cc;
+  --ink:      #1a1510;
+  --muted:    #8a7f72;
+  --accent:   #c94a1a;   /* burnt orange */
+  --accent2:  #1a6b4a;   /* forest green */
+  --accent3:  #1a3d7c;   /* deep blue */
+  --yellow:   #e8a020;
+  --lavender: #6b4fa0;
+  --serif:    'DM Serif Display', serif;
+  --mono:     'IBM Plex Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+  height: 100vh; width: 100vw;
+  user-select: none;
+}
+
+/* ── PROGRESS ── */
+#progress-bar {
+  position: fixed; top:0; left:0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--yellow));
+  transition: width .4s ease;
+  z-index: 100;
+}
+
+/* ── COUNTER ── */
+#counter {
+  position: fixed; bottom: 22px; right: 36px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--muted); z-index: 100;
+}
+
+/* ── NAV ── */
+.nav {
+  position: fixed; bottom: 18px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 10px; z-index: 100;
+}
+.nav button {
+  background: var(--ink); color: var(--bg);
+  border: none; font-family: var(--mono); font-size: 12px;
+  padding: 8px 24px; border-radius: 2px; cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.nav button:hover { background: var(--accent); }
+.nav button:disabled { background: var(--border); color: var(--muted); cursor: default; }
+
+/* ── SLIDE ── */
+.deck { width:100%; height:100%; position:relative; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 48px 68px 52px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* ── SLIDE HEADER ── */
+.slide-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 14px;
+}
+.slide-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--accent); font-weight: 600;
+}
+.slide-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+/* ── TYPE ── */
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  line-height: 1.02; letter-spacing: -.01em; font-weight: 400;
+}
+h1 em { color: var(--accent); font-style: italic; }
+h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+  font-weight: 400; line-height: 1.1; margin-bottom: 24px;
+}
+h2 em { color: var(--accent); font-style: italic; }
+h3 {
+  font-family: var(--mono); font-size: .78rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px; font-weight: 600;
+}
+p, li { font-size: clamp(.88rem, 1.3vw, 1rem); line-height: 1.75; }
+strong { color: var(--accent); }
+.hl-green { color: var(--accent2); font-weight: 700; }
+.hl-blue  { color: var(--accent3); font-weight: 700; }
+.hl-gold  { color: var(--yellow); font-weight: 700; background: #fff8e6; padding: 0 3px; border-radius: 2px; }
+
+ul { list-style: none; }
+ul li { padding-left: 18px; position: relative; margin-bottom: 6px; }
+ul li::before { content: '—'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+/* ── CODE ── */
+.code-wrap {
+  background: #1a1510; color: #e8e0d6;
+  border-radius: 4px; padding: 18px 22px;
+  position: relative; overflow-x: auto;
+  border-left: 4px solid var(--accent);
+  margin: 0;
+}
+.code-wrap.green-border { border-left-color: var(--accent2); }
+.code-wrap.blue-border  { border-left-color: var(--accent3); }
+.code-wrap::before {
+  content: attr(data-lang);
+  position: absolute; top: 7px; right: 12px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: #6b6258;
+}
+pre { font-family: var(--mono); font-size: clamp(.72rem, 1.1vw, .84rem); line-height: 1.85; white-space: pre; }
+.kw  { color: #e07040; font-weight: 600; }
+.fn  { color: #60c080; }
+.str { color: #d0b870; }
+.num { color: #a090e0; }
+.cmt { color: #6a6258; font-style: italic; }
+.op  { color: #c0c0a0; }
+.var { color: #e8e0d6; }
+.grn { color: #60c080; }
+.red { color: #e07070; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 4px; padding: 18px 20px;
+}
+.card.red-top    { border-top: 4px solid var(--accent); }
+.card.green-top  { border-top: 4px solid var(--accent2); }
+.card.blue-top   { border-top: 4px solid var(--accent3); }
+.card.gold-top   { border-top: 4px solid var(--yellow); }
+.card.purple-top { border-top: 4px solid var(--lavender); }
+.card.ruled { background: var(--surface2); }
+
+/* ── GRID ── */
+.two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.col-6040  { display: grid; grid-template-columns: 1.1fr .9fr; gap: 24px; }
+
+/* ── METAPHOR BOX ── */
+.metaphor {
+  background: #fff8f0;
+  border: 1.5px solid #f0d0b0;
+  border-left: 5px solid var(--yellow);
+  border-radius: 4px;
+  padding: 14px 18px;
+  font-style: italic;
+  color: #5a4830;
+}
+.metaphor::before {
+  content: '💡 Metáfora ';
+  font-style: normal; font-weight: 700;
+  font-family: var(--mono); font-size: .72rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--yellow); display: block; margin-bottom: 6px;
+}
+
+/* ── DANGER / TIP ── */
+.danger {
+  background: #fff5f5; border: 1.5px solid #f5c0b0;
+  border-left: 5px solid var(--accent);
+  border-radius: 4px; padding: 12px 16px;
+  font-size: .88rem; color: #6a2010;
+}
+.danger::before { content: '⚠ Atenção — '; font-weight: 700; }
+.tip {
+  background: #f0fff6; border: 1.5px solid #a0dfc0;
+  border-left: 5px solid var(--accent2);
+  border-radius: 4px; padding: 12px 16px;
+  font-size: .88rem; color: #0e3d28;
+}
+.tip::before { content: '✔ Dica — '; font-weight: 700; }
+
+/* ── LOOP VISUAL ── */
+.loop-vis {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; font-family: var(--mono); font-size: .75rem;
+}
+.lv-box {
+  padding: 8px 28px; border-radius: 3px; text-align: center;
+  min-width: 180px; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--ink);
+}
+.lv-box.cond {
+  background: #fff8e6; border-color: var(--yellow);
+  color: #7a5010; font-weight: 700;
+}
+.lv-box.body { background: #f0fff6; border-color: var(--accent2); color: #0e3d28; }
+.lv-box.start { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+.lv-arrow {
+  width: 2px; height: 18px; background: var(--border);
+  position: relative; display: flex; align-items: flex-end; justify-content: center;
+}
+.lv-arrow::after { content: '▼'; position: absolute; bottom: -7px; color: var(--muted); font-size: 8px; }
+.lv-back {
+  align-self: stretch;
+  border-right: 2px dashed var(--border);
+  border-bottom: 2px dashed var(--border);
+  border-top: 2px dashed var(--border);
+  margin: 4px 0 4px 60%;
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+.lv-back::before {
+  content: 'repete';
+  position: absolute; right: -44px; top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  font-size: .65rem; color: var(--muted); white-space: nowrap;
+}
+
+/* ── COMPARE TABLE ── */
+.compare-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.compare-table th {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .1em;
+  text-transform: uppercase; padding: 10px 14px;
+  background: var(--ink); color: var(--bg); text-align: left;
+}
+.compare-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.compare-table tr:nth-child(even) td { background: var(--surface2); }
+.compare-table .for-col  { color: var(--accent); font-weight: 600; font-family: var(--mono); }
+.compare-table .while-col{ color: var(--accent2); font-weight: 600; font-family: var(--mono); }
+
+/* ── QUESTIONS ── */
+.q-list { display: flex; flex-direction: column; gap: 9px; }
+.q-item { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1.5px solid var(--border); border-radius: 3px; padding: 12px 16px; }
+.q-num {
+  font-family: var(--mono); font-size: .7rem; font-weight: 600;
+  min-width: 28px; height: 28px; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.q-num.orange { background: var(--accent);  color: #fff; }
+.q-num.green  { background: var(--accent2); color: #fff; }
+.q-num.blue   { background: var(--accent3); color: #fff; }
+.q-num.gold   { background: var(--yellow);  color: #fff; }
+.q-num.purple { background: var(--lavender);color: #fff; }
+.q-item p { font-size: .87rem; line-height: 1.55; }
+
+/* ── SCROLL ── */
+.slide-body { flex: 1; overflow-y: auto; }
+.slide-body::-webkit-scrollbar { width: 4px; }
+.slide-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── HERO DECORATIONS ── */
+.hero-deco {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 38%; overflow: hidden; z-index: 0;
+}
+.hero-deco-inner {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent, transparent 28px,
+    var(--border) 28px, var(--border) 29px
+  );
+  opacity: .4;
+}
+.hero-deco-rect {
+  position: absolute; top: 12%; right: 8%; width: 72%; height: 76%;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 28px;
+}
+
+/* gaps */
+.g8  { margin-top:  8px; }
+.g14 { margin-top: 14px; }
+.g20 { margin-top: 20px; }
+.g28 { margin-top: 28px; }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="counter">1 / 12</div>
+
+<div class="deck" id="deck">
+
+<!-- ══════ S1 — CAPA ══════ -->
+<div class="slide active" id="s1">
+  <div class="hero-deco">
+    <div class="hero-deco-inner"></div>
+    <div class="hero-deco-rect">
+      <div class="loop-vis">
+        <div class="lv-box start">início</div>
+        <div class="lv-arrow"></div>
+        <div class="lv-box cond">condição?</div>
+        <div class="lv-arrow"></div>
+        <div class="lv-box body">execute o bloco</div>
+        <div class="lv-back"></div>
+        <div style="height:8px"></div>
+        <div class="lv-arrow"></div>
+        <div class="lv-box start">fim</div>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1; margin-top:auto; margin-bottom:auto; max-width:58%;">
+    <div class="slide-label" style="margin-bottom:16px">Técnico em Desenvolvimento de Sistemas · Senac</div>
+    <h1>Estruturas<br>de <em>Repetição</em><br>em Python</h1>
+    <p class="g28" style="color:var(--muted); max-width:480px">
+      Como fazer o computador repetir uma tarefa automaticamente — sem copiar e colar código dezenas de vezes.
+    </p>
+    <div class="g20" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <span style="font-family:var(--mono);font-size:.78rem;background:var(--accent);color:#fff;padding:5px 14px;border-radius:2px">for</span>
+      <span style="font-family:var(--mono);font-size:.78rem;background:var(--accent2);color:#fff;padding:5px 14px;border-radius:2px">while</span>
+      <span style="font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--bg);padding:5px 14px;border-radius:2px">break</span>
+      <span style="font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--bg);padding:5px 14px;border-radius:2px">continue</span>
+      <span style="font-family:var(--mono);font-size:.78rem;background:var(--ink);color:var(--bg);padding:5px 14px;border-radius:2px">range()</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S2 — POR QUE REPETIR? ══════ -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <div class="slide-label">Motivação</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>Por que precisamos de <em>repetição</em>?</h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <p>Imagine que você precisa exibir a tabuada do 7. Sem repetição, o código ficaria assim:</p>
+        <div class="code-wrap g14" data-lang="python — SEM repetição 😱">
+<pre><span class="fn">print</span><span class="op">(</span><span class="str">"7 x 1 ="</span><span class="op">,</span> <span class="num">7</span><span class="op">*</span><span class="num">1</span><span class="op">)</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">"7 x 2 ="</span><span class="op">,</span> <span class="num">7</span><span class="op">*</span><span class="num">2</span><span class="op">)</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">"7 x 3 ="</span><span class="op">,</span> <span class="num">7</span><span class="op">*</span><span class="num">3</span><span class="op">)</span>
+<span class="cmt">... 7 linhas repetidas manualmente</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">"7 x 10 ="</span><span class="op">,</span> <span class="num">7</span><span class="op">*</span><span class="num">10</span><span class="op">)</span></pre>
+        </div>
+        <p class="g14">E se fossem 100 linhas? Ou 1.000.000? Com estruturas de repetição (<strong>loops</strong>), o mesmo resultado em 2 linhas:</p>
+        <div class="code-wrap g14" data-lang="python — COM repetição ✅">
+<pre><span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">11</span><span class="op">):</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"7 x {i} = {7*i}"</span><span class="op">)</span></pre>
+        </div>
+      </div>
+      <div>
+        <div class="metaphor">
+          Pense em um loop como uma <strong>máquina de lavar roupa</strong>. Você não lava cada peça manualmente — você define o programa (quantas voltas, temperatura) e a máquina repete o ciclo sozinha até terminar.
+        </div>
+        <div class="card red-top g20">
+          <h3>Dois tipos de loop em Python</h3>
+          <ul>
+            <li><strong>for</strong> — repete um número <em>conhecido</em> de vezes ("faça isso 10 vezes")</li>
+            <li><strong>while</strong> — repete enquanto uma <em>condição for verdadeira</em> ("continue enquanto…")</li>
+          </ul>
+        </div>
+        <div class="tip g14">
+          Loops são um dos conceitos mais poderosos da programação. Dominar o <em>for</em> e o <em>while</em> é dominar a automação.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S3 — FOR + RANGE ══════ -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <div class="slide-label">Loop for — Parte 1</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>O loop <em>for</em> e o <span class="hl-blue">range()</span></h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <p>O <strong>for</strong> percorre uma sequência de valores. A função <strong>range()</strong> gera essa sequência de números inteiros.</p>
+        <div class="code-wrap g14" data-lang="sintaxe">
+<pre><span class="kw">for</span> <span class="var">variável</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="var">início</span><span class="op">,</span> <span class="var">fim</span><span class="op">,</span> <span class="var">passo</span><span class="op">):</span>
+    <span class="cmt"># bloco indentado — repete a cada volta</span>
+    <span class="var">instrução</span></pre>
+        </div>
+        <div class="metaphor g14">
+          O <strong>for</strong> é como um funcionário que recebe uma lista de tarefas numeradas: "Faça a tarefa 1, depois a 2, depois a 3… pare no 10." Ele sabe exatamente quantas voltas vai dar.
+        </div>
+        <div class="card gold-top g14">
+          <h3>range() — 3 formas de usar</h3>
+          <div class="code-wrap" style="border-left-color:var(--yellow)" data-lang="python">
+<pre><span class="fn">range</span><span class="op">(</span><span class="num">5</span><span class="op">)</span>          <span class="cmt"># 0, 1, 2, 3, 4</span>
+<span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">6</span><span class="op">)</span>       <span class="cmt"># 1, 2, 3, 4, 5</span>
+<span class="fn">range</span><span class="op">(</span><span class="num">0</span><span class="op">,</span> <span class="num">11</span><span class="op">,</span> <span class="num">2</span><span class="op">)</span>  <span class="cmt"># 0, 2, 4, 6, 8, 10</span>
+<span class="fn">range</span><span class="op">(</span><span class="num">10</span><span class="op">,</span> <span class="num">0</span><span class="op">,</span> <span class="op">-</span><span class="num">1</span><span class="op">)</span> <span class="cmt"># 10, 9, 8... 1 (decrescente)</span></pre>
+          </div>
+          <p class="g8" style="font-size:.82rem;color:var(--muted)">O <em>fim</em> é <strong>exclusivo</strong> — range(1,6) vai até 5, não chega ao 6.</p>
+        </div>
+      </div>
+      <div>
+        <h3>Exemplos Práticos</h3>
+        <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Contar de 1 a 5</span>
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">6</span><span class="op">):</span>
+    <span class="fn">print</span><span class="op">(</span><span class="var">i</span><span class="op">)</span>
+<span class="cmt"># saída: 1  2  3  4  5</span>
+
+<span class="cmt"># Tabuada do 9</span>
+<span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">11</span><span class="op">):</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"9 x {n} = {9*n}"</span><span class="op">)</span>
+
+<span class="cmt"># Contagem regressiva (lançamento)</span>
+<span class="kw">for</span> <span class="var">t</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">10</span><span class="op">,</span> <span class="num">0</span><span class="op">,</span> <span class="op">-</span><span class="num">1</span><span class="op">):</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"{t}..."</span><span class="op">)</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">"🚀 Lançamento!"</span><span class="op">)</span>
+
+<span class="cmt"># Soma de 1 a 100</span>
+<span class="var">total</span> <span class="op">=</span> <span class="num">0</span>
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">101</span><span class="op">):</span>
+    <span class="var">total</span> <span class="op">+=</span> <span class="var">i</span>  <span class="cmt"># total = total + i</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">"Soma:"</span><span class="op">,</span> <span class="var">total</span><span class="op">)</span>  <span class="cmt"># 5050</span></pre>
+        </div>
+        <div class="danger g14">
+          A indentação define o que está <em>dentro</em> do loop. Tudo com 4 espaços após o <strong>for</strong> repete. O que não tem indentação executa apenas uma vez, depois do loop.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S4 — FOR ACUMULADORES ══════ -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <div class="slide-label">Loop for — Parte 2</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>Contadores e <em>Acumuladores</em> com for</h2>
+  <div class="slide-body">
+    <p>Um dos usos mais comuns do loop <strong>for</strong> é <em>acumular</em> valores — somar, contar, calcular médias — usando uma variável que cresce a cada iteração.</p>
+    <div class="two-col g20">
+      <div>
+        <div class="card red-top">
+          <h3>Padrão Contador</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Conta quantos números pares há entre 1 e 20</span>
+<span class="var">contador</span> <span class="op">=</span> <span class="num">0</span>           <span class="cmt"># inicia em 0</span>
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">21</span><span class="op">):</span>
+    <span class="kw">if</span> <span class="var">i</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="op">:</span>
+        <span class="var">contador</span> <span class="op">+=</span> <span class="num">1</span>   <span class="cmt"># incrementa</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">"Pares encontrados:"</span><span class="op">,</span> <span class="var">contador</span><span class="op">)</span>
+<span class="cmt"># saída: Pares encontrados: 10</span></pre>
+          </div>
+        </div>
+        <div class="card green-top g14">
+          <h3>Padrão Acumulador (soma)</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Média de N números digitados pelo usuário</span>
+<span class="var">n</span> <span class="op">=</span> <span class="fn">int</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Quantos números? "</span><span class="op">))</span>
+<span class="var">soma</span> <span class="op">=</span> <span class="num">0</span>
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="var">n</span> <span class="op">+</span> <span class="num">1</span><span class="op">):</span>
+    <span class="var">valor</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">f"Número {i}: "</span><span class="op">))</span>
+    <span class="var">soma</span> <span class="op">+=</span> <span class="var">valor</span>
+
+<span class="var">media</span> <span class="op">=</span> <span class="var">soma</span> <span class="op">/</span> <span class="var">n</span>
+<span class="fn">print</span><span class="op">(</span><span class="str">f"Média: {media:.2f}"</span><span class="op">)</span></pre>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="metaphor">
+          Um acumulador é como um <strong>caixa de supermercado</strong> que vai somando o preço de cada produto na medida em que passa pelo leitor. Começa em zero e vai crescendo a cada item (iteração).
+        </div>
+        <div class="card blue-top g14">
+          <h3>Operadores de atribuição</h3>
+          <div class="code-wrap" style="border-left-color:var(--accent3)" data-lang="python">
+<pre><span class="var">x</span> <span class="op">+=</span> <span class="num">1</span>   <span class="cmt"># x = x + 1   (incremento)</span>
+<span class="var">x</span> <span class="op">-=</span> <span class="num">1</span>   <span class="cmt"># x = x - 1   (decremento)</span>
+<span class="var">x</span> <span class="op">*=</span> <span class="num">2</span>   <span class="cmt"># x = x * 2   (dobrar)</span>
+<span class="var">x</span> <span class="op">/=</span> <span class="num">2</span>   <span class="cmt"># x = x / 2   (dividir)</span>
+<span class="var">x</span> <span class="op">**=</span> <span class="num">2</span>  <span class="cmt"># x = x ** 2  (elevar ao quadrado)</span></pre>
+          </div>
+        </div>
+        <div class="card gold-top g14">
+          <h3>Produto fatorial (n!)</h3>
+          <div class="code-wrap" style="border-left-color:var(--yellow)" data-lang="python">
+<pre><span class="var">n</span> <span class="op">=</span> <span class="fn">int</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Calcular fatorial de: "</span><span class="op">))</span>
+<span class="var">fatorial</span> <span class="op">=</span> <span class="num">1</span>           <span class="cmt"># neutro da multiplicação</span>
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="var">n</span> <span class="op">+</span> <span class="num">1</span><span class="op">):</span>
+    <span class="var">fatorial</span> <span class="op">*=</span> <span class="var">i</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">f"{n}! = {fatorial}"</span><span class="op">)</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S5 — FOR ANINHADO ══════ -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <div class="slide-label">Loop for — Parte 3</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>For <em>Aninhado</em> — loop dentro de loop</h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <p>Assim como o <em>if</em> pode ser aninhado, podemos colocar um <strong>for dentro de outro for</strong>. Para cada iteração do loop externo, o loop interno executa <em>completamente</em>.</p>
+        <div class="metaphor g14">
+          Imagine um <strong>relógio</strong>: o ponteiro dos segundos (loop interno) dá 60 voltas completas para cada volta do ponteiro dos minutos (loop externo). Os dois giram juntos, em níveis diferentes.
+        </div>
+        <div class="code-wrap g14" data-lang="python — todas as tabuadas">
+<pre><span class="cmt"># Tabuada de 1 a 5</span>
+<span class="kw">for</span> <span class="var">tabela</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">6</span><span class="op">):</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"\n=== Tabuada do {tabela} ==="</span><span class="op">)</span>
+    <span class="kw">for</span> <span class="var">mult</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">11</span><span class="op">):</span>   <span class="cmt"># loop interno</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">f"  {tabela} x {mult} = {tabela*mult}"</span><span class="op">)</span></pre>
+        </div>
+        <p class="g8" style="font-size:.85rem; color:var(--muted)">O loop externo itera 5 vezes. O interno, 10 vezes. Total: <strong>50 linhas</strong> geradas automaticamente.</p>
+      </div>
+      <div>
+        <h3>Padrão com estrelas — visualizando a iteração</h3>
+        <div class="code-wrap" data-lang="python — triângulo">
+<pre><span class="cmt"># Imprime um triângulo de estrelas</span>
+<span class="kw">for</span> <span class="var">linha</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">6</span><span class="op">):</span>
+    <span class="kw">for</span> <span class="var">col</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="var">linha</span><span class="op">):</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"*"</span><span class="op">,</span> <span class="var">end</span><span class="op">=</span><span class="str">""</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">()</span>  <span class="cmt"># quebra de linha</span></pre>
+        </div>
+        <div class="card ruled g14" style="font-family:var(--mono); font-size:.9rem; line-height:1.9; color:var(--accent);">
+          *<br>**<br>***<br>****<br>*****
+        </div>
+        <div class="danger g14">
+          Loops aninhados multiplicam as execuções. Um for de 100 dentro de um for de 100 executa <strong>10.000 vezes</strong>. Use com consciência.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S6 — WHILE ══════ -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <div class="slide-label">Loop while</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>O loop <em>while</em></h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <p>O <strong>while</strong> repete um bloco <em>enquanto</em> uma condição for verdadeira. Diferente do <em>for</em>, ele não sabe de antemão quantas vezes vai repetir — depende do que acontecer durante a execução.</p>
+        <div class="code-wrap g14" data-lang="sintaxe">
+<pre><span class="kw">while</span> <span class="var">condição</span><span class="op">:</span>
+    <span class="cmt"># bloco executado enquanto True</span>
+    <span class="var">instrução_1</span>
+    <span class="var">instrução_2</span>
+    <span class="cmt"># algo que eventualmente torna condição False</span></pre>
+        </div>
+        <div class="metaphor g14">
+          O <strong>while</strong> é como um <strong>semáforo de pedestre</strong>: enquanto a luz estiver vermelha (condição verdadeira), você fica parado repetindo a espera. Assim que fica verde (condição falsa), você atravessa e o loop termina.
+        </div>
+        <div class="danger g14">
+          <strong>Loop infinito!</strong> Se a condição <em>nunca</em> se tornar falsa, o programa trava para sempre. Sempre garanta que algo dentro do bloco <em>modifique</em> a condição.
+        </div>
+      </div>
+      <div>
+        <h3>Exemplo — Adivinhe o número</h3>
+        <div class="code-wrap" data-lang="python">
+<pre><span class="var">secreto</span> <span class="op">=</span> <span class="num">42</span>
+<span class="var">chute</span>   <span class="op">=</span> <span class="num">0</span>        <span class="cmt"># valor inicial ≠ secreto</span>
+
+<span class="kw">while</span> <span class="var">chute</span> <span class="op">!=</span> <span class="var">secreto</span><span class="op">:</span>
+    <span class="var">chute</span> <span class="op">=</span> <span class="fn">int</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Adivinhe (1-100): "</span><span class="op">))</span>
+
+    <span class="kw">if</span> <span class="var">chute</span> <span class="op"><</span> <span class="var">secreto</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"📉 Muito baixo!"</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">chute</span> <span class="op">></span> <span class="var">secreto</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"📈 Muito alto!"</span><span class="op">)</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">"🎉 Acertou!"</span><span class="op">)</span></pre>
+        </div>
+        <p class="g8" style="font-size:.83rem; color:var(--muted)">Aqui não sabemos quantas tentativas o usuário vai precisar — por isso o <em>while</em> é ideal. O <em>for</em> não serviria, pois não há um número fixo de repetições.</p>
+        <div class="card green-top g14">
+          <h3>Quando usar while?</h3>
+          <ul>
+            <li>Número de repetições <strong>desconhecido</strong></li>
+            <li>Depende de <strong>entrada do usuário</strong></li>
+            <li>Espera por um evento ou condição externa</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S7 — WHILE COM CONTADOR ══════ -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <div class="slide-label">while — Padrões</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>Padrões essenciais com <em>while</em></h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <div class="card red-top">
+          <h3>Padrão 1 — Contador Manual</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Equivalente ao for range(1,6)</span>
+<span class="var">i</span> <span class="op">=</span> <span class="num">1</span>               <span class="cmt"># 1. inicialização</span>
+
+<span class="kw">while</span> <span class="var">i</span> <span class="op"><=</span> <span class="num">5</span><span class="op">:</span>       <span class="cmt"># 2. condição</span>
+    <span class="fn">print</span><span class="op">(</span><span class="var">i</span><span class="op">)</span>
+    <span class="var">i</span> <span class="op">+=</span> <span class="num">1</span>          <span class="cmt"># 3. atualização ⚠ obrigatória!</span></pre>
+          </div>
+        </div>
+        <div class="card green-top g14">
+          <h3>Padrão 2 — Validação de entrada</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Força o usuário a digitar valor válido</span>
+<span class="var">nota</span> <span class="op">=</span> <span class="op">-</span><span class="num">1</span>          <span class="cmt"># valor inválido para entrar no loop</span>
+
+<span class="kw">while</span> <span class="var">nota</span> <span class="op"><</span> <span class="num">0</span> <span class="kw">or</span> <span class="var">nota</span> <span class="op">></span> <span class="num">10</span><span class="op">:</span>
+    <span class="var">nota</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Nota (0–10): "</span><span class="op">))</span>
+    <span class="kw">if</span> <span class="var">nota</span> <span class="op"><</span> <span class="num">0</span> <span class="kw">or</span> <span class="var">nota</span> <span class="op">></span> <span class="num">10</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"❌ Nota inválida! Tente novamente."</span><span class="op">)</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">f"Nota registrada: {nota}"</span><span class="op">)</span></pre>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card blue-top">
+          <h3>Padrão 3 — Menu Interativo</h3>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="var">opcao</span> <span class="op">=</span> <span class="str">""</span>
+
+<span class="kw">while</span> <span class="var">opcao</span> <span class="op">!=</span> <span class="str">"0"</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"\n=== MENU ==="</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"1 - Nova venda"</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"2 - Ver relatório"</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"0 - Sair"</span><span class="op">)</span>
+    <span class="var">opcao</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Escolha: "</span><span class="op">)</span>
+
+    <span class="kw">if</span> <span class="var">opcao</span> <span class="op">==</span> <span class="str">"1"</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Registrando venda..."</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">opcao</span> <span class="op">==</span> <span class="str">"2"</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Exibindo relatório..."</span><span class="op">)</span>
+
+<span class="fn">print</span><span class="op">(</span><span class="str">"Sistema encerrado."</span><span class="op">)</span></pre>
+          </div>
+        </div>
+        <div class="metaphor g14">
+          O padrão de <strong>menu com while</strong> é como um restaurante: o garçom continua tomando pedidos até o cliente dizer "a conta, por favor" (opção 0). O loop só encerra quando você decide sair.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S8 — BREAK E CONTINUE ══════ -->
+<div class="slide" id="s8">
+  <div class="slide-header">
+    <div class="slide-label">Controle de Fluxo</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2><em>break</em> e <em>continue</em> — controlando o loop</h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <div class="card red-top">
+          <h3>break — Interrompe o loop</h3>
+          <p style="font-size:.88rem; margin-bottom:10px">O <strong>break</strong> encerra imediatamente o loop, mesmo que a condição ainda seja verdadeira ou que haja iterações restantes.</p>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Procura o primeiro múltiplo de 7 entre 1 e 50</span>
+<span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">51</span><span class="op">):</span>
+    <span class="kw">if</span> <span class="var">n</span> <span class="op">%</span> <span class="num">7</span> <span class="op">==</span> <span class="num">0</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">f"Primeiro múltiplo: {n}"</span><span class="op">)</span>
+        <span class="kw">break</span>           <span class="cmt"># sai do loop aqui</span>
+<span class="cmt"># saída: Primeiro múltiplo: 7</span></pre>
+          </div>
+        </div>
+        <div class="metaphor g14">
+          O <strong>break</strong> é como o <strong>botão de emergência</strong> de uma esteira: assim que você o pressiona, tudo para imediatamente, sem esperar o ciclo atual terminar.
+        </div>
+      </div>
+      <div>
+        <div class="card green-top">
+          <h3>continue — Pula para a próxima iteração</h3>
+          <p style="font-size:.88rem; margin-bottom:10px">O <strong>continue</strong> ignora o restante do bloco naquela iteração e volta ao início do loop para a próxima.</p>
+          <div class="code-wrap" data-lang="python">
+<pre><span class="cmt"># Imprime só os ímpares de 1 a 10</span>
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="num">11</span><span class="op">):</span>
+    <span class="kw">if</span> <span class="var">i</span> <span class="op">%</span> <span class="num">2</span> <span class="op">==</span> <span class="num">0</span><span class="op">:</span>
+        <span class="kw">continue</span>        <span class="cmt"># pula os pares</span>
+    <span class="fn">print</span><span class="op">(</span><span class="var">i</span><span class="op">)</span>
+<span class="cmt"># saída: 1 3 5 7 9</span></pre>
+          </div>
+        </div>
+        <div class="metaphor g14">
+          O <strong>continue</strong> é como um <strong>portão seletivo</strong> numa linha de produção: quando um produto com defeito passa, o portão o desvia e o processo segue para o próximo — sem parar a linha inteira.
+        </div>
+        <div class="tip g14">
+          <strong>break</strong> encerra o loop inteiro. <strong>continue</strong> encerra apenas a <em>iteração atual</em> e vai para a próxima.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S9 — WHILE TRUE ══════ -->
+<div class="slide" id="s9">
+  <div class="slide-header">
+    <div class="slide-label">Padrão Avançado</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>O padrão <em>while True</em></h2>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <p>O <strong>while True</strong> cria deliberadamente um loop infinito, que só termina quando um <em>break</em> é encontrado. É muito usado em menus e sistemas de login.</p>
+        <div class="code-wrap g14" data-lang="python — login com tentativas">
+<pre><span class="var">SENHA_CORRETA</span> <span class="op">=</span> <span class="str">"python123"</span>
+<span class="var">tentativas</span> <span class="op">=</span> <span class="num">0</span>
+
+<span class="kw">while</span> <span class="kw">True</span><span class="op">:</span>
+    <span class="var">senha</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Digite a senha: "</span><span class="op">)</span>
+    <span class="var">tentativas</span> <span class="op">+=</span> <span class="num">1</span>
+
+    <span class="kw">if</span> <span class="var">senha</span> <span class="op">==</span> <span class="var">SENHA_CORRETA</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"✅ Acesso liberado!"</span><span class="op">)</span>
+        <span class="kw">break</span>           <span class="cmt"># sai do while True</span>
+    <span class="kw">elif</span> <span class="var">tentativas</span> <span class="op">>=</span> <span class="num">3</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"🔒 Conta bloqueada!"</span><span class="op">)</span>
+        <span class="kw">break</span>
+    <span class="kw">else</span><span class="op">:</span>
+        <span class="var">restantes</span> <span class="op">=</span> <span class="num">3</span> <span class="op">-</span> <span class="var">tentativas</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">f"❌ Senha errada. {restantes} tentativa(s)."</span><span class="op">)</span></pre>
+        </div>
+      </div>
+      <div>
+        <div class="metaphor">
+          O <strong>while True</strong> é como uma <strong>catraca automática</strong>: ela fica girando indefinidamente, esperando o cartão certo. Quando o cartão correto é passado (<em>break</em>), a catraca para. Se errar 3 vezes, o segurança bloqueia a entrada (segundo <em>break</em>).
+        </div>
+        <div class="card gold-top g20">
+          <h3>Comparando os dois padrões</h3>
+          <div class="code-wrap" style="border-left-color:var(--yellow)" data-lang="python">
+<pre><span class="cmt"># Padrão tradicional</span>
+<span class="var">continua</span> <span class="op">=</span> <span class="kw">True</span>
+<span class="kw">while</span> <span class="var">continua</span><span class="op">:</span>
+    <span class="var">r</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Continua? (s/n): "</span><span class="op">)</span>
+    <span class="kw">if</span> <span class="var">r</span> <span class="op">==</span> <span class="str">"n"</span><span class="op">:</span>
+        <span class="var">continua</span> <span class="op">=</span> <span class="kw">False</span>
+
+<span class="cmt"># Padrão while True + break (mais limpo)</span>
+<span class="kw">while</span> <span class="kw">True</span><span class="op">:</span>
+    <span class="var">r</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Continua? (s/n): "</span><span class="op">)</span>
+    <span class="kw">if</span> <span class="var">r</span> <span class="op">==</span> <span class="str">"n"</span><span class="op">:</span>
+        <span class="kw">break</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S10 — FOR vs WHILE ══════ -->
+<div class="slide" id="s10">
+  <div class="slide-header">
+    <div class="slide-label">Comparativo</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2><em>for</em> vs <em>while</em> — quando usar cada um?</h2>
+  <div class="slide-body">
+    <table class="compare-table g20">
+      <thead>
+        <tr>
+          <th style="width:22%">Critério</th>
+          <th class="for-col" style="width:39%">for</th>
+          <th class="while-col" style="width:39%">while</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Nº de repetições</strong></td>
+          <td>Conhecido antes de começar</td>
+          <td>Desconhecido — depende da condição</td>
+        </tr>
+        <tr>
+          <td><strong>Controle</strong></td>
+          <td>Automático via range()</td>
+          <td>Manual — você gerencia o contador</td>
+        </tr>
+        <tr>
+          <td><strong>Risco de loop infinito</strong></td>
+          <td>Baixo — range() sempre termina</td>
+          <td>Alto — se a condição nunca for falsa</td>
+        </tr>
+        <tr>
+          <td><strong>Uso típico</strong></td>
+          <td>Tabuadas, somas, contadores, padrões</td>
+          <td>Menus, validação, login, jogos</td>
+        </tr>
+        <tr>
+          <td><strong>Metáfora</strong></td>
+          <td>Máquina de lavar: ciclo definido</td>
+          <td>Semáforo: repete até mudar de cor</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="two-col g20">
+      <div class="card red-top">
+        <h3>Prefira o for quando…</h3>
+        <ul>
+          <li>Você sabe <strong>exatamente</strong> quantas vezes repetir</li>
+          <li>Quer percorrer um <strong>intervalo numérico</strong> (range)</li>
+          <li>Está calculando <strong>somas, contadores, fatoriais</strong></li>
+        </ul>
+      </div>
+      <div class="card green-top">
+        <h3>Prefira o while quando…</h3>
+        <ul>
+          <li>A repetição depende de <strong>input do usuário</strong></li>
+          <li>Você cria <strong>menus</strong> ou sistemas interativos</li>
+          <li>Precisa <strong>validar</strong> dados até obter uma resposta correta</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S11 — PROJETO COMPLETO ══════ -->
+<div class="slide" id="s11">
+  <div class="slide-header">
+    <div class="slide-label">Projeto Integrador</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>Caixa Eletrônico — <em>Projeto Completo</em></h2>
+  <div class="slide-body">
+    <p>Vamos integrar <strong>for</strong>, <strong>while</strong>, <strong>if/elif/else</strong>, <strong>break</strong> e acumuladores num programa real.</p>
+    <div class="two-col g14">
+      <div class="code-wrap" data-lang="python — caixa eletrônico simplificado">
+<pre><span class="var">saldo</span>     <span class="op">=</span> <span class="num">1000.0</span>
+<span class="var">tentativas</span> <span class="op">=</span> <span class="num">0</span>
+<span class="var">MAX</span>       <span class="op">=</span> <span class="num">3</span>
+
+<span class="cmt"># ── Autenticação ──────────────────────</span>
+<span class="kw">while</span> <span class="var">tentativas</span> <span class="op"><</span> <span class="var">MAX</span><span class="op">:</span>
+    <span class="var">pin</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Digite seu PIN: "</span><span class="op">)</span>
+    <span class="kw">if</span> <span class="var">pin</span> <span class="op">==</span> <span class="str">"1234"</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"✅ Autenticado!"</span><span class="op">)</span>
+        <span class="kw">break</span>
+    <span class="var">tentativas</span> <span class="op">+=</span> <span class="num">1</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"PIN errado. {MAX - tentativas} tentativa(s)."</span><span class="op">)</span>
+<span class="kw">else</span><span class="op">:</span>              <span class="cmt"># else do while: executa se NÃO houve break</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"🔒 Cartão bloqueado."</span><span class="op">)</span>
+    <span class="fn">exit</span><span class="op">()</span>
+
+<span class="cmt"># ── Menu principal ────────────────────</span>
+<span class="kw">while</span> <span class="kw">True</span><span class="op">:</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">f"\nSaldo: R$ {saldo:.2f}"</span><span class="op">)</span>
+    <span class="fn">print</span><span class="op">(</span><span class="str">"1-Saque  2-Depósito  0-Sair"</span><span class="op">)</span>
+    <span class="var">op</span> <span class="op">=</span> <span class="fn">input</span><span class="op">(</span><span class="str">"Opção: "</span><span class="op">)</span>
+
+    <span class="kw">if</span> <span class="var">op</span> <span class="op">==</span> <span class="str">"0"</span><span class="op">:</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">"Obrigado. Até logo!"</span><span class="op">)</span>
+        <span class="kw">break</span>
+    <span class="kw">elif</span> <span class="var">op</span> <span class="op">==</span> <span class="str">"1"</span><span class="op">:</span>
+        <span class="var">v</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Valor: R$ "</span><span class="op">))</span>
+        <span class="kw">if</span> <span class="var">v</span> <span class="op">></span> <span class="var">saldo</span><span class="op">:</span>
+            <span class="fn">print</span><span class="op">(</span><span class="str">"❌ Saldo insuficiente!"</span><span class="op">)</span>
+        <span class="kw">else</span><span class="op">:</span>
+            <span class="var">saldo</span> <span class="op">-=</span> <span class="var">v</span>
+            <span class="fn">print</span><span class="op">(</span><span class="str">f"💸 Saque de R$ {v:.2f} realizado."</span><span class="op">)</span>
+    <span class="kw">elif</span> <span class="var">op</span> <span class="op">==</span> <span class="str">"2"</span><span class="op">:</span>
+        <span class="var">v</span> <span class="op">=</span> <span class="fn">float</span><span class="op">(</span><span class="fn">input</span><span class="op">(</span><span class="str">"Valor: R$ "</span><span class="op">))</span>
+        <span class="var">saldo</span> <span class="op">+=</span> <span class="var">v</span>
+        <span class="fn">print</span><span class="op">(</span><span class="str">f"💰 Depósito de R$ {v:.2f} realizado."</span><span class="op">)</span></pre>
+      </div>
+      <div>
+        <div class="card red-top">
+          <h3>O que este programa usa</h3>
+          <ul>
+            <li><strong>while</strong> com contador para autenticação (máx. 3 tentativas)</li>
+            <li><strong>break</strong> para sair quando PIN correto</li>
+            <li><strong>else do while</strong> — executa se <em>não</em> houve break</li>
+            <li><strong>while True</strong> para o menu principal</li>
+            <li><strong>if/elif/else</strong> para as operações</li>
+            <li>Acumulador com <strong>-=</strong> e <strong>+=</strong> para o saldo</li>
+          </ul>
+        </div>
+        <div class="card gold-top g14">
+          <h3>💡 else no while</h3>
+          <p style="font-size:.87rem">Python tem um recurso raro: o bloco <strong>else</strong> depois de um <em>while</em> ou <em>for</em>. Ele executa <strong>somente se o loop terminou normalmente</strong> — sem <em>break</em>. Muito útil para sinalizar "procurei e não achei".</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ S12 — QUESTÕES ══════ -->
+<div class="slide" id="s12">
+  <div class="slide-header">
+    <div class="slide-label">Lista de Exercícios</div>
+    <div class="slide-tag">Senac TDS · Python</div>
+  </div>
+  <h2>Questões para <em>Praticar</em></h2>
+  <div class="slide-body">
+    <div class="q-list">
+      <div class="q-item">
+        <div class="q-num orange">1</div>
+        <p>Use o <strong>for</strong> para imprimir todos os números pares entre 2 e 30. Em seguida, calcule e exiba a <em>soma</em> desses números.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num orange">2</div>
+        <p>Crie um programa que leia um número <strong>N</strong> do usuário e exiba a <em>tabuada completa</em> desse número (de 1 a 10) usando <strong>for</strong>.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num green">3</div>
+        <p>Com <strong>while</strong>, peça ao usuário que digite números inteiros positivos. O programa deve somar tudo e parar quando o usuário digitar <strong>0</strong>. Exiba a soma final.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num green">4</div>
+        <p>Crie um <strong>menu</strong> com while que ofereça: converter Celsius em Fahrenheit, calcular área de um retângulo, ou sair. Repita até o usuário escolher sair.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num blue">5</div>
+        <p>Use <strong>for + if</strong> para ler 5 notas digitadas pelo usuário e contar quantas são <em>aprovadas</em> (≥ 7), <em>recuperação</em> (entre 4 e 6,9) e <em>reprovadas</em> (&lt; 4).</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num blue">6</div>
+        <p>Usando <strong>for</strong> e <strong>continue</strong>, imprima os números de 1 a 50, <em>pulando</em> os múltiplos de 3. Depois refaça usando <strong>while</strong>.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num gold">7</div>
+        <p>Crie um validador de senha com <strong>while True</strong>: a senha deve ter pelo menos 6 caracteres. Se não atender, exiba o motivo e peça novamente. Quando válida, confirme e encerre.</p>
+      </div>
+      <div class="q-item">
+        <div class="q-num gold">8</div>
+        <p><strong>Desafio:</strong> Escreva um programa que calcule e exiba os <em>N primeiros números primos</em>, onde N é informado pelo usuário. Use <strong>for</strong> aninhado e <strong>break</strong> para verificar a primalidade.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)">◀ Anterior</button>
+  <button id="nextBtn" onclick="navigate(1)">Próximo ▶</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total  = slides.length;
+let current  = 0;
+
+function goTo(index) {
+  if (index < 0 || index >= total) return;
+  slides[current].classList.remove('active');
+  current = index;
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progress-bar').style.width = ((current + 1) / total * 100) + '%';
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') navigate(1);
+  if (e.key === 'ArrowLeft') navigate(-1);
+});
+
+goTo(0);
+</script>
+</body>
+</html>
