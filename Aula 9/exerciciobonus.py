@@ -31,6 +31,21 @@ elif codigo == "002":
     preco_produto = 20
 else:
     print("PRODUTO NÃO IDENTIFICADO")
+    nome_produto = "PRODUTO NÃO IDENTIFICADO"
+    preco_produto = 0
+
+
+# match codigo:
+#     case "001":
+#         nome_produto = "X-Burguer"
+#         preco_produto = 18
+#     case "002":
+#         nome_produto = "X-Salada"
+#         preco_produto = 20  
+#     case _:
+#         print("PRODUTO NÃO IDENTIFICADO")
+#         nome_produto = "PRODUTO NÃO IDENTIFICADO"
+#         preco_produto = 0
     
 
 total_venda = preco_produto * qtd_produto
