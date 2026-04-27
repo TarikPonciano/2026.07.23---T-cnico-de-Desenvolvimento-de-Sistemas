@@ -7,7 +7,7 @@
 # Bônus: Permita que o professor decida quantas notas serão registradas.
 # Bônus: Exiba o boletim do aluno ao final
 
-# 3. Faça um programa que recebe um palpite de um usuário e verifica se esse palpite é igual o número secreto(usar um número aleatório). Permita que o jogador tenha até 3 tentativas.
+# 3. Faça um programa que recebe um palpite de um usuário e verifica se esse palpite é igual ao número secreto(usar um número aleatório). Permita que o jogador tenha até 3 tentativas.
 # Bônus: Faça com o que o jogo encerre assim que o jogador acertar o número secreto.
 # Bônus: Faça com que o jogo imprima uma mensagem especial para quando o número de tentativas chegar ao final.
 
