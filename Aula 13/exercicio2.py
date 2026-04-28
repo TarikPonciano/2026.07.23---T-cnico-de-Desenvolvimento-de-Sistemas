@@ -5,6 +5,8 @@ import random
 
 bilhete = ""
 
+
+
 for i in range(6):
     num = random.randint(1,60)
     
