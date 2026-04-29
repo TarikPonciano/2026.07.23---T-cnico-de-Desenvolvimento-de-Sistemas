@@ -29,7 +29,6 @@ for i in range(qtd_temperaturas):
     if temperatura < menor_temperatura:
         menor_temperatura = temperatura
 
-    
 
 media_temperatura = soma_temperaturas / qtd_temperaturas
 
