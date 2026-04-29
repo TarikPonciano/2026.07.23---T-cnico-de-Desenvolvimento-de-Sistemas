@@ -7,3 +7,4 @@
 # 3. Crie um programa que recebe 5 números reais, exiba na tela o maior entre os números inseridos.
 
 # 4. Uma estação de metereologia contratou você para criar um programa que calcula a média de temperatura de um dia. O seu programa deve perguntar quantas temperaturas serão inseridas, fazer a leitura dessas temperaturas e ao final informar qual foi a temperatura média daquele dia, a temperatura máxima e a temperatura mínima do dia.
+# Bônus: Exiba uma lista com todas as temperaturas inseridas
