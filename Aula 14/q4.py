@@ -2,9 +2,14 @@
 # Bônus: Exiba ao final a lista de funcionários cadastrados
 
 qtd_funcionarios = 0
+# opcoes = ["s", "sair", "exit","quit", ""]
 
 while True:
     nome_func = input("Digite o nome do funcionário: ")
+
+    # if nome_func.lower() in opcoes:
+    #     print("SAINDO DO CADASTRO DE FUNCIONÁRIOS")
+    #     break
 
     if nome_func == "SAIR":
         print("SAINDO DO CADASTRO DE FUNCIONÁRIOS")
