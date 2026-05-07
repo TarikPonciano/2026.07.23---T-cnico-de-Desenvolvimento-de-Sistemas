@@ -8,7 +8,7 @@
 # Dada a lista notas = [7.0, 5.5, 8.5, 4.0, 9.0, 6.5], exiba a maior nota, a menor nota e a média da turma usando max(), min(), sum() e len().
 
 # 4. Fatiamento de ranking
-# Uma competição registrou os tempos (em segundos) dos 8 participantes em ordem de chegada: [12.3, 13.1, 13.8, 14.0, 14.5, 15.2, 16.0, 17.4]. Usando fatiamento, exiba apenas o pódio (os 3 primeiros), os 3 últimos colocados e os participantes do meio (posições 3 a 5).
+# Uma competição registrou os tempos (em segundos) dos 8 participantes em ordem de chegada: [12.3, 13.1, 13.8, 14.0, 14.5, 15.2, 16.0, 17.4]. Usando slicing, exiba apenas o pódio (os 3 primeiros), os 3 últimos colocados e os participantes do meio (posições 3 a 5).
 
 # 5. Verificação de estoque
 # Um mercadinho tem a lista estoque = ["arroz", "feijão", "macarrão", "leite", "óleo"]. Peça ao usuário um produto com input() e informe se ele está ou não disponível no estoque. Depois, exiba o estoque em ordem alfabética usando sorted().
