@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coleções em Python — TDS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #0d1b2a;
+    --navy2:  #132338;
+    --blue:   #2563eb;
+    --blue2:  #1d4ed8;
+    --cyan:   #22d3ee;
+    --green:  #10b981;
+    --orange: #f59e0b;
+    --red:    #ef4444;
+    --purple: #8b5cf6;
+    --pink:   #ec4899;
+    --teal:   #0d9488;
+    --white:  #f8fafc;
+    --muted:  #94a3b8;
+    --dark:   #1e293b;
+    --card:   #172032;
+    --line:   #1e3050;
+    --code-bg:#0a1628;
+    --kw:     #f97316;
+    --va:     #67e8f9;
+    --st:     #86efac;
+    --nu:     #fde68a;
+    --fn:     #93c5fd;
+    --cm:     #4b7a57;
+    --hi:     #fde68a;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── SLIDE CONTAINER ── */
+  #deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 0;
+    opacity: 0;
+    transition: opacity .35s ease;
+    overflow: hidden;
+  }
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+  .slide.fade-in { animation: fadeIn .4s ease forwards; }
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── SLIDE LAYOUTS ── */
+  .s-cover {
+    background: var(--navy);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0 8vw;
+  }
+  .s-default {
+    background: var(--navy);
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 1.1rem 2.4rem;
+    border-bottom: 1px solid var(--line);
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+  .topbar-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .topbar h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--white);
+    flex: 1;
+  }
+  .topbar .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem;
+    color: var(--muted);
+    background: var(--navy2);
+    border: 1px solid var(--line);
+    padding: .18rem .6rem;
+    border-radius: 4px;
+  }
+
+  /* ── CONTENT AREA ── */
+  .content {
+    flex: 1;
+    padding: 1.6rem 2.4rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .cols-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+    flex: 1;
+    overflow: hidden;
+  }
+  .cols-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 10px;
+    padding: 1.1rem 1.3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    line-height: 1.75;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    position: relative;
+  }
+  .code-block .cb-label {
+    position: absolute;
+    top: .5rem; right: .7rem;
+    font-size: .62rem;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .code-block .line { display: flex; gap: .2rem; flex-wrap: wrap; align-items: baseline; }
+  .code-block .br  { height: .65em; }
+  .kw  { color: var(--kw); }
+  .va  { color: var(--va); }
+  .st  { color: var(--st); }
+  .nu  { color: #fde68a; }
+  .fn  { color: var(--fn); }
+  .cm  { color: var(--cm); font-style: italic; }
+  .hi  { color: var(--hi); }
+  .pl  { color: #e2e8f0; }
+  .op  { color: #f472b6; }
+  .bracket { color: #a78bfa; }
+
+  /* ── OUTPUT BOX ── */
+  .output-box {
+    background: #0a2a18;
+    border: 1px solid #155734;
+    border-radius: 8px;
+    padding: .7rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem;
+    color: #86efac;
+    line-height: 1.7;
+  }
+  .output-box::before {
+    content: '▶ saída';
+    display: block;
+    color: #4b7a57;
+    font-size: .65rem;
+    margin-bottom: .3rem;
+    letter-spacing: .05em;
+  }
+
+  /* ── INFO CARD ── */
+  .card {
+    background: var(--navy2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: .88rem;
+    font-weight: 700;
+  }
+  .card p, .card li {
+    font-size: .82rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+  }
+  .card ul { padding-left: 1rem; }
+
+  /* ── HIGHLIGHT CARD ── */
+  .hcard {
+    border-radius: 10px;
+    padding: .9rem 1.1rem;
+    border-left: 3px solid;
+  }
+  .hcard .hcard-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .88rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+  }
+  .hcard p {
+    font-size: .78rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+  }
+
+  /* ── CONTEXT BOX ── */
+  .ctx-box {
+    background: var(--navy2);
+    border: 1px solid;
+    border-radius: 10px;
+    padding: .8rem 1.1rem;
+    font-size: .82rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+    flex-shrink: 0;
+  }
+  .ctx-box strong { color: var(--white); }
+
+  /* ── SECTION DIVIDER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    flex-shrink: 0;
+  }
+  .section-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ── METHODS GRID ── */
+  .methods-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .55rem;
+  }
+  .method-card {
+    background: var(--navy2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: .55rem .75rem;
+    border-left: 3px solid;
+  }
+  .method-card .m-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem;
+    font-weight: 700;
+    margin-bottom: .15rem;
+  }
+  .method-card .m-desc {
+    font-size: .72rem;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+
+  /* ── COVER SLIDE ── */
+  .cover-content {
+    max-width: 720px;
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .75rem;
+    color: var(--cyan);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  .cover-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1.2rem;
+  }
+  .cover-title span { color: var(--cyan); }
+  .cover-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 2.2rem;
+    max-width: 520px;
+  }
+  .cover-tags {
+    display: flex;
+    gap: .6rem;
+    flex-wrap: wrap;
+  }
+  .cover-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    padding: .3rem .75rem;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .cover-deco {
+    position: absolute;
+    right: 4vw;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: .04;
+    font-size: 18vw;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--cyan);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  /* ── INDEX DIAGRAM ── */
+  .index-diagram {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem;
+    margin: .3rem 0;
+    flex-wrap: wrap;
+    gap: .3rem;
+  }
+  .idx-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+  }
+  .idx-val {
+    background: var(--navy2);
+    border: 1px solid;
+    border-radius: 6px;
+    padding: .4rem .6rem;
+    font-weight: 700;
+    min-width: 42px;
+    text-align: center;
+    font-size: .78rem;
+  }
+  .idx-pos {
+    font-size: .62rem;
+    color: var(--muted);
+  }
+  .idx-pos.pos-neg {
+    color: #f97316;
+  }
+
+  /* ── SLICE DIAGRAM ── */
+  .slice-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem;
+    padding: .5rem .75rem;
+    background: var(--navy2);
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    margin-bottom: .35rem;
+  }
+  .slice-code { color: var(--cyan); flex-shrink: 0; min-width: 160px; }
+  .slice-arr  { color: var(--muted); }
+  .slice-result { color: var(--st); }
+  .slice-note { color: var(--muted); font-size: .7rem; margin-left: auto; }
+
+  /* ── TABLE ── */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .8rem;
+  }
+  .comp-table th {
+    padding: .6rem .8rem;
+    text-align: left;
+    font-family: 'Syne', sans-serif;
+    font-size: .78rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--line);
+  }
+  .comp-table td {
+    padding: .55rem .8rem;
+    border-bottom: 1px solid var(--line);
+    color: #cbd5e1;
+    vertical-align: middle;
+  }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr:hover td { background: rgba(255,255,255,.025); }
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .68rem;
+    padding: .15rem .45rem;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  /* ── DICT VISUAL ── */
+  .dict-pair {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+  }
+  .dict-key {
+    padding: .3rem .65rem;
+    border-radius: 6px;
+    font-weight: 700;
+    min-width: 90px;
+    text-align: center;
+  }
+  .dict-arrow { color: var(--muted); font-size: 1rem; }
+  .dict-val {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    padding: .3rem .65rem;
+    border-radius: 6px;
+    color: var(--cyan);
+  }
+
+  /* ── NAVIGATION ── */
+  #nav {
+    position: fixed;
+    bottom: 1.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    background: rgba(13,27,42,.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 40px;
+    padding: .5rem 1.1rem;
+    z-index: 100;
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: .2rem .4rem;
+    border-radius: 6px;
+    transition: color .2s, background .2s;
+    display: flex; align-items: center;
+  }
+  .nav-btn:hover { color: var(--white); background: var(--line); }
+  .nav-btn:disabled { opacity: .25; cursor: default; }
+  #slide-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    color: var(--muted);
+    min-width: 52px;
+    text-align: center;
+  }
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--cyan);
+    transition: width .3s ease;
+    z-index: 200;
+  }
+
+  /* ── SECTION MARKER ── */
+  .section-slide {
+    justify-content: center;
+    align-items: center;
+    background: var(--navy);
+  }
+  .section-slide .sec-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .8rem;
+    color: var(--muted);
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    margin-bottom: .8rem;
+  }
+  .section-slide h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: .8rem;
+  }
+  .section-slide p {
+    color: var(--muted);
+    font-size: .9rem;
+    text-align: center;
+    max-width: 460px;
+  }
+  .section-line {
+    width: 60px;
+    height: 3px;
+    border-radius: 2px;
+    margin: .8rem auto;
+  }
+
+  /* ── UTILS ── */
+  .text-blue   { color: var(--blue); }
+  .text-cyan   { color: var(--cyan); }
+  .text-green  { color: var(--green); }
+  .text-orange { color: var(--orange); }
+  .text-red    { color: var(--red); }
+  .text-purple { color: var(--purple); }
+  .text-pink   { color: var(--pink); }
+  .text-teal   { color: var(--teal); }
+  .text-muted  { color: var(--muted); }
+
+  .bg-blue   { background: rgba(37,99,235,.12); border-color: rgba(37,99,235,.4); }
+  .bg-green  { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.4); }
+  .bg-orange { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4); }
+  .bg-purple { background: rgba(139,92,246,.12); border-color: rgba(139,92,246,.4); }
+  .bg-red    { background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.4); }
+  .bg-teal   { background: rgba(13,148,136,.12); border-color: rgba(13,148,136,.4); }
+  .bg-pink   { background: rgba(236,72,153,.12); border-color: rgba(236,72,153,.4); }
+  .bg-cyan   { background: rgba(34,211,238,.12); border-color: rgba(34,211,238,.4); }
+
+  .tip-box {
+    display: flex;
+    gap: .6rem;
+    background: rgba(245,158,11,.08);
+    border: 1px solid rgba(245,158,11,.25);
+    border-radius: 8px;
+    padding: .65rem .9rem;
+    font-size: .78rem;
+    color: #fde68a;
+    line-height: 1.55;
+    flex-shrink: 0;
+  }
+  .tip-box .tip-icon { flex-shrink: 0; font-size: 1rem; }
+
+  .warn-box {
+    display: flex;
+    gap: .6rem;
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 8px;
+    padding: .65rem .9rem;
+    font-size: .78rem;
+    color: #fca5a5;
+    line-height: 1.55;
+    flex-shrink: 0;
+  }
+
+  .badge-green  { background: rgba(16,185,129,.2);  color: #6ee7b7; }
+  .badge-red    { background: rgba(239,68,68,.2);   color: #fca5a5; }
+  .badge-blue   { background: rgba(37,99,235,.2);   color: #93c5fd; }
+  .badge-purple { background: rgba(139,92,246,.2);  color: #c4b5fd; }
+  .badge-orange { background: rgba(245,158,11,.2);  color: #fde68a; }
+  .badge-gray   { background: rgba(148,163,184,.15);color: #94a3b8; }
+
+  h3.sub {
+    font-family: 'Syne', sans-serif;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .35rem;
+  }
+
+  .lead {
+    font-size: .88rem;
+    color: #cbd5e1;
+    line-height: 1.65;
+    flex-shrink: 0;
+  }
+
+  kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    background: var(--navy2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: .1rem .35rem;
+    color: var(--cyan);
+  }
+
+  /* print/export hint */
+  @media print {
+    body { overflow: visible; }
+    .slide { position: relative; display: flex; page-break-after: always; height: 100vh; }
+    #nav { display: none; }
+    #progress-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div id="deck">
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 1 — CAPA -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-cover active" data-index="1">
+  <div class="cover-deco">[ ]</div>
+  <div class="cover-content">
+    <div class="cover-eyebrow">Técnico em Desenvolvimento de Sistemas</div>
+    <h1 class="cover-title">Coleções<br><span>em Python</span></h1>
+    <p class="cover-sub">
+      Aprenda a armazenar e manipular grupos de dados usando
+      <strong style="color:#fff">Listas</strong>,
+      <strong style="color:#fff">Tuplas</strong> e
+      <strong style="color:#fff">Dicionários</strong> —
+      as estruturas de dados mais usadas no dia a dia do desenvolvedor Python.
+    </p>
+    <div class="cover-tags">
+      <span class="cover-tag" style="border-color:rgba(34,211,238,.4);color:var(--cyan)">Listas</span>
+      <span class="cover-tag" style="border-color:rgba(139,92,246,.4);color:var(--purple)">Tuplas</span>
+      <span class="cover-tag" style="border-color:rgba(16,185,129,.4);color:var(--green)">Dicionários</span>
+      <span class="cover-tag" style="border-color:rgba(245,158,11,.4);color:var(--orange)">Funções Embutidas</span>
+      <span class="cover-tag" style="border-color:rgba(236,72,153,.4);color:var(--pink)">Comprehensions</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 2 — O QUE SÃO COLEÇÕES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="2">
+  <div class="topbar">
+    <div class="topbar-icon bg-cyan" style="background:rgba(34,211,238,.15)">📦</div>
+    <h2>O que são Coleções?</h2>
+  </div>
+  <div class="content">
+    <p class="lead">
+      Até agora trabalhamos com variáveis que guardam <em>um único valor</em>: <kbd>nome = "Ana"</kbd>, <kbd>idade = 20</kbd>.
+      Mas e quando precisamos guardar <strong>muitos valores de uma vez</strong>?
+    </p>
+    <div class="cols-3" style="flex:0 0 auto; gap:.8rem">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <div class="card-title text-blue" style="font-size:1.5rem; font-family:'JetBrains Mono',monospace">[ ]</div>
+        <div class="card-title text-blue">Lista</div>
+        <p>Sequência <strong>ordenada</strong> e <strong>mutável</strong>.<br>Você pode adicionar, remover e alterar itens.</p>
+        <code style="font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--st)">["Ana","Pedro","Maria"]</code>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <div class="card-title text-purple" style="font-size:1.5rem; font-family:'JetBrains Mono',monospace">( )</div>
+        <div class="card-title text-purple">Tupla</div>
+        <p>Sequência <strong>ordenada</strong> e <strong>imutável</strong>.<br>Uma vez criada, não pode ser alterada.</p>
+        <code style="font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--st)">("Jan","Fev","Mar")</code>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green)">
+        <div class="card-title text-green" style="font-size:1.5rem; font-family:'JetBrains Mono',monospace">{ }</div>
+        <div class="card-title text-green">Dicionário</div>
+        <p>Pares de <strong>chave → valor</strong>.<br>Busca direta pelo nome da chave.</p>
+        <code style="font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--st)">{"nome": "Ana", "idade": 20}</code>
+      </div>
+    </div>
+    <div class="tip-box">
+      <span class="tip-icon">💡</span>
+      <span>Nesta aula o foco principal é em <strong>Listas</strong> e <strong>Dicionários</strong>. Tuplas serão apresentadas como complemento. No final há uma seção dedicada a <strong>Comprehensions</strong>.</span>
+    </div>
+    <div class="code-block" style="flex:0 0 auto">
+      <div class="line"><span class="cm"># Sem coleção: variáveis separadas para cada aluno — impraticável!</span></div>
+      <div class="line"><span class="va">aluno1</span><span class="pl"> = </span><span class="st">"Ana"</span><span class="pl">;  </span><span class="va">aluno2</span><span class="pl"> = </span><span class="st">"Pedro"</span><span class="pl">;  </span><span class="va">aluno3</span><span class="pl"> = </span><span class="st">"Maria"</span></div>
+      <div class="br"></div>
+      <div class="line"><span class="cm"># Com lista: um único nome guarda todos!</span></div>
+      <div class="line"><span class="va">alunos</span><span class="pl"> = [</span><span class="st">"Ana"</span><span class="pl">, </span><span class="st">"Pedro"</span><span class="pl">, </span><span class="st">"Maria"</span><span class="pl">]</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 3 — SEÇÃO: LISTAS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide section-slide" data-index="3">
+  <div class="sec-num">Seção 01</div>
+  <h2 class="text-blue">Listas</h2>
+  <div class="section-line" style="background:var(--blue)"></div>
+  <p>Criação, acesso por índice, fatiamento e métodos essenciais</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 4 — LISTAS: CRIAÇÃO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="4">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">📋</div>
+    <h2>Listas — Criação e Características</h2>
+    <span class="section-tag">lista</span>
+  </div>
+  <div class="content">
+    <p class="lead">Uma lista agrupa vários valores em uma única variável. Os itens ficam entre colchetes <kbd>[ ]</kbd>, separados por vírgula.</p>
+    <div class="cols-2">
+      <div style="display:flex; flex-direction:column; gap:.7rem">
+        <h3 class="sub">Exemplos de criação</h3>
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># Lista de strings</span></div>
+          <div class="line"><span class="va">frutas</span><span class="pl"> = [</span><span class="st">"maçã"</span><span class="pl">, </span><span class="st">"banana"</span><span class="pl">, </span><span class="st">"uva"</span><span class="pl">, </span><span class="st">"pera"</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Lista de números</span></div>
+          <div class="line"><span class="va">notas</span><span class="pl"> = [</span><span class="nu">7.5</span><span class="pl">, </span><span class="nu">8.0</span><span class="pl">, </span><span class="nu">9.5</span><span class="pl">, </span><span class="nu">6.0</span><span class="pl">, </span><span class="nu">5.5</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Lista pode misturar tipos</span></div>
+          <div class="line"><span class="va">info</span><span class="pl"> = [</span><span class="st">"Ana"</span><span class="pl">, </span><span class="nu">20</span><span class="pl">, </span><span class="kw">True</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Lista vazia (preenchida depois)</span></div>
+          <div class="line"><span class="va">cadastro</span><span class="pl"> = []</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Tamanho da lista</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">len</span><span class="pl">(frutas))  </span><span class="cm"># 4</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">len</span><span class="pl">(notas))   </span><span class="cm"># 5</span></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:.7rem">
+        <h3 class="sub">Características</h3>
+        <div class="methods-grid" style="grid-template-columns:1fr">
+          <div class="hcard bg-blue">
+            <div class="hcard-title text-blue">✅ Ordenada</div>
+            <p>Os itens mantêm a ordem em que foram inseridos. O primeiro sempre estará na posição 0.</p>
+          </div>
+          <div class="hcard bg-green">
+            <div class="hcard-title text-green">✅ Mutável</div>
+            <p>Pode adicionar, remover e alterar itens a qualquer momento.</p>
+          </div>
+          <div class="hcard bg-orange">
+            <div class="hcard-title text-orange">✅ Permite duplicatas</div>
+            <p>O mesmo valor pode aparecer várias vezes na lista.</p>
+          </div>
+          <div class="hcard bg-purple">
+            <div class="hcard-title text-purple">✅ Indexada</div>
+            <p>Cada item tem uma posição (índice) que começa em <kbd>0</kbd>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 5 — LISTAS: ÍNDICES -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="5">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">🔢</div>
+    <h2>Listas — Acesso por Índice</h2>
+    <span class="section-tag">lista</span>
+  </div>
+  <div class="content">
+    <p class="lead">Cada item da lista tem um <strong>índice</strong> — uma posição numerada. O índice começa em <kbd>0</kbd>, não em 1. Python também aceita índices <strong>negativos</strong> para contar do final.</p>
+
+    <div style="flex-shrink:0">
+      <h3 class="sub" style="margin-bottom:.5rem">Diagrama de índices</h3>
+      <div style="background:var(--code-bg); border:1px solid var(--line); border-radius:10px; padding:.9rem 1.2rem">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:.75rem; color:var(--muted); margin-bottom:.4rem">frutas = ["maçã", "banana", "uva", "pera", "limão"]</div>
+        <div style="display:flex; gap:.4rem; margin-bottom:.6rem; flex-wrap:wrap">
+          <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"maçã"</div><div class="idx-pos text-blue">0</div><div class="idx-pos pos-neg">-5</div></div>
+          <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"banana"</div><div class="idx-pos text-blue">1</div><div class="idx-pos pos-neg">-4</div></div>
+          <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"uva"</div><div class="idx-pos text-blue">2</div><div class="idx-pos pos-neg">-3</div></div>
+          <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"pera"</div><div class="idx-pos text-blue">3</div><div class="idx-pos pos-neg">-2</div></div>
+          <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"limão"</div><div class="idx-pos text-blue">4</div><div class="idx-pos pos-neg">-1</div></div>
+        </div>
+        <div style="display:flex;gap:1.5rem;font-family:'JetBrains Mono',monospace;font-size:.7rem">
+          <span style="color:var(--blue)">↑ índice positivo (da esquerda)</span>
+          <span style="color:var(--orange)">↑ índice negativo (da direita)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols-2">
+      <div class="code-block">
+        <div class="line"><span class="cm"># Acessando pelo índice positivo</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="nu">0</span><span class="pl">])   </span><span class="cm"># maçã   (primeiro)</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="nu">2</span><span class="pl">])   </span><span class="cm"># uva    (terceiro)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Acessando pelo índice negativo</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="op">-1</span><span class="pl">])  </span><span class="cm"># limão  (último)</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="op">-2</span><span class="pl">])  </span><span class="cm"># pera   (penúltimo)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Alterando um item pelo índice</span></div>
+        <div class="line"><span class="pl">frutas[</span><span class="nu">1</span><span class="pl">] = </span><span class="st">"manga"</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="nu">1</span><span class="pl">])   </span><span class="cm"># manga</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="warn-box">
+          <span>⚠️</span>
+          <span>Tentar acessar um índice que não existe gera <strong>IndexError</strong>. Se a lista tem 5 itens, o último índice válido é <kbd>4</kbd> (ou <kbd>-5</kbd>).</span>
+        </div>
+        <div class="code-block">
+          <div class="line"><span class="cm"># IndexError — índice fora do alcance</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(frutas[</span><span class="nu">10</span><span class="pl">])  </span><span class="cm"># ❌ ERRO!</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Para verificar antes de acessar:</span></div>
+          <div class="line"><span class="kw">if</span><span class="pl"> </span><span class="fn">len</span><span class="pl">(frutas) > </span><span class="nu">3</span><span class="pl">:</span></div>
+          <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(frutas[</span><span class="nu">3</span><span class="pl">])  </span><span class="cm"># pera ✅</span></div>
+        </div>
+        <div class="tip-box">
+          <span class="tip-icon">💡</span>
+          <span>O índice <kbd>-1</kbd> sempre aponta para o <strong>último item</strong>, independente do tamanho da lista.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 6 — LISTAS: FATIAMENTO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="6">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">✂️</div>
+    <h2>Listas — Fatiamento (Slicing)</h2>
+    <span class="section-tag">lista</span>
+  </div>
+  <div class="content">
+    <p class="lead">Além de acessar um item por vez, podemos pegar <strong>múltiplos itens de uma vez</strong> usando o operador de fatiamento: <kbd>lista[início : fim : passo]</kbd>. O item do índice <em>fim</em> não é incluído.</p>
+
+    <div style="flex-shrink:0;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:.75rem 1.1rem;font-family:'JetBrains Mono',monospace;font-size:.8rem;margin-bottom:.1rem">
+      <div style="color:var(--muted);margin-bottom:.35rem;font-size:.72rem">letras = ["a", "b", "c", "d", "e", "f", "g"]</div>
+      <div style="display:flex;gap:.35rem;margin-bottom:.35rem;flex-wrap:wrap">
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"a"</div><div class="idx-pos text-blue">0</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"b"</div><div class="idx-pos text-blue">1</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"c"</div><div class="idx-pos text-blue">2</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"d"</div><div class="idx-pos text-blue">3</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"e"</div><div class="idx-pos text-blue">4</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"f"</div><div class="idx-pos text-blue">5</div></div>
+        <div class="idx-cell"><div class="idx-val" style="border-color:rgba(37,99,235,.5);color:var(--st)">"g"</div><div class="idx-pos text-blue">6</div></div>
+      </div>
+    </div>
+
+    <div style="flex-shrink:0">
+      <div class="slice-row"><span class="slice-code">letras[1:4]</span><span class="slice-arr">→</span><span class="slice-result">["b", "c", "d"]</span><span class="slice-note">do índice 1 até 3 (4 não incluso)</span></div>
+      <div class="slice-row"><span class="slice-code">letras[0:3]</span><span class="slice-arr">→</span><span class="slice-result">["a", "b", "c"]</span><span class="slice-note">os 3 primeiros</span></div>
+      <div class="slice-row"><span class="slice-code">letras[4:]</span><span class="slice-arr">→</span><span class="slice-result">["e", "f", "g"]</span><span class="slice-note">do índice 4 até o final</span></div>
+      <div class="slice-row"><span class="slice-code">letras[:3]</span><span class="slice-arr">→</span><span class="slice-result">["a", "b", "c"]</span><span class="slice-note">do início até índice 2</span></div>
+      <div class="slice-row"><span class="slice-code">letras[:]</span><span class="slice-arr">→</span><span class="slice-result">["a","b","c","d","e","f","g"]</span><span class="slice-note">cópia completa</span></div>
+      <div class="slice-row"><span class="slice-code">letras[::2]</span><span class="slice-arr">→</span><span class="slice-result">["a", "c", "e", "g"]</span><span class="slice-note">passo 2 — pula de dois em dois</span></div>
+      <div class="slice-row"><span class="slice-code">letras[::-1]</span><span class="slice-arr">→</span><span class="slice-result">["g","f","e","d","c","b","a"]</span><span class="slice-note">passo -1 → inverte a lista!</span></div>
+      <div class="slice-row"><span class="slice-code">letras[-3:]</span><span class="slice-arr">→</span><span class="slice-result">["e", "f", "g"]</span><span class="slice-note">os 3 últimos</span></div>
+    </div>
+
+    <div class="tip-box" style="flex-shrink:0">
+      <span class="tip-icon">💡</span>
+      <span>O fatiamento <strong>nunca gera erro</strong> de índice — se o valor for maior que o tamanho da lista, Python simplesmente vai até o final. E ele <strong>sempre retorna uma nova lista</strong>, sem alterar a original.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 7 — LISTAS: MÉTODOS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="7">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">🔧</div>
+    <h2>Listas — Métodos Principais</h2>
+    <span class="section-tag">lista</span>
+  </div>
+  <div class="content">
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <h3 class="sub">Adicionar e remover</h3>
+        <div class="methods-grid">
+          <div class="method-card" style="border-color:var(--blue)"><div class="m-name text-blue">.append(x)</div><div class="m-desc">Adiciona <kbd>x</kbd> ao final da lista</div></div>
+          <div class="method-card" style="border-color:var(--teal)"><div class="m-name text-teal">.insert(i, x)</div><div class="m-desc">Insere <kbd>x</kbd> na posição <kbd>i</kbd></div></div>
+          <div class="method-card" style="border-color:var(--red)"><div class="m-name text-red">.remove(x)</div><div class="m-desc">Remove a 1ª ocorrência de <kbd>x</kbd></div></div>
+          <div class="method-card" style="border-color:var(--orange)"><div class="m-name text-orange">.pop(i)</div><div class="m-desc">Remove e retorna o item da posição <kbd>i</kbd>. Sem argumento, remove o último.</div></div>
+          <div class="method-card" style="border-color:var(--muted)"><div class="m-name" style="color:var(--muted)">.clear()</div><div class="m-desc">Remove todos os itens</div></div>
+          <div class="method-card" style="border-color:var(--pink)"><div class="m-name text-pink">.extend(l)</div><div class="m-desc">Adiciona todos os itens de outra lista</div></div>
+        </div>
+        <h3 class="sub" style="margin-top:.2rem">Consultar e ordenar</h3>
+        <div class="methods-grid">
+          <div class="method-card" style="border-color:var(--green)"><div class="m-name text-green">.sort()</div><div class="m-desc">Ordena a lista <em>in-place</em></div></div>
+          <div class="method-card" style="border-color:var(--cyan)"><div class="m-name text-cyan">.reverse()</div><div class="m-desc">Inverte a ordem <em>in-place</em></div></div>
+          <div class="method-card" style="border-color:var(--purple)"><div class="m-name text-purple">.index(x)</div><div class="m-desc">Retorna o índice da 1ª ocorrência de <kbd>x</kbd></div></div>
+          <div class="method-card" style="border-color:var(--yellow,#fde68a)"><div class="m-name" style="color:#fde68a">.count(x)</div><div class="m-desc">Conta quantas vezes <kbd>x</kbd> aparece</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <h3 class="sub">Exemplos práticos</h3>
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="va">compras</span><span class="pl"> = [</span><span class="st">"arroz"</span><span class="pl">, </span><span class="st">"feijão"</span><span class="pl">, </span><span class="st">"leite"</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Adicionar ao final</span></div>
+          <div class="line"><span class="pl">compras.</span><span class="fn">append</span><span class="pl">(</span><span class="st">"pão"</span><span class="pl">)</span></div>
+          <div class="line"><span class="cm"># ["arroz","feijão","leite","pão"]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Inserir numa posição específica</span></div>
+          <div class="line"><span class="pl">compras.</span><span class="fn">insert</span><span class="pl">(</span><span class="nu">1</span><span class="pl">, </span><span class="st">"óleo"</span><span class="pl">)</span></div>
+          <div class="line"><span class="cm"># ["arroz","óleo","feijão","leite","pão"]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Remover um item específico</span></div>
+          <div class="line"><span class="pl">compras.</span><span class="fn">remove</span><span class="pl">(</span><span class="st">"leite"</span><span class="pl">)</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Remover o último item</span></div>
+          <div class="line"><span class="va">ultimo</span><span class="pl"> = compras.</span><span class="fn">pop</span><span class="pl">()</span></div>
+          <div class="line"><span class="cm"># ultimo = "pão"</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Ordenar alfabeticamente</span></div>
+          <div class="line"><span class="pl">compras.</span><span class="fn">sort</span><span class="pl">()</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Verificar se item existe</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">"arroz"</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> compras)  </span><span class="cm"># True</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 8 — FUNÇÕES EMBUTIDAS + LISTAS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="8">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">⚡</div>
+    <h2>Funções Embutidas com Listas</h2>
+    <span class="section-tag">lista · funções</span>
+  </div>
+  <div class="content">
+    <p class="lead">Python oferece funções prontas que trabalham com qualquer lista. Não precisam ser importadas — estão sempre disponíveis.</p>
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <div class="methods-grid">
+          <div class="method-card" style="border-color:var(--blue)"><div class="m-name text-blue">len(lista)</div><div class="m-desc">Quantidade de itens</div></div>
+          <div class="method-card" style="border-color:var(--green)"><div class="m-name text-green">sum(lista)</div><div class="m-desc">Soma todos os valores numéricos</div></div>
+          <div class="method-card" style="border-color:var(--orange)"><div class="m-name text-orange">max(lista)</div><div class="m-desc">Retorna o maior valor</div></div>
+          <div class="method-card" style="border-color:var(--red)"><div class="m-name text-red">min(lista)</div><div class="m-desc">Retorna o menor valor</div></div>
+          <div class="method-card" style="border-color:var(--purple)"><div class="m-name text-purple">sorted(lista)</div><div class="m-desc">Retorna nova lista ordenada (original intacta)</div></div>
+          <div class="method-card" style="border-color:var(--cyan)"><div class="m-name text-cyan">enumerate(l)</div><div class="m-desc">Retorna índice + valor a cada iteração</div></div>
+          <div class="method-card" style="border-color:var(--pink)"><div class="m-name text-pink">zip(l1, l2)</div><div class="m-desc">Combina duas listas par a par</div></div>
+          <div class="method-card" style="border-color:var(--teal)"><div class="m-name text-teal">any(lista)</div><div class="m-desc"><kbd>True</kbd> se algum elemento for verdadeiro</div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="va">notas</span><span class="pl"> = [</span><span class="nu">7.5</span><span class="pl">, </span><span class="nu">8.0</span><span class="pl">, </span><span class="nu">4.0</span><span class="pl">, </span><span class="nu">9.5</span><span class="pl">, </span><span class="nu">6.0</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">len</span><span class="pl">(notas))     </span><span class="cm"># 5</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">sum</span><span class="pl">(notas))     </span><span class="cm"># 35.0</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">max</span><span class="pl">(notas))     </span><span class="cm"># 9.5</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">min</span><span class="pl">(notas))     </span><span class="cm"># 4.0</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Média manual: sum / len</span></div>
+          <div class="line"><span class="va">media</span><span class="pl"> = </span><span class="fn">sum</span><span class="pl">(notas) / </span><span class="fn">len</span><span class="pl">(notas)</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(media)         </span><span class="cm"># 7.0</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># sorted não altera o original</span></div>
+          <div class="line"><span class="va">em_ordem</span><span class="pl"> = </span><span class="fn">sorted</span><span class="pl">(notas)</span></div>
+          <div class="line"><span class="cm"># [4.0, 6.0, 7.5, 8.0, 9.5]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># enumerate — índice + valor</span></div>
+          <div class="kw">for</div><span class="pl"> </span><span class="va">i</span><span class="pl">, </span><span class="va">n</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">enumerate</span><span class="pl">(notas):</span>
+          <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f"[{i}] → {n}"</span><span class="pl">)</span></div>
+          <div class="cm"># [0] → 7.5 / [1] → 8.0 ...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 9 — SITUAÇÃO: BOLETIM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="9">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(37,99,235,.15)">🎓</div>
+    <h2>Situação Prática — Boletim da Turma</h2>
+    <span class="section-tag">lista · for · funções</span>
+  </div>
+  <div class="content">
+    <div class="ctx-box" style="border-color:rgba(37,99,235,.3)">
+      <strong>📋 Contexto:</strong> Um professor tem as notas de 8 alunos e precisa calcular a média da turma, encontrar a maior e menor nota, e listar quem está aprovado (nota ≥ 6.0).
+    </div>
+    <div class="cols-2">
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="va">notas</span><span class="pl"> = [</span><span class="nu">7.5</span><span class="pl">, </span><span class="nu">8.0</span><span class="pl">, </span><span class="nu">5.5</span><span class="pl">, </span><span class="nu">9.0</span><span class="pl">, </span><span class="nu">6.5</span><span class="pl">, </span><span class="nu">4.0</span><span class="pl">, </span><span class="nu">8.5</span><span class="pl">, </span><span class="nu">7.0</span><span class="pl">]</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Estatísticas com funções embutidas</span></div>
+        <div class="line"><span class="va">media</span><span class="pl"> = </span><span class="fn">sum</span><span class="pl">(notas) / </span><span class="fn">len</span><span class="pl">(notas)</span></div>
+        <div class="line"><span class="va">maior</span><span class="pl"> = </span><span class="fn">max</span><span class="pl">(notas)</span></div>
+        <div class="line"><span class="va">menor</span><span class="pl"> = </span><span class="fn">min</span><span class="pl">(notas)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Média:  {media:.1f}"</span><span class="pl">)  </span><span class="cm"># 7.0</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Maior:  {maior}"</span><span class="pl">)    </span><span class="cm"># 9.0</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Menor:  {menor}"</span><span class="pl">)    </span><span class="cm"># 4.0</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Contar aprovados com for</span></div>
+        <div class="line"><span class="va">aprovados</span><span class="pl"> = </span><span class="nu">0</span></div>
+        <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">n</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> notas:</span></div>
+        <div class="line"><span class="pl">    </span><span class="kw">if</span><span class="pl"> n >= </span><span class="nu">6.0</span><span class="pl">:</span></div>
+        <div class="line"><span class="pl">        aprovados += </span><span class="nu">1</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Aprovados: {aprovados}/{len(notas)}"</span><span class="pl">)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># Exibir boletim com enumerate</span></div>
+          <div class="line"><span class="va">nomes</span><span class="pl"> = [</span><span class="st">"Ana"</span><span class="pl">,</span><span class="st">"Pedro"</span><span class="pl">,</span><span class="st">"Maria"</span><span class="pl">,</span><span class="st">"João"</span><span class="pl">,</span></div>
+          <div class="line"><span class="pl">         </span><span class="st">"Bia"</span><span class="pl">,</span><span class="st">"Lucas"</span><span class="pl">,</span><span class="st">"Sofia"</span><span class="pl">,</span><span class="st">"Caio"</span><span class="pl">]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">i</span><span class="pl">, </span><span class="va">nota</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">enumerate</span><span class="pl">(notas):</span></div>
+          <div class="line"><span class="pl">    </span><span class="va">nome</span><span class="pl"> = nomes[i]</span></div>
+          <div class="line"><span class="pl">    </span><span class="kw">if</span><span class="pl"> nota >= </span><span class="nu">6.0</span><span class="pl">:</span></div>
+          <div class="line"><span class="pl">        status = </span><span class="st">"✅"</span></div>
+          <div class="line"><span class="pl">    </span><span class="kw">else</span><span class="pl">:</span></div>
+          <div class="line"><span class="pl">        status = </span><span class="st">"❌"</span></div>
+          <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f"{status} {nome}: {nota}"</span><span class="pl">)</span></div>
+        </div>
+        <div class="output-box">
+          ✅ Ana: 7.5<br>
+          ✅ Pedro: 8.0<br>
+          ❌ Maria: 5.5<br>
+          ✅ João: 9.0<br>
+          ✅ Bia: 6.5<br>
+          ❌ Lucas: 4.0<br>
+          ...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 10 — SEÇÃO: TUPLAS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide section-slide" data-index="10">
+  <div class="sec-num">Seção 02</div>
+  <h2 class="text-purple">Tuplas</h2>
+  <div class="section-line" style="background:var(--purple)"></div>
+  <p>Quando os dados não devem mudar</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 11 — TUPLAS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="11">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(139,92,246,.15)">📌</div>
+    <h2>Tuplas — Dados Imutáveis</h2>
+    <span class="section-tag">tupla</span>
+  </div>
+  <div class="content">
+    <p class="lead">Tuplas são como listas, mas <strong>imutáveis</strong> — uma vez criadas, não podem ser alteradas. Use parênteses <kbd>( )</kbd> em vez de colchetes.</p>
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># Criando tuplas</span></div>
+          <div class="line"><span class="va">meses</span><span class="pl"> = (</span><span class="st">"Jan"</span><span class="pl">,</span><span class="st">"Fev"</span><span class="pl">,</span><span class="st">"Mar"</span><span class="pl">,</span><span class="st">"Abr"</span><span class="pl">,</span><span class="st">"Mai"</span><span class="pl">,</span><span class="st">"Jun"</span><span class="pl">,</span></div>
+          <div class="line"><span class="pl">          </span><span class="st">"Jul"</span><span class="pl">,</span><span class="st">"Ago"</span><span class="pl">,</span><span class="st">"Set"</span><span class="pl">,</span><span class="st">"Out"</span><span class="pl">,</span><span class="st">"Nov"</span><span class="pl">,</span><span class="st">"Dez"</span><span class="pl">)</span></div>
+          <div class="line"><span class="va">coord</span><span class="pl">  = (</span><span class="nu">-23.5</span><span class="pl">, </span><span class="nu">-46.6</span><span class="pl">)  </span><span class="cm"># lat/lon</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Acesso igual à lista</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(meses[</span><span class="nu">0</span><span class="pl">])   </span><span class="cm"># Jan</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(meses[</span><span class="op">-1</span><span class="pl">])  </span><span class="cm"># Dez</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">len</span><span class="pl">(meses)) </span><span class="cm"># 12</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Desempacotamento</span></div>
+          <div class="line"><span class="va">lat</span><span class="pl">, </span><span class="va">lon</span><span class="pl"> = coord</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Lat: {lat}, Lon: {lon}"</span><span class="pl">)</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Tentativa de alterar → ERRO!</span></div>
+          <div class="line"><span class="cm"># meses[0] = "Janeiro"  ← TypeError!</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <h3 class="sub">Tupla vs Lista</h3>
+        <table class="comp-table">
+          <tr><th>Característica</th><th>Lista [ ]</th><th>Tupla ( )</th></tr>
+          <tr><td>Mutável?</td><td><span class="badge badge-green">✅ Sim</span></td><td><span class="badge badge-red">❌ Não</span></td></tr>
+          <tr><td>Performance</td><td><span class="badge badge-gray">Normal</span></td><td><span class="badge badge-green">Mais rápida</span></td></tr>
+          <tr><td>Acesso por índice</td><td><span class="badge badge-green">✅ Sim</span></td><td><span class="badge badge-green">✅ Sim</span></td></tr>
+          <tr><td>Fatiamento</td><td><span class="badge badge-green">✅ Sim</span></td><td><span class="badge badge-green">✅ Sim</span></td></tr>
+          <tr><td>Duplicatas</td><td><span class="badge badge-green">✅ Sim</span></td><td><span class="badge badge-green">✅ Sim</span></td></tr>
+        </table>
+        <div class="tip-box">
+          <span class="tip-icon">💡</span>
+          <span>Use tuplas para dados que <strong>não devem mudar</strong>: dias da semana, coordenadas geográficas, nomes de meses, configurações. A imutabilidade previne erros acidentais.</span>
+        </div>
+        <div class="hcard bg-purple" style="flex-shrink:0">
+          <div class="hcard-title text-purple">Desempacotamento</div>
+          <p>Python permite atribuir cada elemento da tupla a uma variável separada em uma única linha — recurso muito prático para trabalhar com pares de valores.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 12 — SEÇÃO: DICIONÁRIOS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide section-slide" data-index="12">
+  <div class="sec-num">Seção 03</div>
+  <h2 class="text-green">Dicionários</h2>
+  <div class="section-line" style="background:var(--green)"></div>
+  <p>Dados organizados por chave → valor</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 13 — DICIONÁRIOS: INTRODUÇÃO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="13">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(16,185,129,.15)">🗂️</div>
+    <h2>Dicionários — Introdução</h2>
+    <span class="section-tag">dicionário</span>
+  </div>
+  <div class="content">
+    <p class="lead">Um dicionário armazena pares de <strong>chave → valor</strong>. Você busca um valor pelo seu <em>nome</em> (chave), não por uma posição numérica.</p>
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <h3 class="sub">Visualização</h3>
+        <div style="background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;flex-shrink:0">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);margin-bottom:.7rem">aluno = {</div>
+          <div class="dict-pair"><span class="dict-key" style="background:rgba(37,99,235,.2);color:#93c5fd">"nome"</span><span class="dict-arrow">:</span><span class="dict-val">"Ana"</span></div>
+          <div class="dict-pair"><span class="dict-key" style="background:rgba(245,158,11,.2);color:#fde68a">"idade"</span><span class="dict-arrow">:</span><span class="dict-val">20</span></div>
+          <div class="dict-pair"><span class="dict-key" style="background:rgba(139,92,246,.2);color:#c4b5fd">"curso"</span><span class="dict-arrow">:</span><span class="dict-val">"TDS"</span></div>
+          <div class="dict-pair"><span class="dict-key" style="background:rgba(16,185,129,.2);color:#6ee7b7">"ativo"</span><span class="dict-arrow">:</span><span class="dict-val">True</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);margin-top:.3rem">}</div>
+        </div>
+        <div class="methods-grid" style="grid-template-columns:1fr">
+          <div class="hcard bg-green"><div class="hcard-title text-green">✅ Mutável</div><p>Pode adicionar, remover e alterar pares a qualquer momento.</p></div>
+          <div class="hcard bg-blue"><div class="hcard-title text-blue">✅ Chaves únicas</div><p>Cada chave só pode aparecer uma vez. Repetir uma chave substitui o valor anterior.</p></div>
+        </div>
+      </div>
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="cm"># Criando um dicionário</span></div>
+        <div class="line"><span class="va">aluno</span><span class="pl"> = {</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"nome"</span><span class="pl">:  </span><span class="st">"Ana"</span><span class="pl">,</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"idade"</span><span class="pl">: </span><span class="nu">20</span><span class="pl">,</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"curso"</span><span class="pl">: </span><span class="st">"TDS"</span></div>
+        <div class="line"><span class="pl">}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Acessando por chave</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(aluno[</span><span class="st">"nome"</span><span class="pl">])   </span><span class="cm"># Ana</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(aluno[</span><span class="st">"idade"</span><span class="pl">])  </span><span class="cm"># 20</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># .get() — seguro: não gera erro</span></div>
+        <div class="line"><span class="cm"># se chave não existir, retorna None</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(aluno.</span><span class="fn">get</span><span class="pl">(</span><span class="st">"nota"</span><span class="pl">))      </span><span class="cm"># None</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(aluno.</span><span class="fn">get</span><span class="pl">(</span><span class="st">"nota"</span><span class="pl">, </span><span class="nu">0</span><span class="pl">))   </span><span class="cm"># 0 (padrão)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Adicionar / alterar</span></div>
+        <div class="line"><span class="pl">aluno[</span><span class="st">"nota"</span><span class="pl">]  = </span><span class="nu">8.5</span></div>
+        <div class="line"><span class="pl">aluno[</span><span class="st">"idade"</span><span class="pl">] = </span><span class="nu">21</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Remover uma chave</span></div>
+        <div class="line"><span class="kw">del</span><span class="pl"> aluno[</span><span class="st">"ativo"</span><span class="pl">]</span></div>
+        <div class="line"><span class="va">v</span><span class="pl"> = aluno.</span><span class="fn">pop</span><span class="pl">(</span><span class="st">"curso"</span><span class="pl">)  </span><span class="cm"># remove e retorna</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Verificar se chave existe</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">"nome"</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> aluno)  </span><span class="cm"># True</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 14 — DICIONÁRIOS: MÉTODOS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="14">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(16,185,129,.15)">🔧</div>
+    <h2>Dicionários — Métodos e Funções</h2>
+    <span class="section-tag">dicionário</span>
+  </div>
+  <div class="content">
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <h3 class="sub">Métodos principais</h3>
+        <div class="methods-grid">
+          <div class="method-card" style="border-color:var(--blue)"><div class="m-name text-blue">.keys()</div><div class="m-desc">Retorna todas as chaves</div></div>
+          <div class="method-card" style="border-color:var(--purple)"><div class="m-name text-purple">.values()</div><div class="m-desc">Retorna todos os valores</div></div>
+          <div class="method-card" style="border-color:var(--green)"><div class="m-name text-green">.items()</div><div class="m-desc">Retorna pares (chave, valor)</div></div>
+          <div class="method-card" style="border-color:var(--orange)"><div class="m-name text-orange">.get(k, d)</div><div class="m-desc">Valor de <kbd>k</kbd>; retorna <kbd>d</kbd> se não existir</div></div>
+          <div class="method-card" style="border-color:var(--red)"><div class="m-name text-red">.pop(k)</div><div class="m-desc">Remove e retorna o valor da chave <kbd>k</kbd></div></div>
+          <div class="method-card" style="border-color:var(--teal)"><div class="m-name text-teal">.update(d2)</div><div class="m-desc">Atualiza com outro dicionário</div></div>
+        </div>
+        <h3 class="sub" style="margin-top:.2rem">Funções embutidas</h3>
+        <div class="methods-grid">
+          <div class="method-card" style="border-color:var(--blue)"><div class="m-name text-blue">len(d)</div><div class="m-desc">Número de pares chave-valor</div></div>
+          <div class="method-card" style="border-color:var(--green)"><div class="m-name text-green">sorted(d)</div><div class="m-desc">Chaves ordenadas</div></div>
+          <div class="method-card" style="border-color:var(--orange)"><div class="m-name text-orange">sum(d.values())</div><div class="m-desc">Soma todos os valores</div></div>
+          <div class="method-card" style="border-color:var(--red)"><div class="m-name text-red">max / min</div><div class="m-desc">Maior / menor entre os valores</div></div>
+        </div>
+      </div>
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="va">pontos</span><span class="pl"> = {</span><span class="st">"Ana"</span><span class="pl">:</span><span class="nu">95</span><span class="pl">, </span><span class="st">"Pedro"</span><span class="pl">:</span><span class="nu">82</span><span class="pl">, </span><span class="st">"Maria"</span><span class="pl">:</span><span class="nu">98</span><span class="pl">, </span><span class="st">"João"</span><span class="pl">:</span><span class="nu">70</span><span class="pl">}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">len</span><span class="pl">(pontos))              </span><span class="cm"># 4</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">sum</span><span class="pl">(pontos.</span><span class="fn">values</span><span class="pl">()))     </span><span class="cm"># 345</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="fn">max</span><span class="pl">(pontos.</span><span class="fn">values</span><span class="pl">()))     </span><span class="cm"># 98</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Iterando com .keys()</span></div>
+        <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">nome</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> pontos.</span><span class="fn">keys</span><span class="pl">():</span></div>
+        <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(nome, </span><span class="st">"→"</span><span class="pl">, pontos[nome])</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Iterando com .items() — mais direto!</span></div>
+        <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">nome</span><span class="pl">, </span><span class="va">pt</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> pontos.</span><span class="fn">items</span><span class="pl">():</span></div>
+        <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f"{nome}: {pt} pts"</span><span class="pl">)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Lista em ordem alfabética</span></div>
+        <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">nome</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">sorted</span><span class="pl">(pontos):</span></div>
+        <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f"{nome}: {pontos[nome]}"</span><span class="pl">)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># .update() — combina dicionários</span></div>
+        <div class="line"><span class="va">extras</span><span class="pl"> = {</span><span class="st">"Bia"</span><span class="pl">:</span><span class="nu">88</span><span class="pl">, </span><span class="st">"Caio"</span><span class="pl">:</span><span class="nu">75</span><span class="pl">}</span></div>
+        <div class="line"><span class="pl">pontos.</span><span class="fn">update</span><span class="pl">(extras)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 15 — SITUAÇÃO: AGENDA -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="15">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(16,185,129,.15)">📱</div>
+    <h2>Situação Prática — Agenda de Contatos</h2>
+    <span class="section-tag">dicionário · for</span>
+  </div>
+  <div class="content">
+    <div class="ctx-box" style="border-color:rgba(16,185,129,.3)">
+      <strong>📱 Contexto:</strong> Uma agenda de contatos precisa buscar um número pelo nome, listar todos os contatos em ordem e verificar se um número já foi cadastrado.
+    </div>
+    <div class="cols-2">
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="va">agenda</span><span class="pl"> = {</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"Ana"</span><span class="pl">:   </span><span class="st">"9999-1111"</span><span class="pl">,</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"Pedro"</span><span class="pl">: </span><span class="st">"9999-2222"</span><span class="pl">,</span></div>
+        <div class="line"><span class="pl">    </span><span class="st">"Maria"</span><span class="pl">: </span><span class="st">"9999-3333"</span></div>
+        <div class="line"><span class="pl">}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Buscar usando .get() — sem erro</span></div>
+        <div class="line"><span class="va">nome_busca</span><span class="pl"> = </span><span class="st">"Ana"</span></div>
+        <div class="line"><span class="va">resultado</span><span class="pl">  = agenda.</span><span class="fn">get</span><span class="pl">(nome_busca, </span><span class="st">"Não encontrado"</span><span class="pl">)</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(resultado)  </span><span class="cm"># 9999-1111</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="va">nome_busca</span><span class="pl"> = </span><span class="st">"Carlos"</span></div>
+        <div class="line"><span class="va">resultado</span><span class="pl">  = agenda.</span><span class="fn">get</span><span class="pl">(nome_busca, </span><span class="st">"Não encontrado"</span><span class="pl">)</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(resultado)  </span><span class="cm"># Não encontrado</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Listar em ordem alfabética</span></div>
+        <div class="kw">for</div><span class="pl"> </span><span class="va">nome</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">sorted</span><span class="pl">(agenda):</span>
+        <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f"{nome}: {agenda[nome]}"</span><span class="pl">)</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># Verificar duplicata antes de cadastrar</span></div>
+          <div class="line"><span class="va">novo_num</span><span class="pl"> = </span><span class="st">"9999-2222"</span></div>
+          <div class="line"><span class="kw">if</span><span class="pl"> novo_num </span><span class="kw">in</span><span class="pl"> agenda.</span><span class="fn">values</span><span class="pl">():</span></div>
+          <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">"⚠️ Número já cadastrado!"</span><span class="pl">)</span></div>
+          <div class="line"><span class="kw">else</span><span class="pl">:</span></div>
+          <div class="line"><span class="pl">    agenda[</span><span class="st">"João"</span><span class="pl">] = novo_num</span></div>
+          <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">"✅ Contato adicionado."</span><span class="pl">)</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Total de contatos</span></div>
+          <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Total: {len(agenda)} contatos"</span><span class="pl">)</span></div>
+        </div>
+        <div class="output-box">
+          Ana: 9999-1111<br>
+          Maria: 9999-3333<br>
+          Pedro: 9999-2222<br>
+          ⚠️ Número já cadastrado!<br>
+          Total: 3 contatos
+        </div>
+        <div class="tip-box">
+          <span class="tip-icon">💡</span>
+          <span>Use <kbd>.get(chave, padrão)</kbd> no lugar de <kbd>d[chave]</kbd> quando a chave pode não existir. Evita o <strong>KeyError</strong>.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 16 — LISTA DE DICIONÁRIOS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="16">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(16,185,129,.15)">🏫</div>
+    <h2>Situação Prática — Cadastro de Alunos</h2>
+    <span class="section-tag">lista · dicionário · for</span>
+  </div>
+  <div class="content">
+    <div class="ctx-box" style="border-color:rgba(16,185,129,.3)">
+      <strong>🏫 Contexto:</strong> Sistema de cadastro de alunos. Cada aluno é um dicionário; todos os alunos ficam numa lista. Essa é a estrutura mais comum para representar tabelas de dados em Python.
+    </div>
+    <div class="cols-2">
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="cm"># Lista de dicionários = tabela</span></div>
+        <div class="line"><span class="cm"># cada dicionário = uma linha</span></div>
+        <div class="line"><span class="va">cadastro</span><span class="pl"> = [</span></div>
+        <div class="line"><span class="pl">    {</span><span class="st">"nome"</span><span class="pl">:</span><span class="st">"Ana"</span><span class="pl">,   </span><span class="st">"nota"</span><span class="pl">:</span><span class="nu">8.5</span><span class="pl">, </span><span class="st">"turma"</span><span class="pl">:</span><span class="st">"A"</span><span class="pl">},</span></div>
+        <div class="line"><span class="pl">    {</span><span class="st">"nome"</span><span class="pl">:</span><span class="st">"Pedro"</span><span class="pl">, </span><span class="st">"nota"</span><span class="pl">:</span><span class="nu">5.0</span><span class="pl">, </span><span class="st">"turma"</span><span class="pl">:</span><span class="st">"B"</span><span class="pl">},</span></div>
+        <div class="line"><span class="pl">    {</span><span class="st">"nome"</span><span class="pl">:</span><span class="st">"Maria"</span><span class="pl">, </span><span class="st">"nota"</span><span class="pl">:</span><span class="nu">9.0</span><span class="pl">, </span><span class="st">"turma"</span><span class="pl">:</span><span class="st">"A"</span><span class="pl">},</span></div>
+        <div class="line"><span class="pl">    {</span><span class="st">"nome"</span><span class="pl">:</span><span class="st">"João"</span><span class="pl">,  </span><span class="st">"nota"</span><span class="pl">:</span><span class="nu">7.0</span><span class="pl">, </span><span class="st">"turma"</span><span class="pl">:</span><span class="st">"B"</span><span class="pl">},</span></div>
+        <div class="line"><span class="pl">]</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Acessar um campo de um aluno</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(cadastro[</span><span class="nu">0</span><span class="pl">][</span><span class="st">"nome"</span><span class="pl">])  </span><span class="cm"># Ana</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(cadastro[</span><span class="nu">2</span><span class="pl">][</span><span class="st">"nota"</span><span class="pl">])  </span><span class="cm"># 9.0</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Adicionar novo aluno à lista</span></div>
+        <div class="line"><span class="va">novo</span><span class="pl"> = {</span><span class="st">"nome"</span><span class="pl">:</span><span class="st">"Bia"</span><span class="pl">, </span><span class="st">"nota"</span><span class="pl">:</span><span class="nu">6.5</span><span class="pl">, </span><span class="st">"turma"</span><span class="pl">:</span><span class="st">"A"</span><span class="pl">}</span></div>
+        <div class="line"><span class="pl">cadastro.</span><span class="fn">append</span><span class="pl">(novo)</span></div>
+      </div>
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="cm"># Relatório completo com for</span></div>
+        <div class="kw">for</div><span class="pl"> </span><span class="va">a</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> cadastro:</span>
+        <div class="line"><span class="pl">    </span><span class="kw">if</span><span class="pl"> a[</span><span class="st">"nota"</span><span class="pl">] >= </span><span class="nu">6.0</span><span class="pl">:</span></div>
+        <div class="line"><span class="pl">        status = </span><span class="st">"✅ Aprovado"</span></div>
+        <div class="line"><span class="pl">    </span><span class="kw">else</span><span class="pl">:</span></div>
+        <div class="line"><span class="pl">        status = </span><span class="st">"❌ Reprovado"</span></div>
+        <div class="line"><span class="pl">    </span><span class="fn">print</span><span class="pl">(</span><span class="st">f'{a["nome"]} ({a["turma"]}): {a["nota"]} — {status}'</span><span class="pl">)</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Estatísticas</span></div>
+        <div class="line"><span class="va">total</span><span class="pl"> = </span><span class="fn">len</span><span class="pl">(cadastro)</span></div>
+        <div class="line"><span class="va">soma</span><span class="pl">  = </span><span class="nu">0</span></div>
+        <div class="line"><span class="va">aprov</span><span class="pl"> = </span><span class="nu">0</span></div>
+        <div class="kw">for</div><span class="pl"> </span><span class="va">a</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> cadastro:</span>
+        <div class="line"><span class="pl">    soma += a[</span><span class="st">"nota"</span><span class="pl">]</span></div>
+        <div class="line"><span class="pl">    </span><span class="kw">if</span><span class="pl"> a[</span><span class="st">"nota"</span><span class="pl">] >= </span><span class="nu">6.0</span><span class="pl">:</span></div>
+        <div class="line"><span class="pl">        aprov += </span><span class="nu">1</span></div>
+        <div class="line"><span class="fn">print</span><span class="pl">(</span><span class="st">f"Média: {soma/total:.1f} | Aprovados: {aprov}/{total}"</span><span class="pl">)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 17 — SEÇÃO: COMPREHENSIONS -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide section-slide" data-index="17">
+  <div class="sec-num">Seção 04 — Avançado</div>
+  <h2 class="text-pink">Comprehensions</h2>
+  <div class="section-line" style="background:var(--pink)"></div>
+  <p>Uma forma elegante e concisa de criar coleções em uma única linha</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 18 — LIST COMPREHENSION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="18">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(236,72,153,.15)">⚡</div>
+    <h2>List Comprehension</h2>
+    <span class="section-tag">comprehension</span>
+  </div>
+  <div class="content">
+    <p class="lead">Permite criar uma lista nova em <strong>uma única linha</strong>, substituindo um padrão muito comum de <kbd>for</kbd> + <kbd>.append()</kbd>. A lógica é a mesma — só muda a forma de escrever.</p>
+
+    <div style="background:var(--code-bg);border:1px solid rgba(236,72,153,.3);border-radius:10px;padding:.8rem 1.2rem;flex-shrink:0">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+        <span style="color:#a78bfa">[</span>
+        <span style="color:var(--cyan)">expressão</span>
+        <span style="color:var(--kw)">  for  </span>
+        <span style="color:var(--va)">variável</span>
+        <span style="color:var(--kw)">  in  </span>
+        <span style="color:var(--st)">iterável</span>
+        <span style="color:var(--kw)">  if  </span>
+        <span style="color:var(--nu)">condição</span>
+        <span style="color:#a78bfa">]</span>
+        <span style="color:var(--muted);font-size:.72rem">← condição é opcional</span>
+      </div>
+    </div>
+
+    <div class="cols-2">
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># 1. Quadrados de 0 a 9</span></div>
+          <div class="line"><span class="cm"># Forma tradicional:</span></div>
+          <div class="line"><span class="va">quad</span><span class="pl"> = []</span></div>
+          <div class="line"><span class="kw">for</span><span class="pl"> </span><span class="va">x</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">range</span><span class="pl">(</span><span class="nu">10</span><span class="pl">):</span></div>
+          <div class="line"><span class="pl">    quad.</span><span class="fn">append</span><span class="pl">(x ** </span><span class="nu">2</span><span class="pl">)</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># Com list comprehension:</span></div>
+          <div class="line"><span class="va">quad</span><span class="pl"> = [x ** </span><span class="nu">2</span><span class="pl"> </span><span class="kw">for</span><span class="pl"> </span><span class="va">x</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">range</span><span class="pl">(</span><span class="nu">10</span><span class="pl">)]</span></div>
+          <div class="line"><span class="cm"># [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># 2. Só os pares (com condição)</span></div>
+          <div class="line"><span class="va">pares</span><span class="pl"> = [x </span><span class="kw">for</span><span class="pl"> </span><span class="va">x</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">range</span><span class="pl">(</span><span class="nu">20</span><span class="pl">) </span><span class="kw">if</span><span class="pl"> x % </span><span class="nu">2</span><span class="pl"> == </span><span class="nu">0</span><span class="pl">]</span></div>
+          <div class="line"><span class="cm"># [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># 3. Transformar strings</span></div>
+          <div class="line"><span class="va">frutas</span><span class="pl"> = [</span><span class="st">"maçã"</span><span class="pl">, </span><span class="st">"banana"</span><span class="pl">, </span><span class="st">"uva"</span><span class="pl">]</span></div>
+          <div class="line"><span class="va">maiusc</span><span class="pl"> = [f.</span><span class="fn">upper</span><span class="pl">() </span><span class="kw">for</span><span class="pl"> </span><span class="va">f</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> frutas]</span></div>
+          <div class="line"><span class="cm"># ['MAÇÃ', 'BANANA', 'UVA']</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="code-block" style="flex:1">
+          <div class="line"><span class="cm"># 4. Extrair campo de lista de dicts</span></div>
+          <div class="line"><span class="va">nomes</span><span class="pl"> = [a[</span><span class="st">"nome"</span><span class="pl">] </span><span class="kw">for</span><span class="pl"> </span><span class="va">a</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> cadastro]</span></div>
+          <div class="line"><span class="cm"># ['Ana', 'Pedro', 'Maria', 'João', 'Bia']</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># 5. Filtrar aprovados</span></div>
+          <div class="line"><span class="va">aprovados</span><span class="pl"> = [a[</span><span class="st">"nome"</span><span class="pl">]</span></div>
+          <div class="line"><span class="pl">              </span><span class="kw">for</span><span class="pl"> </span><span class="va">a</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> cadastro</span></div>
+          <div class="line"><span class="pl">              </span><span class="kw">if</span><span class="pl"> a[</span><span class="st">"nota"</span><span class="pl">] >= </span><span class="nu">6.0</span><span class="pl">]</span></div>
+          <div class="line"><span class="cm"># ['Ana', 'Maria', 'João', 'Bia']</span></div>
+          <div class="br"></div>
+          <div class="line"><span class="cm"># 6. Notas com bônus (+0.5)</span></div>
+          <div class="line"><span class="va">com_bonus</span><span class="pl"> = [a[</span><span class="st">"nota"</span><span class="pl">] + </span><span class="nu">0.5</span></div>
+          <div class="line"><span class="pl">               </span><span class="kw">for</span><span class="pl"> </span><span class="va">a</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> cadastro]</span></div>
+          <div class="line"><span class="cm"># [9.0, 5.5, 9.5, 7.5, 7.0]</span></div>
+        </div>
+        <div class="warn-box">
+          <span>⚠️</span>
+          <span>Comprehensions com muitas condições ficam difíceis de ler. Prefira o <kbd>for</kbd> tradicional nesses casos.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 19 — DICT COMPREHENSION -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="19">
+  <div class="topbar">
+    <div class="topbar-icon" style="background:rgba(236,72,153,.15)">⚡</div>
+    <h2>Dict Comprehension</h2>
+    <span class="section-tag">comprehension</span>
+  </div>
+  <div class="content">
+    <p class="lead">Assim como o List Comprehension cria listas, o <strong>Dict Comprehension</strong> cria dicionários em uma linha, definindo chave e valor para cada item.</p>
+
+    <div style="background:var(--code-bg);border:1px solid rgba(236,72,153,.3);border-radius:10px;padding:.8rem 1.2rem;flex-shrink:0">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+        <span style="color:#a78bfa">{</span>
+        <span style="color:var(--cyan)">chave</span>
+        <span style="color:#e2e8f0">:</span>
+        <span style="color:var(--st)">valor</span>
+        <span style="color:var(--kw)">  for  </span>
+        <span style="color:var(--va)">variável</span>
+        <span style="color:var(--kw)">  in  </span>
+        <span style="color:var(--nu)">iterável</span>
+        <span style="color:#a78bfa">}</span>
+      </div>
+    </div>
+
+    <div class="cols-2">
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="cm"># 1. Quadrado de cada número (chave: nº)</span></div>
+        <div class="line"><span class="va">quad</span><span class="pl"> = {x: x**</span><span class="nu">2</span><span class="pl"> </span><span class="kw">for</span><span class="pl"> </span><span class="va">x</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">range</span><span class="pl">(</span><span class="nu">6</span><span class="pl">)}</span></div>
+        <div class="line"><span class="cm"># {0:0, 1:1, 2:4, 3:9, 4:16, 5:25}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># 2. Inverter chaves e valores</span></div>
+        <div class="line"><span class="va">original</span><span class="pl">  = {</span><span class="st">"a"</span><span class="pl">:</span><span class="nu">1</span><span class="pl">, </span><span class="st">"b"</span><span class="pl">:</span><span class="nu">2</span><span class="pl">, </span><span class="st">"c"</span><span class="pl">:</span><span class="nu">3</span><span class="pl">}</span></div>
+        <div class="line"><span class="va">invertido</span><span class="pl"> = {v: k </span><span class="kw">for</span><span class="pl"> </span><span class="va">k</span><span class="pl">, </span><span class="va">v</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> original.</span><span class="fn">items</span><span class="pl">()}</span></div>
+        <div class="line"><span class="cm"># {1:'a', 2:'b', 3:'c'}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># 3. Contagem de frequência</span></div>
+        <div class="line"><span class="va">linguagens</span><span class="pl"> = [</span><span class="st">"py"</span><span class="pl">, </span><span class="st">"java"</span><span class="pl">, </span><span class="st">"py"</span><span class="pl">, </span><span class="st">"py"</span><span class="pl">, </span><span class="st">"java"</span><span class="pl">]</span></div>
+        <div class="line"><span class="va">freq</span><span class="pl"> = {lang: linguagens.</span><span class="fn">count</span><span class="pl">(lang)</span></div>
+        <div class="line"><span class="pl">        </span><span class="kw">for</span><span class="pl"> </span><span class="va">lang</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">set</span><span class="pl">(linguagens)}</span></div>
+        <div class="line"><span class="cm"># {'py': 3, 'java': 2}</span></div>
+      </div>
+      <div class="code-block" style="flex:1">
+        <div class="line"><span class="cm"># 4. Criar dict a partir de duas listas</span></div>
+        <div class="line"><span class="va">nomes</span><span class="pl"> = [</span><span class="st">"Ana"</span><span class="pl">, </span><span class="st">"Pedro"</span><span class="pl">, </span><span class="st">"Maria"</span><span class="pl">]</span></div>
+        <div class="line"><span class="va">notas</span><span class="pl"> = [</span><span class="nu">8.5</span><span class="pl">, </span><span class="nu">5.0</span><span class="pl">, </span><span class="nu">9.0</span><span class="pl">]</span></div>
+        <div class="line"><span class="va">boletim</span><span class="pl"> = {n: v </span><span class="kw">for</span><span class="pl"> </span><span class="va">n</span><span class="pl">, </span><span class="va">v</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> </span><span class="fn">zip</span><span class="pl">(nomes, notas)}</span></div>
+        <div class="line"><span class="cm"># {'Ana':8.5, 'Pedro':5.0, 'Maria':9.0}</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># Equivalente com dict(zip()):</span></div>
+        <div class="line"><span class="va">boletim</span><span class="pl"> = </span><span class="fn">dict</span><span class="pl">(</span><span class="fn">zip</span><span class="pl">(nomes, notas))</span></div>
+        <div class="br"></div>
+        <div class="line"><span class="cm"># 5. Filtrar e transformar</span></div>
+        <div class="line"><span class="cm"># Só aprovados, com nota + 0.5</span></div>
+        <div class="line"><span class="va">resultado</span><span class="pl"> = {n: v + </span><span class="nu">0.5</span></div>
+        <div class="line"><span class="pl">              </span><span class="kw">for</span><span class="pl"> </span><span class="va">n</span><span class="pl">, </span><span class="va">v</span><span class="pl"> </span><span class="kw">in</span><span class="pl"> boletim.</span><span class="fn">items</span><span class="pl">()</span></div>
+        <div class="line"><span class="pl">              </span><span class="kw">if</span><span class="pl"> v >= </span><span class="nu">6.0</span><span class="pl">}</span></div>
+        <div class="line"><span class="cm"># {'Ana': 9.0, 'Maria': 9.5}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 20 — RESUMO -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide s-default" data-index="20">
+  <div class="topbar">
+    <div class="topbar-icon">📊</div>
+    <h2>Resumo — Quando Usar Cada Coleção?</h2>
+  </div>
+  <div class="content" style="gap:.7rem">
+    <div class="cols-3">
+      <div class="card" style="border-top:3px solid var(--blue)">
+        <div class="card-title text-blue" style="font-size:1.1rem">📋 Lista  [ ]</div>
+        <ul class="card">
+          <li>Sequência que vai mudar com o tempo</li>
+          <li>Precisa adicionar ou remover itens</li>
+          <li>Necessita de acesso por posição</li>
+          <li>Iteração simples com <kbd>for</kbd></li>
+        </ul>
+        <div style="background:var(--code-bg);border-radius:6px;padding:.4rem .65rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--st)">nomes = ["Ana","João","Bia"]</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Funções: <kbd>len · sum · max · min · sorted</kbd></div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--purple)">
+        <div class="card-title text-purple" style="font-size:1.1rem">📌 Tupla  ( )</div>
+        <ul class="card">
+          <li>Dados fixos que não devem mudar</li>
+          <li>Coordenadas, datas, configurações</li>
+          <li>Retornar múltiplos valores</li>
+          <li>Desempacotamento de variáveis</li>
+        </ul>
+        <div style="background:var(--code-bg);border-radius:6px;padding:.4rem .65rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--st)">ponto = (-23.5, -46.6)</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Funções: <kbd>len · count · index</kbd></div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green)">
+        <div class="card-title text-green" style="font-size:1.1rem">🗂️ Dicionário  { }</div>
+        <ul class="card">
+          <li>Dados com nome/identificação</li>
+          <li>Registros e cadastros</li>
+          <li>Contagem de frequência</li>
+          <li>Busca rápida por chave</li>
+        </ul>
+        <div style="background:var(--code-bg);border-radius:6px;padding:.4rem .65rem;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--st)">p = {"nome":"Ana","nota":8.5}</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Funções: <kbd>len · sorted · sum · max</kbd></div>
+      </div>
+    </div>
+    <table class="comp-table" style="flex-shrink:0">
+      <tr>
+        <th></th>
+        <th style="color:var(--blue)">Lista</th>
+        <th style="color:var(--purple)">Tupla</th>
+        <th style="color:var(--green)">Dicionário</th>
+      </tr>
+      <tr>
+        <td style="color:var(--white)">Acesso</td>
+        <td>Por índice <kbd>[0]</kbd></td>
+        <td>Por índice <kbd>[0]</kbd></td>
+        <td>Por chave <kbd>["nome"]</kbd></td>
+      </tr>
+      <tr>
+        <td style="color:var(--white)">Mutável</td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+        <td><span class="badge badge-red">❌ Não</span></td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--white)">Ordenada</td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+        <td><span class="badge badge-orange">Python 3.7+</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--white)">Fatiamento</td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+        <td><span class="badge badge-green">✅ Sim</span></td>
+        <td><span class="badge badge-red">❌ Não</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- SLIDE 21 — FIM -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="slide section-slide" data-index="21">
+  <div class="sec-num">Fim</div>
+  <h2>Bons Estudos! 🐍</h2>
+  <div class="section-line" style="background:var(--cyan)"></div>
+  <p style="max-width:500px">O aprendizado de coleções é fundamental em Python. A melhor forma de fixar é praticar com situações do seu cotidiano.</p>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.5rem;justify-content:center">
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.3rem .75rem;border-radius:4px;border:1px solid rgba(34,211,238,.4);color:var(--cyan)">Listas [ ]</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.3rem .75rem;border-radius:4px;border:1px solid rgba(139,92,246,.4);color:var(--purple)">Tuplas ( )</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.3rem .75rem;border-radius:4px;border:1px solid rgba(16,185,129,.4);color:var(--green)">Dicionários { }</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.3rem .75rem;border-radius:4px;border:1px solid rgba(245,158,11,.4);color:var(--orange)">Funções Embutidas</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:.3rem .75rem;border-radius:4px;border:1px solid rgba(236,72,153,.4);color:var(--pink)">Comprehensions</span>
+  </div>
+  <p style="font-size:.78rem;color:var(--muted);margin-top:1.2rem">Técnico em Desenvolvimento de Sistemas • Python • Material de Apoio</p>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ── NAVIGATION ── -->
+<nav id="nav">
+  <button class="nav-btn" id="btn-prev" onclick="prevSlide()" disabled title="Anterior (←)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <span id="slide-counter">1 / 21</span>
+  <button class="nav-btn" id="btn-next" onclick="nextSlide()" title="Próximo (→)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</nav>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active','fade-in');
+    current = Math.max(0, Math.min(n, slides.length - 1));
+    slides[current].classList.add('active','fade-in');
+    document.getElementById('slide-counter').textContent = `${current + 1} / ${slides.length}`;
+    document.getElementById('btn-prev').disabled = current === 0;
+    document.getElementById('btn-next').disabled = current === slides.length - 1;
+    document.getElementById('progress-bar').style.width = `${((current + 1) / slides.length) * 100}%`;
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); prevSlide(); }
+    if (e.key === 'Home') showSlide(0);
+    if (e.key === 'End')  showSlide(slides.length - 1);
+  });
+
+  // Touch/swipe
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = tx - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) dx > 0 ? nextSlide() : prevSlide();
+  });
+
+  // Init progress bar
+  showSlide(0);
+</script>
+
+</body>
+</html>
