@@ -118,7 +118,7 @@ MENU DE OPÇÕES:
     elif op == "2":
         print("VER PRODUTOS")
         contador = 1
-        for produto in produtos:
+        for i,produto in enumerate(produtos):
             print(f"{contador}. {produto["Nome"]} | {produto["Estoque"]}")
             contador += 1
 
@@ -157,6 +157,7 @@ MENU DE OPÇÕES:
             if produto["Estoque"] <= estoque_minimo:
                 print(f"{i+1} | {produto["Nome"]} | {produto["Estoque"]} | {produto["Unidade"]}")
 
+    # Criar a funcionalidade 5, pesquisar pelo preço. O programa deve exibir todos os produtos que tem o preço maior ou igual ao preço digitado pelo usuário!
                 
 
     elif op == "0":
