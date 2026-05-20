@@ -87,6 +87,8 @@ MENU DE OPÇÕES:
     2. Ver lista de produtos
     3. Ver produto específico
     4. Ver produtos pelo estoque mínimo
+    5. Ver produtos pelo preço mínimo
+    6. Cadastrar Venda de Produto
 
     0. Sair 
 """)
@@ -158,7 +160,59 @@ MENU DE OPÇÕES:
                 print(f"{i+1} | {produto["Nome"]} | {produto["Estoque"]} | {produto["Unidade"]}")
 
     # Criar a funcionalidade 5, pesquisar pelo preço. O programa deve exibir todos os produtos que tem o preço maior ou igual ao preço digitado pelo usuário!
-                
+    elif op == "5":
+        print("PESQUISAR PRODUTOS POR PREÇO MÍNIMO")
+        preco_minimo = float(input("Digite o preço mínimo dos produtos que deseja visualizar: "))
+
+        contador = 1
+
+        for produto in produtos:
+
+            if produto["Preço"] >= preco_minimo:
+                print(f"{contador}. {produto['Nome']} - R$ {produto['Preço']:,.2f}")
+
+            contador += 1
+
+    # Criar a funcionalidade 6. Realizar a venda de um produto específico, o usuário deve escolher um dos produto da lista e a quantidade que deverá ser vendida, após a venda exibir o valor a ser pago e deduzir do estoque do produto.
+    elif op == "6":
+        print("REALIZAR A VENDA DE UM PRODUTO")
+
+        contador = 1
+        for produto in produtos:
+            print(f"{contador}. {produto["Nome"]} | R$ {produto["Preço"]:,.2f} | {produto["Estoque"]}")
+            contador += 1
+
+        while True:
+            num_produto = int(input("Digite o número do produto desejado:"))
+            
+            if num_produto >= 1 and num_produto <= len(produtos):
+                produto_escolhido = produtos[num_produto - 1]
+                break
+            else:
+                print("DIGITE O NÚMERO DE UM PRODUTO VÁLIDO")
+
+        while True:
+            qtd_produto = int(input("Quantas unidades deseja comprar:"))
+
+            if qtd_produto <= produto_escolhido["Estoque"] and qtd_produto > 0:
+                break
+            else:
+                print("NÃO HÁ ESTOQUE SUFICIENTE DO PRODUTO")
+
+        total_venda = produto_escolhido["Preço"] * qtd_produto
+
+        produto_escolhido["Estoque"] -= qtd_produto
+
+        print(f"""
+    RESUMO DA VENDA
+              
+    PRODUTO: {produto_escolhido["Nome"]}
+    PREÇO UNITÁRIO: {produto_escolhido["Preço"]}
+    QTD COMPRADA: {qtd_produto}
+
+    TOTAL: R$ {total_venda:,.2f}
+""")
+        
 
     elif op == "0":
         print("ENCERRANDO PROGRAMA...")
@@ -167,3 +221,7 @@ MENU DE OPÇÕES:
         print("DIGITE UMA OPÇÃO VÁLIDA")
 
     input("DIGITE ENTER PARA CONTINUAR...")
+
+
+
+
