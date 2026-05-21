@@ -3,6 +3,7 @@
 
 # Funcionalidade extra: alertar quais produtos estão abaixo de uma quantidade mínima informada pelo usuário
 
+    
 produtos = [
     {
         "Nome": "Tomate",

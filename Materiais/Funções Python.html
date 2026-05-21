@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Funções em Python</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #08090e;
+  --surface:   #0f1117;
+  --card:      #13161f;
+  --card2:     #181c28;
+  --border:    #1f2535;
+  --border2:   #252d3f;
+
+  --blue:      #4f8ef7;
+  --blue-dim:  rgba(79,142,247,.12);
+  --sky:       #5ecbf5;
+  --teal:      #2ec4b6;
+  --teal-dim:  rgba(46,196,182,.1);
+  --green:     #50d890;
+  --green-dim: rgba(80,216,144,.1);
+  --amber:     #f5a623;
+  --amber-dim: rgba(245,166,35,.1);
+  --red:       #f06565;
+  --red-dim:   rgba(240,101,101,.1);
+  --purple:    #a78bfa;
+  --purple-dim:rgba(167,139,250,.1);
+
+  --text:      #dde3f0;
+  --text2:     #8a95ac;
+  --text3:     #4e5a72;
+
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Plus Jakarta Sans', sans-serif;
+
+  --r:         10px;
+  --r-lg:      14px;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════
+   SHELL — topbar + viewer + bottombar
+═══════════════════════════════════════════════ */
+#shell {
+  display: grid;
+  grid-template-rows: 48px 1fr 52px;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ── Top bar ── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 50;
+  gap: 1rem;
+}
+.tb-brand {
+  font-weight: 800; font-size: .82rem; letter-spacing: .04em;
+  color: var(--sky); white-space: nowrap;
+}
+.tb-course {
+  font-size: .7rem; font-weight: 500; color: var(--text2);
+  padding: 2px 10px; border: 1px solid var(--border2);
+  border-radius: 20px; white-space: nowrap;
+}
+#prog-track {
+  flex: 1; height: 3px; background: var(--border);
+  border-radius: 3px; overflow: hidden; max-width: 220px;
+}
+#prog-fill {
+  height: 100%; background: linear-gradient(90deg, var(--blue), var(--sky));
+  border-radius: 3px; transition: width .35s ease;
+}
+
+/* ── Viewer (the scrollable area) ── */
+#viewer {
+  overflow: hidden;
+  position: relative;
+}
+#track {
+  display: flex;
+  height: 100%;
+  transition: transform .48s cubic-bezier(.76,0,.24,1);
+}
+.slide {
+  flex-shrink: 0;
+  width: 100vw;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.slide::-webkit-scrollbar { width: 4px; }
+.slide::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+.slide-inner {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 2.5rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .4s ease .05s, transform .4s ease .05s;
+}
+.slide.active .slide-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Bottom bar ── */
+#bottombar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+  gap: 1rem;
+}
+.nav-btn {
+  font-family: var(--sans); font-size: .78rem; font-weight: 700;
+  padding: .42rem 1.1rem; border-radius: 7px;
+  background: var(--card2); border: 1px solid var(--border2);
+  color: var(--text); cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s;
+  white-space: nowrap;
+}
+.nav-btn:hover:not(:disabled) {
+  background: var(--blue); border-color: var(--blue); color: #fff;
+}
+.nav-btn:disabled { opacity: .28; cursor: default; }
+
+#dots { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border2); cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+.dot.on { background: var(--blue); transform: scale(1.5); }
+.dot:hover:not(.on) { background: var(--text2); }
+
+#slide-lbl { font-size: .72rem; font-weight: 600; color: var(--text3); min-width: 60px; text-align: right; }
+
+/* ═══════════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════════ */
+.label {
+  font-size: .67rem; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--blue);
+  margin-bottom: .45rem; display: block;
+}
+.title {
+  font-size: clamp(1.65rem, 3.2vw, 2.15rem);
+  font-weight: 800; line-height: 1.12; margin-bottom: .4rem;
+  letter-spacing: -.02em;
+}
+.title em { font-style: normal; color: var(--sky); }
+.subtitle {
+  font-size: .9rem; color: var(--text2); margin-bottom: 1.4rem;
+  line-height: 1.65; max-width: 680px;
+}
+.ctx-tag {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .72rem; font-weight: 600;
+  background: rgba(94,203,245,.08); color: var(--sky);
+  border: 1px solid rgba(94,203,245,.2);
+  border-radius: 20px; padding: .28rem .85rem; margin-bottom: 1.2rem;
+}
+p { color: var(--text2); font-size: .88rem; line-height: 1.7; }
+p + p { margin-top: .5rem; }
+strong { color: var(--text); font-weight: 600; }
+code {
+  font-family: var(--mono); font-size: .8em;
+  background: var(--card2); padding: .1em .4em;
+  border-radius: 4px; color: var(--sky);
+}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT HELPERS
+═══════════════════════════════════════════════ */
+.two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; align-items: start; }
+.split-6-4 { display: grid; grid-template-columns: 1.15fr .85fr; gap: 1.1rem; align-items: start; }
+.split-4-6 { display: grid; grid-template-columns: .85fr 1.15fr; gap: 1.1rem; align-items: start; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: .9rem; }
+.auto-col  { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: .9rem; }
+.stack     { display: flex; flex-direction: column; gap: .8rem; }
+.gap-sm    { gap: .5rem !important; }
+
+@media (max-width: 680px) {
+  .two-col, .split-6-4, .split-4-6, .three-col { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1rem 1.1rem;
+}
+.card-hd {
+  font-size: .72rem; font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; margin-bottom: .55rem;
+}
+.blue   { color: var(--blue); }
+.sky    { color: var(--sky); }
+.teal   { color: var(--teal); }
+.green  { color: var(--green); }
+.amber  { color: var(--amber); }
+.red    { color: var(--red); }
+.purple { color: var(--purple); }
+
+.b-blue   { border-left: 3px solid var(--blue); }
+.b-sky    { border-left: 3px solid var(--sky); }
+.b-teal   { border-left: 3px solid var(--teal); }
+.b-green  { border-left: 3px solid var(--green); }
+.b-amber  { border-left: 3px solid var(--amber); }
+.b-red    { border-left: 3px solid var(--red); }
+.b-purple { border-left: 3px solid var(--purple); }
+
+/* ═══════════════════════════════════════════════
+   CALLOUTS
+═══════════════════════════════════════════════ */
+.callout {
+  display: flex; gap: .75rem; align-items: flex-start;
+  padding: .8rem 1rem; border-radius: var(--r);
+  font-size: .84rem; line-height: 1.6;
+}
+.callout-icon { font-size: 1rem; flex-shrink: 0; padding-top: .05rem; }
+.callout b { color: var(--text); font-weight: 600; display: block; margin-bottom: .2rem; }
+.callout.c-blue   { background: var(--blue-dim);   border: 1px solid rgba(79,142,247,.25); }
+.callout.c-teal   { background: var(--teal-dim);   border: 1px solid rgba(46,196,182,.25); }
+.callout.c-green  { background: var(--green-dim);  border: 1px solid rgba(80,216,144,.22); }
+.callout.c-amber  { background: var(--amber-dim);  border: 1px solid rgba(245,166,35,.25); }
+.callout.c-red    { background: var(--red-dim);    border: 1px solid rgba(240,101,101,.25); }
+.callout.c-purple { background: var(--purple-dim); border: 1px solid rgba(167,139,250,.25); }
+.callout p { color: var(--text2); font-size: .84rem; }
+
+/* ═══════════════════════════════════════════════
+   CODE BLOCKS
+═══════════════════════════════════════════════ */
+.code-wrap {
+  background: #0c0e14;
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: .79rem;
+  line-height: 1.75;
+}
+.code-bar {
+  display: flex; align-items: center; gap: .45rem;
+  padding: .5rem .9rem;
+  background: #111318;
+  border-bottom: 1px solid var(--border);
+}
+.dot-r { width:9px;height:9px;border-radius:50%;background:#f06565;flex-shrink:0; }
+.dot-y { width:9px;height:9px;border-radius:50%;background:#f5a623;flex-shrink:0; }
+.dot-g { width:9px;height:9px;border-radius:50%;background:#50d890;flex-shrink:0; }
+.code-fname { font-size: .68rem; color: var(--text3); margin-left: .3rem; }
+.code-body  { padding: .85rem 1.1rem; overflow-x: auto; }
+.code-body pre { white-space: pre; }
+
+/* tokens */
+.kw { color: #7aa9f7; font-weight: 600; }
+.fn { color: #86efac; }
+.st { color: #a5f3fc; }
+.nu { color: #fca5a5; }
+.cm { color: #3d4f68; font-style: italic; }
+.op { color: #64748b; }
+.pl { color: #c4b5fd; }
+.wt { color: var(--text); }
+.py { color: #fda4af; }
+
+/* output */
+.out-box {
+  background: #070e07;
+  border: 1px solid #1a3322;
+  border-radius: var(--r);
+  padding: .65rem 1rem;
+  font-family: var(--mono);
+  font-size: .77rem;
+  line-height: 1.75;
+  color: #6ee7b7;
+  white-space: pre;
+}
+.out-lbl {
+  display: block; font-size: .65rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: var(--green); margin-bottom: .3rem;
+  font-family: var(--sans);
+}
+
+/* ═══════════════════════════════════════════════
+   MISC COMPONENTS
+═══════════════════════════════════════════════ */
+.step-row { display: flex; gap: .75rem; align-items: flex-start; }
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: var(--blue); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .7rem; font-weight: 800;
+}
+.step-body { flex: 1; padding-top: .05rem; }
+.step-body b { display: block; font-size: .86rem; margin-bottom: .15rem; color: var(--text); }
+.step-body p { font-size: .8rem; }
+
+.feat-row {
+  display: flex; gap: .8rem; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: .75rem .9rem;
+  transition: border-color .2s;
+}
+.feat-row:hover { border-color: var(--border2); }
+.feat-ico {
+  width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem;
+}
+.feat-body b  { display: block; font-size: .86rem; margin-bottom: .15rem; color: var(--text); }
+.feat-body p  { font-size: .8rem; }
+
+.pill {
+  display: inline-block; font-size: .7rem; font-weight: 600;
+  padding: .18rem .6rem; border-radius: 20px; margin: .12rem;
+}
+.p-blue   { background: var(--blue-dim);   color: var(--blue); }
+.p-sky    { background: rgba(94,203,245,.1); color: var(--sky); }
+.p-teal   { background: var(--teal-dim);   color: var(--teal); }
+.p-green  { background: var(--green-dim);  color: var(--green); }
+.p-amber  { background: var(--amber-dim);  color: var(--amber); }
+.p-red    { background: var(--red-dim);    color: var(--red); }
+.p-purple { background: var(--purple-dim); color: var(--purple); }
+
+/* scope boxes */
+.scope-box {
+  border: 2px dashed var(--border2); border-radius: var(--r-lg);
+  padding: 1rem 1.1rem; position: relative; margin-top: .8rem;
+}
+.scope-box.g-scope { border-color: rgba(94,203,245,.3); }
+.scope-box.l-scope  { border-color: rgba(80,216,144,.3); }
+.scope-tag {
+  position: absolute; top: -.6rem; left: .9rem;
+  font-size: .67rem; font-weight: 700; letter-spacing: .07em;
+  padding: .1rem .55rem; border-radius: 4px; text-transform: uppercase;
+}
+.scope-tag.g-tag { background: rgba(94,203,245,.12); color: var(--sky); }
+.scope-tag.l-tag  { background: var(--green-dim);    color: var(--green); }
+
+/* table */
+.tbl { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.tbl th {
+  background: rgba(79,142,247,.12); color: var(--blue);
+  font-size: .68rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; padding: .55rem .9rem;
+  text-align: left; border-bottom: 1px solid var(--border);
+}
+.tbl td {
+  padding: .6rem .9rem; border-bottom: 1px solid var(--border);
+  color: var(--text2); vertical-align: top;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(79,142,247,.03); }
+.tbl td:first-child { font-family: var(--mono); font-size: .75rem; color: var(--green); }
+
+/* divider */
+.div { height: 1px; background: var(--border); margin: 1rem 0; }
+.mt  { margin-top: .7rem; }
+.mt2 { margin-top: 1.1rem; }
+
+/* cover decorations */
+.cover-grid {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(79,142,247,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,142,247,.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.cover-glow {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+}
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- ── TOP BAR ──────────────────────────────────── -->
+  <header id="topbar">
+    <span class="tb-brand">🐍 Funções em Python</span>
+    <div id="prog-track"><div id="prog-fill" style="width:0%"></div></div>
+    <span class="tb-course">Técnico em Desenvolvimento de Sistemas</span>
+  </header>
+
+  <!-- ── SLIDES ────────────────────────────────────── -->
+  <div id="viewer">
+    <div id="track">
+
+      <!-- ═══════════════════════════════════════════
+           S0 — CAPA
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s0">
+        <div class="slide-inner" style="position:relative; padding-top:2.5rem;">
+          <div class="cover-grid"></div>
+          <div class="cover-glow" style="width:420px;height:420px;top:-120px;right:-80px;background:radial-gradient(circle,rgba(79,142,247,.13),transparent 68%);"></div>
+          <div class="cover-glow" style="width:260px;height:260px;bottom:0;left:-60px;background:radial-gradient(circle,rgba(46,196,182,.1),transparent 68%);"></div>
+
+          <div style="position:relative;z-index:1;">
+            <span class="label">Material de Aula</span>
+            <div class="title" style="font-size:clamp(2.4rem,5vw,3.6rem); margin-bottom:.3rem;">Funções</div>
+            <div class="title" style="font-size:clamp(2.4rem,5vw,3.6rem); color:var(--sky); margin-bottom:1rem;">em Python</div>
+            <p class="subtitle">
+              Aprenda a organizar código em blocos reutilizáveis, reduzir repetição e construir programas mais legíveis — com exemplos do cotidiano.
+            </p>
+
+            <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:2rem;">
+              <span class="pill p-blue">def / chamar</span>
+              <span class="pill p-sky">parâmetros</span>
+              <span class="pill p-teal">valor padrão</span>
+              <span class="pill p-green">return</span>
+              <span class="pill p-amber">escopo</span>
+              <span class="pill p-purple">composição</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.65rem;">
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(1)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">01</div>
+                <div style="font-size:.88rem;font-weight:600;">O que é uma Função?</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(2)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">02</div>
+                <div style="font-size:.88rem;font-weight:600;">Por que usar funções?</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(3)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">03</div>
+                <div style="font-size:.88rem;font-weight:600;">Declarar e Chamar</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(4)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">04</div>
+                <div style="font-size:.88rem;font-weight:600;">Parâmetros</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(5)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">05</div>
+                <div style="font-size:.88rem;font-weight:600;">Valor Padrão</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(6)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">06</div>
+                <div style="font-size:.88rem;font-weight:600;">return</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(7)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">07</div>
+                <div style="font-size:.88rem;font-weight:600;">Escopo</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(8)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">08</div>
+                <div style="font-size:.88rem;font-weight:600;">Composição</div>
+              </div>
+              <div class="card" style="cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="goTo(9)">
+                <div style="font-size:.67rem;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.3rem;">09</div>
+                <div style="font-size:.88rem;font-weight:600;">Exercícios</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S1 — O QUE É UMA FUNÇÃO
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s1">
+        <div class="slide-inner">
+          <span class="label">Conceito 01</span>
+          <div class="title">O que é uma <em>Função?</em></div>
+          <div class="ctx-tag">☕ Contexto: pedido no café</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>Imagine que você entra no mesmo café toda manhã e pede: <strong>"Um café médio, com leite, sem açúcar."</strong> Cansativo repetir isso em detalhes a cada vez.</p>
+              <p>O atendente memoriza seu pedido e só precisa ouvir o nome. <strong>Uma função em Python funciona assim</strong> — você dá nome a uma sequência de passos e a chama quando precisar, quantas vezes quiser.</p>
+
+              <div class="stack gap-sm mt">
+                <div class="step-row">
+                  <div class="step-num">1</div>
+                  <div class="step-body"><b>Escreva uma vez</b><p>O bloco <code>def</code> registra a função na memória do Python.</p></div>
+                </div>
+                <div class="step-row">
+                  <div class="step-num">2</div>
+                  <div class="step-body"><b>Chame quando precisar</b><p>Basta usar o nome — Python executa tudo dentro dela.</p></div>
+                </div>
+                <div class="step-row">
+                  <div class="step-num">3</div>
+                  <div class="step-body"><b>Adapte com parâmetros</b><p>Café com leite, sem açúcar, tamanho grande — cada chamada pode ser diferente.</p></div>
+                </div>
+              </div>
+
+              <div class="callout c-amber mt">
+                <span class="callout-icon">⚠️</span>
+                <div><b>Definir ≠ Executar</b><p>O bloco <code>def</code> apenas registra. O código só roda quando você <em>chama</em> a função pelo nome com <code>()</code>.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">cafe.py</span></div>
+                <div class="code-body"><pre>
+<span class="cm"># ── Sem função: código repetido ──────────</span>
+<span class="fn">print</span>(<span class="st">"--- Pedido ---"</span>)
+<span class="fn">print</span>(<span class="st">"Café médio"</span>)
+<span class="fn">print</span>(<span class="st">"Com leite, sem açúcar"</span>)
+<span class="cm"># amanhã, terça, quarta... repete tudo</span>
+
+<span class="cm"># ── Com função: escreve uma vez ──────────</span>
+<span class="kw">def</span> <span class="fn">fazer_pedido</span>():
+    <span class="fn">print</span>(<span class="st">"--- Pedido ---"</span>)
+    <span class="fn">print</span>(<span class="st">"Café médio"</span>)
+    <span class="fn">print</span>(<span class="st">"Com leite, sem açúcar"</span>)
+
+<span class="cm"># Chama quantas vezes quiser</span>
+<span class="fn">fazer_pedido</span>()   <span class="cm"># segunda</span>
+<span class="fn">fazer_pedido</span>()   <span class="cm"># terça</span>
+<span class="fn">fazer_pedido</span>()   <span class="cm"># quarta...</span>
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída (cada chamada)</span>--- Pedido ---
+Café médio
+Com leite, sem açúcar</div>
+
+              <div class="callout c-blue mt">
+                <span class="callout-icon">💡</span>
+                <div><b>Nomes descritivos são documentação</b><p><code>fazer_pedido()</code> diz o que faz sem precisar de comentário. Escolha nomes com verbos: <code>calcular_</code>, <code>verificar_</code>, <code>exibir_</code>.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S2 — POR QUE USAR
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s2">
+        <div class="slide-inner">
+          <span class="label">Conceito 02</span>
+          <div class="title">Por que usar <em>funções?</em></div>
+          <div class="ctx-tag">🛒 Contexto: sistema de caixa de mercado</div>
+
+          <div class="two-col">
+            <div class="stack">
+              <div class="feat-row">
+                <div class="feat-ico" style="background:var(--blue-dim);">♻️</div>
+                <div class="feat-body"><b>Reutilização</b><p>Escreva uma vez, use em qualquer parte do programa. Exibir um produto no caixa não precisa existir 50 vezes — apenas uma função.</p></div>
+              </div>
+              <div class="feat-row">
+                <div class="feat-ico" style="background:var(--teal-dim);">📦</div>
+                <div class="feat-body"><b>Organização</b><p>Em vez de 300 linhas seguidas, você tem <code>calcular_preco()</code>, <code>aplicar_desconto()</code> e <code>emitir_nota()</code> — cada uma com sua responsabilidade.</p></div>
+              </div>
+              <div class="feat-row">
+                <div class="feat-ico" style="background:var(--amber-dim);">🔧</div>
+                <div class="feat-body"><b>Manutenção</b><p>Corrigiu o cálculo de troco? Mude <em>uma vez</em>. Sem funções, você precisaria encontrar e corrigir cada cópia espalhada pelo código.</p></div>
+              </div>
+              <div class="feat-row">
+                <div class="feat-ico" style="background:var(--green-dim);">🔬</div>
+                <div class="feat-body"><b>Testabilidade</b><p>Funções pequenas e isoladas são fáceis de testar. Você consegue verificar <code>calcular_troco()</code> sem executar o programa inteiro.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div>
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);background:var(--red-dim);border:1px solid rgba(240,101,101,.2);border-radius:7px 7px 0 0;padding:.35rem .8rem;">❌ Sem funções — lógica duplicada</div>
+                <div class="code-wrap" style="border-radius:0 0 var(--r-lg) var(--r-lg); border-top:none;">
+                  <div class="code-body"><pre>
+<span class="cm"># Produto 1</span>
+<span class="fn">print</span>(<span class="st">"Café"</span>)
+<span class="fn">print</span>(<span class="st">f"R$ </span><span class="nu">5.50</span><span class="st"> x 1 = R$ </span><span class="nu">5.50</span><span class="st">"</span>)
+
+<span class="cm"># Produto 2 — mesma estrutura!</span>
+<span class="fn">print</span>(<span class="st">"Pão"</span>)
+<span class="fn">print</span>(<span class="st">f"R$ </span><span class="nu">3.00</span><span class="st"> x 2 = R$ </span><span class="nu">6.00</span><span class="st">"</span>)
+
+<span class="cm"># Bug no formato? Corrigir em cada item.</span>
+</pre></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--green);background:var(--green-dim);border:1px solid rgba(80,216,144,.2);border-radius:7px 7px 0 0;padding:.35rem .8rem;">✅ Com função — um lugar só</div>
+                <div class="code-wrap" style="border-radius:0 0 var(--r-lg) var(--r-lg); border-top:none;">
+                  <div class="code-body"><pre>
+<span class="kw">def</span> <span class="fn">exibir_item</span>(nome, preco, qtd):
+    subtotal <span class="op">=</span> preco <span class="op">*</span> qtd
+    <span class="fn">print</span>(<span class="st">f"</span><span class="pl">{nome}</span><span class="st">"</span>)
+    <span class="fn">print</span>(<span class="st">f"R$ </span><span class="pl">{preco:.2f}</span><span class="st"> x </span><span class="pl">{qtd}</span><span class="st"> = R$ </span><span class="pl">{subtotal:.2f}</span><span class="st">"</span>)
+
+<span class="fn">exibir_item</span>(<span class="st">"Café"</span>,  <span class="nu">5.50</span>, <span class="nu">1</span>)
+<span class="fn">exibir_item</span>(<span class="st">"Pão"</span>,   <span class="nu">3.00</span>, <span class="nu">2</span>)
+<span class="fn">exibir_item</span>(<span class="st">"Suco"</span>,  <span class="nu">7.00</span>, <span class="nu">1</span>)
+<span class="cm"># Bug? Corrija só na função.</span>
+</pre></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S3 — DECLARAR E CHAMAR
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s3">
+        <div class="slide-inner">
+          <span class="label">Conceito 03</span>
+          <div class="title">Declarar e <em>Chamar</em></div>
+          <div class="ctx-tag">📱 Contexto: app de notificações</div>
+
+          <div class="split-6-4">
+            <div class="stack">
+              <p>Todo app envia notificações. Sempre o mesmo formato — mas com conteúdo diferente. Uma função define o molde; a chamada preenche com dados reais.</p>
+
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">notificacoes.py</span></div>
+                <div class="code-body"><pre>
+<span class="cm"># ── 1. DECLARAÇÃO ───────────────────────</span>
+<span class="kw">def</span> <span class="fn">notificar</span>(app, mensagem):
+    <span class="fn">print</span>(<span class="st">"┌─────────────────────────┐"</span>)
+    <span class="fn">print</span>(<span class="st">f"│ 🔔 </span><span class="pl">{app:<span class="nu">22</span>}</span><span class="st"> │"</span>)
+    <span class="fn">print</span>(<span class="st">f"│ </span><span class="pl">{mensagem:<span class="nu">24</span>}</span><span class="st"> │"</span>)
+    <span class="fn">print</span>(<span class="st">"└─────────────────────────┘"</span>)
+
+<span class="cm"># ── 2. CHAMADAS ─────────────────────────</span>
+<span class="fn">notificar</span>(<span class="st">"WhatsApp"</span>, <span class="st">"Ana: Oi, tudo bem?"</span>)
+<span class="fn">notificar</span>(<span class="st">"iFood"</span>,    <span class="st">"Pedido saiu p/ entrega"</span>)
+<span class="fn">notificar</span>(<span class="st">"Nubank"</span>,   <span class="st">"Pix recebido: R$50,00"</span>)
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída</span>┌─────────────────────────┐
+│ 🔔 WhatsApp              │
+│ Ana: Oi, tudo bem?       │
+└─────────────────────────┘</div>
+            </div>
+
+            <div class="stack">
+              <div class="card b-blue">
+                <div class="card-hd blue">Anatomia da Declaração</div>
+                <table class="tbl">
+                  <thead><tr><th>Parte</th><th>Papel</th></tr></thead>
+                  <tbody>
+                    <tr><td>def</td><td>Palavra reservada — inicia a declaração</td></tr>
+                    <tr><td>notificar</td><td>Nome da função (snake_case, verbo)</td></tr>
+                    <tr><td>(app, msg)</td><td>Parâmetros — dados de entrada</td></tr>
+                    <tr><td>:</td><td>Abre o bloco</td></tr>
+                    <tr><td>indentação</td><td>4 espaços definem o corpo</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="callout c-teal">
+                <span class="callout-icon">🎯</span>
+                <div><b>Convenção de nomes</b><p>Use <code>snake_case</code> e comece com um verbo: <code>calcular_</code>, <code>verificar_</code>, <code>exibir_</code>, <code>enviar_</code>. Um bom nome dispensa comentário.</p></div>
+              </div>
+
+              <div class="callout c-purple">
+                <span class="callout-icon">🔍</span>
+                <div><b>Onde declarar?</b><p>Sempre <em>antes</em> de chamar. Python lê o arquivo de cima para baixo; chamar uma função antes de declará-la gera <code>NameError</code>.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S4 — PARÂMETROS
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s4">
+        <div class="slide-inner">
+          <span class="label">Conceito 04</span>
+          <div class="title"><em>Parâmetros</em> e Argumentos</div>
+          <div class="ctx-tag">🧾 Contexto: recibo de compra online</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>Quando você compra online, o e-mail de confirmação tem sempre o mesmo layout — mas com <em>seus</em> dados. A função é o molde; os parâmetros são os espaços em branco.</p>
+
+              <div class="card b-blue">
+                <div class="card-hd blue">Parâmetro</div>
+                <p>Variável na <em>definição</em> da função. Só existe enquanto ela executa. Recebe o valor passado na chamada.</p>
+                <div class="mt" style="font-family:var(--mono);font-size:.79rem;color:var(--sky);">def recibo(<b>produto</b>, <b>preco</b>, <b>qtd</b>):</div>
+              </div>
+
+              <div class="card b-teal">
+                <div class="card-hd teal">Argumento</div>
+                <p>O valor concreto passado na <em>chamada</em>. Cada argumento é atribuído ao parâmetro correspondente.</p>
+                <div class="mt" style="font-family:var(--mono);font-size:.79rem;color:var(--teal);">recibo(<b>"Tênis"</b>, <b>299.90</b>, <b>1</b>)</div>
+              </div>
+
+              <div class="callout c-blue">
+                <span class="callout-icon">🔑</span>
+                <div><b>Argumento nomeado</b><p>Passe em qualquer ordem usando o nome do parâmetro: <code>recibo(qtd=2, preco=50, produto="Meia")</code>. Torna chamadas longas muito mais legíveis.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">loja.py</span></div>
+                <div class="code-body"><pre>
+<span class="kw">def</span> <span class="fn">emitir_recibo</span>(produto, preco, qtd):
+    subtotal <span class="op">=</span> preco <span class="op">*</span> qtd
+    <span class="fn">print</span>(<span class="st">"══════════════════════════"</span>)
+    <span class="fn">print</span>(<span class="st">f"Produto : </span><span class="pl">{produto}</span><span class="st">"</span>)
+    <span class="fn">print</span>(<span class="st">f"Preço   : R$ </span><span class="pl">{preco:.2f}</span><span class="st">"</span>)
+    <span class="fn">print</span>(<span class="st">f"Qtd     : </span><span class="pl">{qtd}</span><span class="st">x"</span>)
+    <span class="fn">print</span>(<span class="st">f"Subtotal: R$ </span><span class="pl">{subtotal:.2f}</span><span class="st">"</span>)
+    <span class="fn">print</span>(<span class="st">"══════════════════════════"</span>)
+
+<span class="cm"># Posicional — ordem importa</span>
+<span class="fn">emitir_recibo</span>(<span class="st">"Tênis Nike"</span>, <span class="nu">299.90</span>, <span class="nu">1</span>)
+
+<span class="cm"># Nomeado — ordem livre</span>
+<span class="fn">emitir_recibo</span>(
+    qtd<span class="op">=</span><span class="nu">3</span>,
+    produto<span class="op">=</span><span class="st">"Meia"</span>,
+    preco<span class="op">=</span><span class="nu">12.50</span>
+)
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída (1ª chamada)</span>══════════════════════════
+Produto : Tênis Nike
+Preço   : R$ 299.90
+Qtd     : 1x
+Subtotal: R$ 299.90
+══════════════════════════</div>
+
+              <div class="callout c-red">
+                <span class="callout-icon">❌</span>
+                <div><b>Erro comum: número errado de argumentos</b><p>Chamar <code>emitir_recibo("Tênis")</code> sem todos os parâmetros gera <code>TypeError</code>. Parâmetros obrigatórios exigem argumento.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S5 — VALOR PADRÃO
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s5">
+        <div class="slide-inner">
+          <span class="label">Conceito 05</span>
+          <div class="title">Valor <em>Padrão</em></div>
+          <div class="ctx-tag">🍕 Contexto: app de delivery de pizza</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>A maioria dos pedidos é tamanho médio, sem borda recheada. Faz sentido esses serem os valores <strong>padrão</strong> — o cliente só informa quando quer algo diferente.</p>
+              <p>Um parâmetro com valor padrão (<strong>default</strong>) é <em>opcional</em> na chamada. Se nada for passado, Python usa o valor definido.</p>
+
+              <div class="callout c-amber">
+                <span class="callout-icon">⚠️</span>
+                <div><b>Regra de ordem — obrigatória</b><p>Parâmetros <em>com</em> padrão sempre devem vir <strong>depois</strong> dos sem padrão.</p>
+                  <div style="margin-top:.4rem;">
+                    <span class="pill p-red">❌ def f(a=1, b):</span><br>
+                    <span class="pill p-green">✅ def f(b, a=1):</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="callout c-red">
+                <span class="callout-icon">🐛</span>
+                <div><b>Armadilha: listas como padrão</b><p>Nunca use <code>def f(itens=[])</code>. A lista é criada <em>uma única vez</em> e compartilhada entre todas as chamadas. Use <code>itens=None</code> e crie a lista dentro.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">delivery.py</span></div>
+                <div class="code-body"><pre>
+<span class="kw">def</span> <span class="fn">fazer_pedido</span>(
+    sabor,                   <span class="cm"># obrigatório</span>
+    tamanho<span class="op">=</span><span class="st">"média"</span>,         <span class="cm"># opcional</span>
+    borda<span class="op">=</span><span class="st">"simples"</span>,         <span class="cm"># opcional</span>
+    entrega<span class="op">=</span><span class="kw">True</span>             <span class="cm"># opcional</span>
+):
+    <span class="fn">print</span>(<span class="st">f"🍕 </span><span class="pl">{sabor}</span><span class="st"> | </span><span class="pl">{tamanho}</span><span class="st">"</span>
+          <span class="st">f" | borda: </span><span class="pl">{borda}</span><span class="st">"</span>
+          <span class="st">f" | entrega: </span><span class="pl">{'sim' if entrega else 'não'}</span><span class="st">"</span>)
+
+<span class="cm"># Só o obrigatório — usa todos os padrões</span>
+<span class="fn">fazer_pedido</span>(<span class="st">"Calabresa"</span>)
+
+<span class="cm"># Personaliza tamanho, mantém o resto</span>
+<span class="fn">fazer_pedido</span>(<span class="st">"Frango"</span>, <span class="st">"grande"</span>)
+
+<span class="cm"># Mistura posicional + nomeado</span>
+<span class="fn">fazer_pedido</span>(
+    <span class="st">"4 Queijos"</span>,
+    tamanho<span class="op">=</span><span class="st">"família"</span>,
+    borda<span class="op">=</span><span class="st">"catupiry"</span>,
+    entrega<span class="op">=</span><span class="kw">False</span>
+)
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída</span>🍕 Calabresa | média | borda: simples | entrega: sim
+🍕 Frango | grande | borda: simples | entrega: sim
+🍕 4 Queijos | família | borda: catupiry | entrega: não</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S6 — RETURN
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s6">
+        <div class="slide-inner">
+          <span class="label">Conceito 06</span>
+          <div class="title">Retornando <em>Valores</em></div>
+          <div class="ctx-tag">💰 Contexto: simulador de financiamento</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>Uma função que só imprime é como um caixa de banco que faz a conta mas não te mostra o resultado. Com <strong>return</strong>, a função devolve um valor que você pode usar, guardar ou passar adiante.</p>
+
+              <div class="card b-blue">
+                <div class="card-hd blue">O que return faz</div>
+                <div class="stack gap-sm mt">
+                  <div class="step-row">
+                    <div class="step-num" style="width:22px;height:22px;font-size:.65rem;">1</div>
+                    <div class="step-body"><b>Devolve um valor</b><p>O resultado fica disponível para quem chamou a função.</p></div>
+                  </div>
+                  <div class="step-row">
+                    <div class="step-num" style="width:22px;height:22px;font-size:.65rem;">2</div>
+                    <div class="step-body"><b>Encerra a função imediatamente</b><p>Nenhuma linha após o <code>return</code> é executada.</p></div>
+                  </div>
+                  <div class="step-row">
+                    <div class="step-num" style="width:22px;height:22px;font-size:.65rem;">3</div>
+                    <div class="step-body"><b>Pode retornar múltiplos valores</b><p><code>return a, b, c</code> cria uma tupla implícita.</p></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="callout c-amber">
+                <span class="callout-icon">⚠️</span>
+                <div><b>Sem return → devolve None</b><p>Guardar o resultado de uma função sem <code>return</code> em uma variável é um bug silencioso muito comum.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">financiamento.py</span></div>
+                <div class="code-body"><pre>
+<span class="kw">def</span> <span class="fn">calcular_parcela</span>(valor, meses, taxa_mes):
+    <span class="cm"># Fórmula de financiamento Price</span>
+    t <span class="op">=</span> taxa_mes <span class="op">/</span> <span class="nu">100</span>
+    fator <span class="op">=</span> (t <span class="op">*</span> (<span class="nu">1</span> <span class="op">+</span> t) <span class="op">**</span> meses) <span class="op">/</span> \
+            ((<span class="nu">1</span> <span class="op">+</span> t) <span class="op">**</span> meses <span class="op">-</span> <span class="nu">1</span>)
+    parcela <span class="op">=</span> valor <span class="op">*</span> fator
+    total   <span class="op">=</span> parcela <span class="op">*</span> meses
+    juros   <span class="op">=</span> total <span class="op">-</span> valor
+    <span class="kw">return</span> parcela, total, juros  <span class="cm"># tupla</span>
+
+<span class="cm"># Desempacotamento direto</span>
+p, t, j <span class="op">=</span> <span class="fn">calcular_parcela</span>(
+    valor<span class="op">=</span><span class="nu">20_000</span>,
+    meses<span class="op">=</span><span class="nu">48</span>,
+    taxa_mes<span class="op">=</span><span class="nu">1.2</span>
+)
+<span class="fn">print</span>(<span class="st">f"Parcela : R$ </span><span class="pl">{p:,.2f}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Total   : R$ </span><span class="pl">{t:,.2f}</span><span class="st">"</span>)
+<span class="fn">print</span>(<span class="st">f"Juros   : R$ </span><span class="pl">{j:,.2f}</span><span class="st">"</span>)
+
+<span class="cm"># Retorno também pode alimentar outra função</span>
+<span class="fn">print</span>(<span class="fn">round</span>(<span class="fn">calcular_parcela</span>(<span class="nu">5000</span>,<span class="nu">12</span>,<span class="nu">2.5</span>)[<span class="nu">0</span>], <span class="nu">2</span>))
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída</span>Parcela : R$ 527,03
+Total   : R$ 25.297,62
+Juros   : R$ 5.297,62
+476.69</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S7 — ESCOPO
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s7">
+        <div class="slide-inner">
+          <span class="label">Conceito 07</span>
+          <div class="title">Escopo de <em>Variáveis</em></div>
+          <div class="ctx-tag">🏦 Contexto: conta bancária digital</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>Imagine uma agência bancária: o sistema central tem acesso ao saldo de todos os clientes (global), mas cada caixa numa cabine separada só enxerga os papéis na <em>sua</em> mesa. Quando o caixa vai embora, esses papéis somem.</p>
+
+              <div class="scope-box g-scope">
+                <div class="scope-tag g-tag">🌐 Escopo Global</div>
+                <p style="font-size:.83rem;margin-top:.2rem;">Variáveis declaradas fora de funções. Acessíveis em todo o arquivo. Vivem enquanto o programa rodar.</p>
+              </div>
+
+              <div class="scope-box l-scope">
+                <div class="scope-tag l-tag">🔒 Escopo Local</div>
+                <p style="font-size:.83rem;margin-top:.2rem;">Variáveis criadas dentro de uma função — incluindo os parâmetros. Invisíveis fora dela. Destruídas quando a função termina.</p>
+              </div>
+
+              <div class="callout c-amber mt">
+                <span class="callout-icon">⚠️</span>
+                <div><b>global — use com cautela</b><p><code>global saldo</code> permite modificar uma variável global de dentro de uma função. Funciona, mas dificulta rastrear bugs. <strong>Prefira passar e retornar valores.</strong></p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">banco.py</span></div>
+                <div class="code-body"><pre>
+saldo <span class="op">=</span> <span class="nu">1_000.00</span>   <span class="cm"># ← GLOBAL</span>
+
+<span class="kw">def</span> <span class="fn">depositar</span>(valor):
+    taxa  <span class="op">=</span> <span class="nu">0.005</span>    <span class="cm"># ← LOCAL (só existe aqui)</span>
+    bonus <span class="op">=</span> valor <span class="op">*</span> taxa   <span class="cm"># ← LOCAL</span>
+    <span class="kw">return</span> valor <span class="op">+</span> bonus  <span class="cm"># devolve, não modifica global</span>
+
+<span class="kw">def</span> <span class="fn">sacar</span>(valor, saldo_atual):
+    <span class="kw">if</span> valor <span class="op">></span> saldo_atual:
+        <span class="fn">print</span>(<span class="st">"❌ Saldo insuficiente"</span>)
+        <span class="kw">return</span> saldo_atual
+    <span class="kw">return</span> saldo_atual <span class="op">-</span> valor
+
+<span class="cm"># ── Boas práticas: passa e recebe ───────</span>
+saldo <span class="op">=</span> <span class="fn">depositar</span>(<span class="nu">500.00</span>)      <span class="cm"># → 1502.50</span>
+saldo <span class="op">=</span> <span class="fn">sacar</span>(<span class="nu">200.00</span>, saldo)    <span class="cm"># → 1302.50</span>
+<span class="fn">print</span>(<span class="st">f"Saldo: R$ </span><span class="pl">{saldo:.2f}</span><span class="st">"</span>)
+
+<span class="cm"># ── Isso causaria NameError: ─────────────</span>
+<span class="cm"># print(taxa)   ← local de depositar()</span>
+<span class="cm"># print(bonus)  ← local de depositar()</span>
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída</span>Saldo: R$ 1302.50</div>
+
+              <div class="callout c-red">
+                <span class="callout-icon">❌</span>
+                <div><b>Armadilha: ler global sem querer</b><p>Se você digitar errado um parâmetro, Python pode ler a variável global de mesmo nome <em>sem avisar</em>. Nomes diferentes para globais e locais evitam esse bug.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S8 — COMPOSIÇÃO
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s8">
+        <div class="slide-inner">
+          <span class="label">Conceito 08</span>
+          <div class="title">Composição de <em>Funções</em></div>
+          <div class="ctx-tag">🚗 Contexto: app de corridas (Uber / 99)</div>
+
+          <div class="split-4-6">
+            <div class="stack">
+              <p>O preço de uma corrida envolve várias etapas: distância, tempo, tarifa dinâmica, taxa do app, gorjeta. Cada responsabilidade vira uma função. A função principal apenas <strong>orquestra</strong> as demais.</p>
+              <p>Isso é <strong>composição de funções</strong> — a base da programação modular.</p>
+
+              <div class="card b-purple">
+                <div class="card-hd purple">Por que compor?</div>
+                <div class="stack gap-sm mt">
+                  <div class="feat-row" style="padding:.5rem .7rem;">
+                    <div style="color:var(--purple);font-size:.85rem;flex-shrink:0;">▸</div>
+                    <div class="feat-body"><b>Separação de responsabilidade</b><p>Cada função faz <em>uma coisa</em> e a faz bem.</p></div>
+                  </div>
+                  <div class="feat-row" style="padding:.5rem .7rem;">
+                    <div style="color:var(--purple);font-size:.85rem;flex-shrink:0;">▸</div>
+                    <div class="feat-body"><b>Testabilidade</b><p>Você testa <code>calcular_base()</code> isoladamente, sem rodar o app todo.</p></div>
+                  </div>
+                  <div class="feat-row" style="padding:.5rem .7rem;">
+                    <div style="color:var(--purple);font-size:.85rem;flex-shrink:0;">▸</div>
+                    <div class="feat-body"><b>Reuso</b><p><code>aplicar_taxa()</code> pode ser usada em outros contextos do sistema.</p></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="callout c-teal">
+                <span class="callout-icon">💡</span>
+                <div><b>Princípio da Responsabilidade Única</b><p>Se você precisa de "e" para descrever o que a função faz, considere dividi-la em duas.</p></div>
+              </div>
+            </div>
+
+            <div class="stack">
+              <div class="code-wrap">
+                <div class="code-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><span class="code-fname">corrida.py</span></div>
+                <div class="code-body"><pre>
+<span class="kw">def</span> <span class="fn">calcular_base</span>(km, minutos):
+    <span class="kw">return</span> <span class="nu">2.50</span> <span class="op">+</span> km <span class="op">*</span> <span class="nu">1.80</span> <span class="op">+</span> minutos <span class="op">*</span> <span class="nu">0.35</span>
+
+<span class="kw">def</span> <span class="fn">aplicar_pico</span>(preco, fator<span class="op">=</span><span class="nu">1.8</span>):
+    <span class="cm"># fator > 1 em horário de pico</span>
+    <span class="kw">return</span> preco <span class="op">*</span> fator
+
+<span class="kw">def</span> <span class="fn">adicionar_gorjeta</span>(preco, pct<span class="op">=</span><span class="nu">10</span>):
+    <span class="kw">return</span> preco <span class="op">*</span> (<span class="nu">1</span> <span class="op">+</span> pct <span class="op">/</span> <span class="nu">100</span>)
+
+<span class="kw">def</span> <span class="fn">calcular_corrida</span>(km, minutos,
+                      pico<span class="op">=</span><span class="kw">False</span>, gorjeta<span class="op">=</span><span class="nu">0</span>):
+    preco <span class="op">=</span> <span class="fn">calcular_base</span>(km, minutos)  <span class="cm"># chama 1</span>
+    <span class="kw">if</span> pico:
+        preco <span class="op">=</span> <span class="fn">aplicar_pico</span>(preco)     <span class="cm"># chama 2</span>
+    <span class="kw">if</span> gorjeta <span class="op">></span> <span class="nu">0</span>:
+        preco <span class="op">=</span> <span class="fn">adicionar_gorjeta</span>(preco, gorjeta) <span class="cm"># chama 3</span>
+    <span class="kw">return</span> <span class="fn">round</span>(preco, <span class="nu">2</span>)
+
+<span class="cm"># Corrida normal (8 km, 15 min)</span>
+<span class="fn">print</span>(<span class="fn">calcular_corrida</span>(<span class="nu">8</span>, <span class="nu">15</span>))
+
+<span class="cm"># Horário de pico + gorjeta 10%</span>
+<span class="fn">print</span>(<span class="fn">calcular_corrida</span>(<span class="nu">8</span>, <span class="nu">15</span>,
+      pico<span class="op">=</span><span class="kw">True</span>, gorjeta<span class="op">=</span><span class="nu">10</span>))
+</pre></div>
+              </div>
+
+              <div class="out-box"><span class="out-lbl">▶ saída</span>24.65
+48.78</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════
+           S9 — EXERCÍCIOS
+      ═══════════════════════════════════════════ -->
+      <div class="slide" id="s9">
+        <div class="slide-inner">
+          <span class="label">Prática</span>
+          <div class="title"><em>Exercícios</em> Práticos</div>
+          <p class="subtitle">Resolva cada desafio antes de avançar. Comece pelos obrigatórios — o desafio é para quem terminar cedo.</p>
+
+          <div class="auto-col">
+            <div class="card b-teal">
+              <div class="card-hd teal">01 — Gorjeta</div>
+              <p>Crie <code>gorjeta(valor, pct=10)</code> que retorne uma tupla com o valor da gorjeta e o total a pagar.</p>
+              <div class="out-box mt" style="font-size:.74rem;">gorjeta(85.00)
+→ (8.5, 93.5)
+
+gorjeta(200, pct=15)
+→ (30.0, 230.0)</div>
+            </div>
+
+            <div class="card b-blue">
+              <div class="card-hd blue">02 — Senha Válida</div>
+              <p>Crie <code>senha_valida(s, minimo=8)</code> retornando <code>True</code> se a senha tiver ao menos <code>minimo</code> caracteres <strong>e</strong> pelo menos um dígito.</p>
+              <div class="out-box mt" style="font-size:.74rem;">senha_valida("abc")
+→ False
+
+senha_valida("senha2024")
+→ True</div>
+            </div>
+
+            <div class="card b-green">
+              <div class="card-hd green">03 — Conversor</div>
+              <p>Crie <code>converter(valor, de, para)</code> para converter entre <code>"km"</code>, <code>"m"</code>, <code>"cm"</code> e <code>"mm"</code> usando um dicionário de fatores.</p>
+              <div class="out-box mt" style="font-size:.74rem;">converter(1.5, "km", "m")
+→ 1500.0
+
+converter(200, "cm", "m")
+→ 2.0</div>
+            </div>
+
+            <div class="card b-amber">
+              <div class="card-hd amber">04 — IMC</div>
+              <p>Crie <code>calcular_imc(peso, alt)</code> e <code>classificar_imc(imc)</code>. Depois, <code>relatorio(nome, peso, alt)</code> chama as duas e exibe um resumo.</p>
+              <div class="out-box mt" style="font-size:.74rem;">relatorio("Ana", 62, 1.65)
+→ Ana | 22.8 | Peso normal</div>
+            </div>
+
+            <div class="card b-red" style="grid-column: span 2;">
+              <div class="card-hd red">🔥 Desafio — Mini Extrato Bancário</div>
+              <p style="margin-bottom:.7rem;">Implemente <code>depositar(v, s)</code>, <code>sacar(v, s)</code> e <code>extrato(operacoes)</code>. O parâmetro <code>operacoes</code> é uma lista de tuplas <code>("D", 200)</code> ou <code>("S", 50)</code>. A função extrato deve iterar, chamar as demais e exibir cada linha com saldo parcial e saldo final.</p>
+              <div class="out-box" style="font-size:.74rem;">extrato([("D",500), ("S",120), ("D",80), ("S",600)])
+
+  Depósito  +R$500.00  →  Saldo: R$500.00
+  Saque     -R$120.00  →  Saldo: R$380.00
+  Depósito  + R$80.00  →  Saldo: R$460.00
+  ❌ Saldo insuficiente para R$600.00
+  ──────────────────────────────────────
+  Saldo final: R$460.00</div>
+            </div>
+
+            <div class="card" style="border-color:rgba(167,139,250,.25);background:var(--purple-dim);">
+              <div class="card-hd purple">📋 Referência Rápida</div>
+              <table class="tbl" style="margin-top:.3rem;">
+                <tbody>
+                  <tr><td>def f():</td><td>Sem parâmetros</td></tr>
+                  <tr><td>def f(a, b):</td><td>Com parâmetros</td></tr>
+                  <tr><td>def f(a, b=0):</td><td>Com valor padrão</td></tr>
+                  <tr><td>return x</td><td>Retorna e encerra</td></tr>
+                  <tr><td>return a, b</td><td>Retorno múltiplo (tupla)</td></tr>
+                  <tr><td>f(b=2, a=1)</td><td>Argumentos nomeados</td></tr>
+                  <tr><td>global x</td><td>Acessa/modifica global</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /track -->
+  </div><!-- /viewer -->
+
+  <!-- ── BOTTOM BAR ─────────────────────────────── -->
+  <footer id="bottombar">
+    <button class="nav-btn" id="btn-prev" onclick="prev()">← Anterior</button>
+    <div id="dots"></div>
+    <button class="nav-btn" id="btn-next" onclick="next()">Próximo →</button>
+  </footer>
+
+</div><!-- /shell -->
+
+<script>
+const N = 10;
+let cur = 0;
+
+const track   = document.getElementById('track');
+const dotsEl  = document.getElementById('dots');
+const fill    = document.getElementById('prog-fill');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+// Build dots
+for (let i = 0; i < N; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.addEventListener('click', () => goTo(i));
+  dotsEl.appendChild(d);
+}
+
+function goTo(n) {
+  if (n < 0 || n >= N) return;
+
+  // Deactivate old slide (hides content for re-animation)
+  const old = document.getElementById('s' + cur);
+  if (old) old.classList.remove('active');
+
+  cur = n;
+  track.style.transform = `translateX(-${cur * 100}vw)`;
+
+  // Activate new slide (triggers CSS transition)
+  requestAnimationFrame(() => {
+    const sl = document.getElementById('s' + cur);
+    if (sl) {
+      sl.classList.add('active');
+      // Scroll to top of this slide
+      sl.scrollTop = 0;
+    }
+  });
+
+  // Sync UI
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  fill.style.width = (cur / (N - 1) * 100) + '%';
+  btnPrev.disabled = cur === 0;
+  btnNext.disabled = cur === N - 1;
+}
+
+function next() { goTo(cur + 1); }
+function prev() { goTo(cur - 1); }
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  next();
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    prev();
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End')  goTo(N - 1);
+});
+
+// Touch / swipe
+let tx0 = 0, ty0 = 0;
+document.addEventListener('touchstart', e => {
+  tx0 = e.touches[0].clientX;
+  ty0 = e.touches[0].clientY;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx0;
+  const dy = e.changedTouches[0].clientY - ty0;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45)
+    dx < 0 ? next() : prev();
+}, { passive: true });
+
+goTo(0);
+</script>
+</body>
+</html>
