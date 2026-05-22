@@ -127,17 +127,6 @@ Originalidade, relação com tecnologia/programação e impacto.
 ### Critério 3 — Participação dos Membros
 Envolvimento e contribuição de todos os 4 integrantes durante a Fase 1.
 
----
-
-## 📅 Prazos
-
-| Atividade | Prazo |
-|-----------|-------|
-| Formação das equipes e nome | A definir |
-| Entrega dos enunciados e soluções | A definir |
-| Início da Fase 2 | A definir |
-
----
 
 ## ❓ Dúvidas rápidas
 

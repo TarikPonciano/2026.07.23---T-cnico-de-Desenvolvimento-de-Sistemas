@@ -1,6 +1,8 @@
 funcionarios = []
 
 def cadastrarFuncionario():
+
+
     print("CADASTRO DE FUNCIONÁRIOS")
 
     nome = input("Digite o nome do Funcionário: ")
@@ -14,7 +16,6 @@ def cadastrarFuncionario():
     "cargo": cargo,           # Cargo/Função
     "salario": salario        # Salário mensal
 }
-    
     funcionarios.append(novo_funcionario)
     
 
