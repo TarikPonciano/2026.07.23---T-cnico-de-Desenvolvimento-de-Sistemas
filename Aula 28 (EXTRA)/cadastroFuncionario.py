@@ -1,4 +1,7 @@
+import utils
+
 funcionarios = []
+
 
 def cadastrarFuncionario():
 
