@@ -1,8 +1,6 @@
 funcionarios = []
 
-def cadastrarFuncionario():
-
-
+def cadastrar_funcionario():
     print("CADASTRO DE FUNCIONÁRIOS")
 
     nome = input("Digite o nome do Funcionário: ")
@@ -37,8 +35,9 @@ Menu:
     op = input("Digite a opção desejada:")
 
     if op == "1":
-        cadastrarFuncionario()
+        cadastrar_funcionario()
     elif op == "2":
+        # Criar uma função chamada ver_funcionarios() que exibe os funcionários em uma lista numerada no formato {numero}. {nome} - {cpf}
         print(funcionarios)
     elif op == "3":
         pass
