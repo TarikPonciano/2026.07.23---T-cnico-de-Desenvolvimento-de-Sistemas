@@ -136,7 +136,14 @@ def cadastrar_funcionario():
     "salario": salario        # Salário mensal
 }
     funcionarios.append(novo_funcionario)
-    
+
+def ver_funcionarios():
+
+    print("LISTA DE FUNCIONÁRIOS")
+    contador = 1
+    for funcionario in funcionarios:
+        print(f"{contador}. {funcionario["nome"]} - {funcionario["cpf"]}")
+        contador += 1
 
 while True:
 
@@ -159,10 +166,14 @@ Menu:
         cadastrar_funcionario()
     elif op == "2":
         # Criar uma função chamada ver_funcionarios() que exibe os funcionários em uma lista numerada no formato {numero}. {nome} - {cpf}
-        print(funcionarios)
+        ver_funcionarios()
     elif op == "3":
         pass
     elif op == "4":
+        # Mostrar a lista de funcionários na tela
+        # Pedir para o usuário digitar o número do funcionário
+        # Validar se o número que o usuário digitou é possível
+        # Remover o funcionário escolhido
         pass
     elif op == "0":
         print("SAINDO DO PROGRAMA...")
