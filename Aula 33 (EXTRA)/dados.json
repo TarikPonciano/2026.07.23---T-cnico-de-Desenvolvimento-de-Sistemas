@@ -1,0 +1,122 @@
+[
+    {
+        "nome": "Ana Beatriz Souza",
+        "cpf": "12345678901",
+        "cargo": "Analista de Sistemas",
+        "salario": 5200.0
+    },
+    {
+        "nome": "Carlos Eduardo Lima",
+        "cpf": "23456789012",
+        "cargo": "Desenvolvedor Backend",
+        "salario": 6800.0
+    },
+    {
+        "nome": "Fernanda Alves Rocha",
+        "cpf": "34567890123",
+        "cargo": "Designer UX/UI",
+        "salario": 4700.0
+    },
+    {
+        "nome": "Jo\u00c3\u00a3o Pedro Martins",
+        "cpf": "45678901234",
+        "cargo": "Administrador de Redes",
+        "salario": 5900.0
+    },
+    {
+        "nome": "Mariana Costa Silva",
+        "cpf": "56789012345",
+        "cargo": "Gerente de Projetos",
+        "salario": 8500.0
+    },
+    {
+        "nome": "Lucas Ferreira Gomes",
+        "cpf": "67890123456",
+        "cargo": "T\u00c3\u00a9cnico em Suporte",
+        "salario": 3200.0
+    },
+    {
+        "nome": "Patr\u00c3\u00adcia Mendes Ara\u00c3\u00bajo",
+        "cpf": "78901234567",
+        "cargo": "Analista de Dados",
+        "salario": 6100.0
+    },
+    {
+        "nome": "Rafael Henrique Batista",
+        "cpf": "89012345678",
+        "cargo": "Desenvolvedor Frontend",
+        "salario": 6400.0
+    },
+    {
+        "nome": "Juliana Oliveira Castro",
+        "cpf": "90123456789",
+        "cargo": "Assistente Administrativo",
+        "salario": 2800.0
+    },
+    {
+        "nome": "Thiago Ribeiro Santos",
+        "cpf": "11223344556",
+        "cargo": "Coordenador de TI",
+        "salario": 7800.0
+    },
+    {
+        "nome": "Camila Nunes Pereira",
+        "cpf": "22334455667",
+        "cargo": "Recursos Humanos",
+        "salario": 4300.0
+    },
+    {
+        "nome": "Bruno Carvalho Freitas",
+        "cpf": "33445566778",
+        "cargo": "Engenheiro de Software",
+        "salario": 9200.0
+    },
+    {
+        "nome": "Larissa Barbosa Melo",
+        "cpf": "44556677889",
+        "cargo": "Secret\u00c3\u00a1ria",
+        "salario": 2600.0
+    },
+    {
+        "nome": "Diego Fernandes Pinto",
+        "cpf": "55667788990",
+        "cargo": "Analista Financeiro",
+        "salario": 5100.0
+    },
+    {
+        "nome": "Renata Vieira Campos",
+        "cpf": "66778899001",
+        "cargo": "Contadora",
+        "salario": 7000.0
+    },
+    {
+        "nome": "Felipe Moura Teixeira",
+        "cpf": "77889900112",
+        "cargo": "Desenvolvedor Mobile",
+        "salario": 6600.0
+    },
+    {
+        "nome": "Gustavo Almeida Cunha",
+        "cpf": "99001122334",
+        "cargo": "Supervisor de Produ\u00c3\u00a7\u00c3\u00a3o",
+        "salario": 6200.0
+    },
+    {
+        "nome": "Vanessa Lopes Cardoso",
+        "cpf": "10111213141",
+        "cargo": "Consultora Comercial",
+        "salario": 4800.0
+    },
+    {
+        "nome": "Ricardo Moreira Dias",
+        "cpf": "12131415161",
+        "cargo": "Auxiliar de Escrit\u00c3\u00b3rio",
+        "salario": 2400.0
+    },
+    {
+        "nome": "Rafael Lucas Dias",
+        "cpf": "12131414321",
+        "cargo": "Gerente de Escrit\u00c3\u00b3rio",
+        "salario": 6400.0
+    }
+]
