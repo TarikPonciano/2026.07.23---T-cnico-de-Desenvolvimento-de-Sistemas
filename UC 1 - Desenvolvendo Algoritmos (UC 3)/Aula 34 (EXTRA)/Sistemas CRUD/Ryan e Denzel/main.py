@@ -182,9 +182,9 @@ while True:
     Comentário: {filme_escolhido["comentário"]}
 """)
                 escolha = input("Deseja remover esse filme (S/N): ")
-                escolha = escolha.upper
+                escolha = escolha.upper()
                 if escolha == "S":
-                    
+                    filmes_assistidos.pop(indice)
                     print("Filme removido com sucesso!")
                 elif escolha == "N":
                     continue
@@ -205,9 +205,9 @@ while True:
     Comentário: {filme_escolhido["comentário"]}
 """)
                 escolha = input("Deseja remover esse filme (S/N): ")
-                escolha = escolha.upper
+                escolha = escolha.upper()
                 if escolha == "S":
-
+                    filmes_nao_assistidos.pop(indice)
                     print("Filme removido com sucesso!")
                 elif escolha == "N":
                     continue

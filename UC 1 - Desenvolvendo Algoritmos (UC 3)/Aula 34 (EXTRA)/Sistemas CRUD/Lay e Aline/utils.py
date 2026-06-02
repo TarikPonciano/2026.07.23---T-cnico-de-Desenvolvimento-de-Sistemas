@@ -183,7 +183,6 @@ def modificar_livro (livros):
     
 def remover_livro(livros):
 
-    while True:
 
         visualizar_titulos(livros)
 
@@ -192,6 +191,8 @@ def remover_livro(livros):
         livro_removido = livros.pop(num_livro-1)
 
         print(f"O livro {livro_removido['Título']} do autor {livro_removido['Autor']} foi removido com sucesso!")
+
+
 
 def ler_sinopses(livros):
 

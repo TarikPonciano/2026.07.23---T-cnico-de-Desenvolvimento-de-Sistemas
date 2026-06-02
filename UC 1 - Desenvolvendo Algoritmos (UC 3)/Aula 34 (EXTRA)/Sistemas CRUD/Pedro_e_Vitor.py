@@ -109,7 +109,7 @@ def ver_alunos():
 def escolher_alunos():
     while True:
         try:
-            num = int(input("Digite o número do aluno: ")).strip()
+            num = int(input("Digite o número do aluno: ").strip())
 
             if num <1 or num > len(alunos):
                 print("DIGITE UM NÚMERO VÁLIDO")

@@ -24,8 +24,7 @@ def validar_nome(nome_produto):
 def validar_preco(preco_produto):
     if preco_produto > 0:
         return True
-    else:
-        return False
+    return False
 
 
 # ---- Funcionalidades Específicas do Tema ----

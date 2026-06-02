@@ -6,6 +6,7 @@
 
 livros = []
 
+
 def livro_exist(titulo):
     for dados in livros:
         if dados["titulo"]==titulo:
