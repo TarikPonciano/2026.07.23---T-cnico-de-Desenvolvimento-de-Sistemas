@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POO em Python — Introdução | TDS Senac</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap');
+
+  :root{
+    --ink:#15130f;
+    --paper:#f4ede0;
+    --paper-2:#ebe0cd;
+    --rust:#c0492b;
+    --rust-dk:#9a3620;
+    --teal:#1f5f5b;
+    --gold:#d99a2b;
+    --line:#2a261f;
+    --code-bg:#1a1814;
+    --code-ink:#f0e6d6;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html,body{height:100%;}
+
+  body{
+    font-family:'Sora',sans-serif;
+    background:var(--ink);
+    color:var(--ink);
+    overflow:hidden;
+  }
+
+  .deck{
+    width:100vw;height:100vh;position:relative;
+  }
+
+  .slide{
+    position:absolute;inset:0;
+    display:none;
+    flex-direction:column;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(192,73,43,.06) 0, transparent 38%),
+      radial-gradient(circle at 88% 82%, rgba(31,95,91,.07) 0, transparent 40%);
+    padding:clamp(2rem,5vh,3.6rem) clamp(2rem,7vw,6rem);
+    overflow-y:auto;
+  }
+  .slide.active{display:flex;animation:fade .5s ease;}
+
+  @keyframes fade{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  /* texture grain */
+  .deck::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+    opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .kicker{
+    font-family:'Space Mono',monospace;
+    font-size:.78rem;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--rust);font-weight:700;
+    display:flex;align-items:center;gap:.7rem;margin-bottom:1.3rem;
+  }
+  .kicker::before{content:"";width:34px;height:2px;background:var(--rust);}
+
+  h1{
+    font-family:'Fraunces',serif;font-weight:900;
+    font-size:clamp(2.4rem,6vw,4.6rem);line-height:.98;
+    letter-spacing:-.02em;color:var(--ink);
+  }
+  h1 em{font-style:italic;color:var(--rust);}
+
+  h2{
+    font-family:'Fraunces',serif;font-weight:900;
+    font-size:clamp(1.8rem,3.6vw,2.9rem);line-height:1.02;
+    letter-spacing:-.015em;margin-bottom:1.4rem;
+  }
+  h2 em{font-style:italic;color:var(--teal);}
+
+  h3{
+    font-family:'Sora',sans-serif;font-weight:700;
+    font-size:1.15rem;margin-bottom:.5rem;
+  }
+
+  p{font-size:clamp(1rem,1.6vw,1.18rem);line-height:1.6;max-width:64ch;color:#3a342b;}
+  p + p{margin-top:.9rem;}
+
+  .lead{font-size:clamp(1.15rem,2vw,1.4rem);}
+
+  strong{color:var(--rust-dk);font-weight:600;}
+
+  code.inline{
+    font-family:'Space Mono',monospace;font-size:.92em;
+    background:var(--paper-2);padding:.1rem .4rem;border-radius:4px;
+    border:1px solid rgba(42,38,31,.2);color:var(--rust-dk);
+  }
+
+  /* ---- cover ---- */
+  .cover{justify-content:center;}
+  .cover .big-num{
+    position:absolute;right:clamp(1rem,4vw,5rem);bottom:-2vh;
+    font-family:'Fraunces',serif;font-weight:900;
+    font-size:clamp(12rem,38vw,30rem);line-height:.7;
+    color:var(--paper-2);z-index:0;user-select:none;
+  }
+  .cover > *{position:relative;z-index:1;}
+  .course-tag{
+    font-family:'Space Mono',monospace;font-size:.82rem;
+    letter-spacing:.12em;color:var(--teal);margin-top:2rem;
+    border-top:1px solid rgba(42,38,31,.25);padding-top:1rem;max-width:40ch;
+  }
+
+  /* ---- cards ---- */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-top:.4rem;}
+  .cards.three{grid-template-columns:repeat(3,1fr);}
+  .card{
+    background:var(--paper-2);border:1.5px solid var(--line);
+    border-radius:4px;padding:1.5rem 1.6rem;
+    box-shadow:5px 5px 0 var(--ink);
+  }
+  .card.teal{border-color:var(--teal);box-shadow:5px 5px 0 var(--teal);}
+  .card.rust{border-color:var(--rust-dk);box-shadow:5px 5px 0 var(--rust-dk);}
+  .card .tag{
+    font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--rust);font-weight:700;
+  }
+  .card.teal .tag{color:var(--teal);}
+  .card p{font-size:1rem;}
+
+  /* ---- analogy strip ---- */
+  .analogy{
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    gap:1.5rem;margin-top:1.8rem;
+  }
+  .analogy .box{
+    text-align:center;padding:1.6rem 1rem;border-radius:6px;
+    border:2px solid var(--line);background:var(--paper-2);
+  }
+  .analogy .box .ic{font-size:2.6rem;display:block;margin-bottom:.5rem;}
+  .analogy .box b{font-family:'Fraunces',serif;font-size:1.3rem;display:block;}
+  .analogy .box span{font-size:.9rem;color:#5a5345;}
+  .analogy .arrow{font-size:2rem;color:var(--rust);font-weight:700;}
+
+  /* ---- code ---- */
+  pre{
+    background:var(--code-bg);color:var(--code-ink);
+    border-radius:6px;padding:1.4rem 1.6rem;
+    font-family:'Space Mono',monospace;font-size:clamp(.78rem,1.15vw,.95rem);
+    line-height:1.65;overflow-x:auto;margin-top:.4rem;
+    border-left:5px solid var(--rust);
+  }
+  pre.teal-edge{border-left-color:var(--teal);}
+  pre .c{color:#7c8a86;font-style:italic;}      /* comment */
+  pre .k{color:#e0913a;}                          /* keyword */
+  pre .s{color:#9fd8a0;}                          /* string */
+  pre .f{color:#6fc3d4;}                          /* function/class name */
+  pre .n{color:#d98b8b;}                          /* number */
+  pre .v{color:#f0e6d6;}                          /* var */
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;}
+  .split.wide-left{grid-template-columns:1.15fr .85fr;}
+  .split.wide-code{grid-template-columns:1.25fr .75fr;}
+
+  /* tree */
+  .tree{
+    background:var(--code-bg);color:var(--code-ink);
+    font-family:'Space Mono',monospace;font-size:.92rem;line-height:1.8;
+    padding:1.6rem 1.8rem;border-radius:6px;border-left:5px solid var(--teal);
+  }
+  .tree .dir{color:var(--gold);font-weight:700;}
+  .tree .file{color:#9fd8a0;}
+  .tree .note{color:#7c8a86;}
+
+  ul.clean{list-style:none;margin-top:.6rem;}
+  ul.clean li{
+    padding-left:1.6rem;position:relative;margin-bottom:.7rem;
+    font-size:1rem;line-height:1.5;
+  }
+  ul.clean li::before{
+    content:"→";position:absolute;left:0;color:var(--rust);font-weight:700;
+  }
+
+  .pill-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;}
+  .pill{
+    font-family:'Space Mono',monospace;font-size:.78rem;
+    background:var(--ink);color:var(--paper);padding:.35rem .8rem;border-radius:20px;
+  }
+
+  .callout{
+    border:2px dashed var(--teal);border-radius:6px;
+    padding:1.2rem 1.4rem;margin-top:1.4rem;background:rgba(31,95,91,.06);
+  }
+  .callout b{color:var(--teal);font-family:'Fraunces',serif;}
+  .callout.rust-note{border-color:var(--rust-dk);background:rgba(192,73,43,.06);}
+  .callout.rust-note b{color:var(--rust-dk);}
+
+  .section-divider{
+    justify-content:center;align-items:flex-start;
+    background:var(--ink) !important;
+    background-image:
+      radial-gradient(circle at 15% 25%, rgba(192,73,43,.18) 0, transparent 42%),
+      radial-gradient(circle at 85% 75%, rgba(31,95,91,.18) 0, transparent 45%) !important;
+  }
+  .section-divider .kicker{color:var(--gold);}
+  .section-divider .kicker::before{background:var(--gold);}
+  .section-divider h1{color:var(--paper);}
+  .section-divider h1 em{color:var(--rust);}
+  .section-divider p{color:#c9bfae;}
+
+  /* ---- nav ---- */
+  .nav{
+    position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);
+    z-index:100;display:flex;align-items:center;gap:1rem;
+    background:var(--ink);padding:.5rem .9rem;border-radius:40px;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);
+  }
+  .nav button{
+    background:none;border:none;color:var(--paper);font-size:1.3rem;
+    cursor:pointer;width:34px;height:34px;border-radius:50%;
+    display:grid;place-items:center;transition:.2s;
+  }
+  .nav button:hover{background:var(--rust);}
+  .nav .counter{
+    font-family:'Space Mono',monospace;font-size:.85rem;color:var(--paper);
+    min-width:62px;text-align:center;letter-spacing:.1em;
+  }
+  .progress{
+    position:fixed;top:0;left:0;height:4px;background:var(--rust);z-index:100;
+    transition:width .3s ease;
+  }
+
+  .footer-tag{
+    position:fixed;bottom:1.3rem;left:1.6rem;z-index:90;
+    font-family:'Space Mono',monospace;font-size:.7rem;
+    color:var(--rust);letter-spacing:.1em;
+  }
+
+  @media(max-width:760px){
+    .cards,.cards.three,.split,.split.wide-left,.split.wide-code,.analogy{grid-template-columns:1fr;}
+    .analogy .arrow{transform:rotate(90deg);}
+    .footer-tag{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 — COVER -->
+  <section class="slide active cover">
+    <div class="big-num">OO</div>
+    <div class="kicker">Técnico em Desenvolvimento de Sistemas</div>
+    <h1>Programação<br>Orientada a<br><em>Objetos</em></h1>
+    <p class="lead" style="margin-top:1.5rem;">Uma introdução prática em Python: do conceito à primeira classe.</p>
+    <div class="course-tag">Material de apoio · Python · Senac TDS<br>Prof. Tarik Ponciano</div>
+  </section>
+
+  <!-- 2 — POR QUE POO -->
+  <section class="slide">
+    <div class="kicker">Ponto de partida</div>
+    <h2>Por que <em>orientar a objetos?</em></h2>
+    <p class="lead">Até agora você escreveu programas com variáveis soltas e funções separadas. Funciona — até o projeto crescer.</p>
+    <div class="split" style="margin-top:1.4rem;">
+      <div>
+        <pre><span class="c"># Sem POO: dados de UM produto espalhados</span>
+nome_produto = <span class="s">"Camiseta"</span>
+preco_produto = <span class="n">49.90</span>
+estoque_produto = <span class="n">12</span>
+
+<span class="c"># e se forem 200 produtos? E um cliente? E um pedido?</span>
+<span class="c"># vira um mar de variáveis soltas...</span>
+<span class="k">def</span> <span class="f">aplicar_desconto</span>(preco, percentual):
+    <span class="k">return</span> preco - (preco * percentual / <span class="n">100</span>)</pre>
+      </div>
+      <div>
+        <div class="card rust">
+          <span class="tag">O problema</span>
+          <h3>Código espalhado</h3>
+          <p>Os dados de cada produto ficam soltos, e toda função precisa receber tudo como parâmetro. Difícil de manter e fácil de errar.</p>
+        </div>
+        <div class="card teal" style="margin-top:1rem;">
+          <span class="tag">A ideia da POO</span>
+          <h3>Juntar o que é parecido</h3>
+          <p>Reunir os <strong>dados</strong> e as <strong>ações</strong> da mesma coisa em uma única estrutura organizada.</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Em uma frase:</b> POO é programar pensando em <strong>objetos do mundo real</strong> — um produto, um cliente, um pedido — em vez de pensar só em comandos isolados.
+    </div>
+  </section>
+
+  <!-- 3 — CLASSE vs OBJETO (analogia) -->
+  <section class="slide">
+    <div class="kicker">Conceito central</div>
+    <h2>Classe é a <em>fôrma</em>. Objeto é o <em>bolo</em>.</h2>
+    <p class="lead">A melhor forma de entender a diferença é com uma analogia.</p>
+    <div class="analogy">
+      <div class="box" style="border-color:var(--rust-dk);">
+        <span class="ic">📐</span>
+        <b>Classe</b>
+        <span>A planta / o molde<br>Existe uma só</span>
+      </div>
+      <div class="arrow">➜</div>
+      <div class="box" style="border-color:var(--teal);">
+        <span class="ic">🍰</span>
+        <b>Objetos</b>
+        <span>Os produtos finais<br>Pode ter vários</span>
+      </div>
+    </div>
+    <p style="margin-top:1.6rem;">A <strong>classe</strong> "Bolo" descreve o que todo bolo tem (sabor, peso) e o que ele faz (ser servido). Cada bolo que você assa a partir dela é um <strong>objeto</strong> diferente — com seu próprio sabor e peso.</p>
+    <div class="callout rust-note">
+      <b>Outras fôrmas do dia a dia:</b> a planta de uma casa (classe) e as casas construídas (objetos); o formulário de cadastro (classe) e cada cadastro preenchido (objetos).
+    </div>
+  </section>
+
+  <!-- 4 — DEFINIÇÕES TEÓRICAS -->
+  <section class="slide">
+    <div class="kicker">Definições</div>
+    <h2>As definições <em>formais</em></h2>
+    <p class="lead">Agora que a intuição está formada, vamos nomear as coisas com precisão.</p>
+    <div class="cards" style="margin-top:1rem;">
+      <div class="card rust">
+        <span class="tag">Classe</span>
+        <h3>O modelo / molde</h3>
+        <p>É um <strong>modelo</strong> que define um tipo de objeto. Ela diz <em>quais dados</em> (atributos) e <em>quais ações</em> (métodos) os objetos daquele tipo terão. A classe sozinha é só a descrição — como uma receita que ainda não virou bolo.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag">Objeto</span>
+        <h3>A instância concreta</h3>
+        <p>É uma <strong>instância</strong> criada a partir de uma classe. Existe de verdade na memória e tem valores próprios. <em>Instanciar</em> é justamente o ato de criar um objeto a partir da classe.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Vocabulário que vamos usar o tempo todo:</b>
+      <ul class="clean" style="margin-top:.7rem;">
+        <li><strong>Atributo</strong> — uma característica/dado do objeto. Ex.: o <em>nome</em> e o <em>preço</em> de um produto.</li>
+        <li><strong>Método</strong> — uma ação/comportamento do objeto. Ex.: <em>aplicar desconto</em>.</li>
+        <li><strong>Instância</strong> — outro nome para "objeto criado a partir da classe".</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 — DIVIDER: MÃO NA MASSA -->
+  <section class="slide section-divider">
+    <div class="kicker">Parte prática</div>
+    <h1>Mão na <em>massa</em></h1>
+    <p class="lead" style="margin-top:1.2rem;max-width:50ch;">Vamos construir, passo a passo, a classe <code class="inline" style="background:rgba(255,255,255,.1);color:#f0e6d6;border-color:transparent;">Produto</code> de uma loja — e dar vida a ela criando objetos.</p>
+  </section>
+
+  <!-- 6 — CRIANDO UMA CLASSE -->
+  <section class="slide">
+    <div class="kicker">Passo 1 · A estrutura</div>
+    <h2>Criando uma <em>classe</em></h2>
+    <div class="split wide-code">
+      <div>
+        <pre><span class="k">class</span> <span class="f">Produto</span>:
+    <span class="c"># construtor: roda quando o objeto é criado</span>
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="v">self</span>, nome, preco):
+        <span class="v">self</span>.nome = nome    <span class="c"># atributo</span>
+        <span class="v">self</span>.preco = preco  <span class="c"># atributo</span>
+
+    <span class="c"># método: comportamento do produto</span>
+    <span class="k">def</span> <span class="f">exibir</span>(<span class="v">self</span>):
+        <span class="k">return</span> <span class="s">f"{</span><span class="v">self</span><span class="s">.nome} — R$ {</span><span class="v">self</span><span class="s">.preco:.2f}"</span></pre>
+      </div>
+      <div>
+        <ul class="clean">
+          <li><strong>class</strong> declara a classe. Por convenção, o nome começa com letra maiúscula (<code class="inline">Produto</code>).</li>
+          <li><strong>__init__</strong> é o construtor: roda sozinho no momento em que o objeto nasce.</li>
+          <li><strong>self</strong> é o próprio objeto falando de si mesmo — toda informação dele mora em <code class="inline">self</code>.</li>
+          <li>Os <strong>atributos</strong> <code class="inline">self.nome</code> e <code class="inline">self.preco</code> guardam os dados de cada produto.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 — ENTENDENDO O self -->
+  <section class="slide">
+    <div class="kicker">Passo 1 · Aprofundando</div>
+    <h2>Afinal, o que é o <em>self?</em></h2>
+    <p class="lead">É a parte que mais confunde no começo — então vamos com calma.</p>
+    <div class="split" style="margin-top:1.2rem;">
+      <div>
+        <ul class="clean">
+          <li>Pense em <code class="inline">self</code> como a palavra <strong>"eu"</strong> dita pelo próprio objeto.</li>
+          <li>Quando escrevemos <code class="inline">self.nome</code>, é o objeto dizendo: <em>"o meu nome"</em>.</li>
+          <li>Cada objeto tem o seu próprio <code class="inline">self</code> — por isso dois produtos podem ter nomes diferentes.</li>
+          <li>Ele é sempre o <strong>primeiro parâmetro</strong> dos métodos, mas o Python o preenche automaticamente quando você usa o ponto.</li>
+        </ul>
+      </div>
+      <div>
+        <pre class="teal-edge">camiseta = <span class="f">Produto</span>(<span class="s">"Camiseta"</span>, <span class="n">49.90</span>)
+caneca   = <span class="f">Produto</span>(<span class="s">"Caneca"</span>, <span class="n">29.90</span>)
+
+<span class="c"># para a camiseta, self é a camiseta:</span>
+<span class="c">#   self.nome  -> "Camiseta"</span>
+
+<span class="c"># para a caneca, self é a caneca:</span>
+<span class="c">#   self.nome  -> "Caneca"</span>
+
+camiseta.<span class="f">exibir</span>()  <span class="c"># self = camiseta</span>
+caneca.<span class="f">exibir</span>()    <span class="c"># self = caneca</span></pre>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Regra prática:</b> dentro da classe, tudo que pertence ao objeto leva <code class="inline">self.</code> na frente.
+    </div>
+  </section>
+
+  <!-- 8 — INSTANCIANDO -->
+  <section class="slide">
+    <div class="kicker">Passo 2 · Dando vida</div>
+    <h2>Instanciando <em>objetos</em></h2>
+    <div class="split">
+      <div>
+        <pre><span class="c"># criando (instanciando) objetos da classe</span>
+p1 = <span class="f">Produto</span>(<span class="s">"Camiseta"</span>, <span class="n">49.90</span>)
+p2 = <span class="f">Produto</span>(<span class="s">"Caneca"</span>, <span class="n">29.90</span>)
+
+<span class="c"># acessando atributos com o ponto</span>
+<span class="k">print</span>(p1.nome)    <span class="c"># Camiseta</span>
+<span class="k">print</span>(p2.preco)   <span class="c"># 29.9</span>
+
+<span class="c"># chamando um método</span>
+<span class="k">print</span>(p1.<span class="f">exibir</span>())
+<span class="c"># Camiseta — R$ 49.90</span></pre>
+      </div>
+      <div>
+        <ul class="clean">
+          <li><code class="inline">Produto("Camiseta", 49.90)</code> chama a classe como se fosse uma função — e isso cria o objeto.</li>
+          <li>Os argumentos vão direto para o <strong>__init__</strong>.</li>
+          <li><code class="inline">p1</code> e <code class="inline">p2</code> são <strong>objetos independentes</strong>: cada um com seus próprios valores.</li>
+          <li>Usamos o <strong>ponto (.)</strong> para acessar atributos e chamar métodos.</li>
+        </ul>
+        <div class="callout">
+          <b>Repare:</b> uma única classe, dois objetos diferentes. Esse é o coração da POO.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 — MÉTODOS QUE FAZEM ALGO -->
+  <section class="slide">
+    <div class="kicker">Passo 3 · Comportamento</div>
+    <h2>Métodos que <em>fazem algo</em></h2>
+    <p class="lead">Métodos não só mostram dados — eles podem alterar o objeto e tomar decisões.</p>
+    <div class="split wide-code" style="margin-top:1rem;">
+      <div>
+        <pre><span class="k">class</span> <span class="f">Produto</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="v">self</span>, nome, preco, estoque):
+        <span class="v">self</span>.nome = nome
+        <span class="v">self</span>.preco = preco
+        <span class="v">self</span>.estoque = estoque
+
+    <span class="k">def</span> <span class="f">aplicar_desconto</span>(<span class="v">self</span>, percentual):
+        <span class="v">self</span>.preco -= <span class="v">self</span>.preco * percentual / <span class="n">100</span>
+
+    <span class="k">def</span> <span class="f">vender</span>(<span class="v">self</span>, qtd):
+        <span class="k">if</span> qtd <= <span class="v">self</span>.estoque:
+            <span class="v">self</span>.estoque -= qtd
+            <span class="k">return</span> <span class="s">f"Vendido(s) {qtd} de {</span><span class="v">self</span><span class="s">.nome}."</span>
+        <span class="k">return</span> <span class="s">"Estoque insuficiente!"</span></pre>
+      </div>
+      <div>
+        <pre class="teal-edge">tenis = <span class="f">Produto</span>(<span class="s">"Tênis"</span>, <span class="n">200.0</span>, <span class="n">5</span>)
+
+tenis.<span class="f">aplicar_desconto</span>(<span class="n">10</span>)
+<span class="k">print</span>(tenis.preco)   <span class="c"># 180.0</span>
+
+<span class="k">print</span>(tenis.<span class="f">vender</span>(<span class="n">3</span>))
+<span class="c"># Vendido(s) 3 de Tênis.</span>
+<span class="k">print</span>(tenis.estoque)  <span class="c"># 2</span>
+
+<span class="k">print</span>(tenis.<span class="f">vender</span>(<span class="n">10</span>))
+<span class="c"># Estoque insuficiente!</span></pre>
+        <p style="margin-top:.8rem;font-size:.95rem;">Os métodos <strong>mudam o estado</strong> do objeto: o preço e o estoque do tênis se alteram a cada chamada.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 — OUTRO EXEMPLO: CLIENTE -->
+  <section class="slide">
+    <div class="kicker">Passo 4 · Outro contexto</div>
+    <h2>O mesmo padrão, outro <em>contexto</em></h2>
+    <p class="lead">Toda classe segue a mesma receita. Veja uma <code class="inline">ContaCorrente</code> de banco.</p>
+    <div class="split" style="margin-top:1rem;">
+      <div>
+        <pre><span class="k">class</span> <span class="f">ContaCorrente</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="v">self</span>, titular, saldo=<span class="n">0</span>):
+        <span class="v">self</span>.titular = titular
+        <span class="v">self</span>.saldo = saldo
+
+    <span class="k">def</span> <span class="f">depositar</span>(<span class="v">self</span>, valor):
+        <span class="v">self</span>.saldo += valor
+
+    <span class="k">def</span> <span class="f">sacar</span>(<span class="v">self</span>, valor):
+        <span class="k">if</span> valor <= <span class="v">self</span>.saldo:
+            <span class="v">self</span>.saldo -= valor
+        <span class="k">else</span>:
+            <span class="k">print</span>(<span class="s">"Saldo insuficiente."</span>)</pre>
+      </div>
+      <div>
+        <pre class="teal-edge">conta = <span class="f">ContaCorrente</span>(<span class="s">"Ana"</span>)
+
+conta.<span class="f">depositar</span>(<span class="n">500</span>)
+conta.<span class="f">sacar</span>(<span class="n">200</span>)
+<span class="k">print</span>(conta.saldo)   <span class="c"># 300</span>
+
+conta.<span class="f">sacar</span>(<span class="n">1000</span>)
+<span class="c"># Saldo insuficiente.</span></pre>
+        <ul class="clean" style="margin-top:1rem;">
+          <li>Mesma estrutura: <code class="inline">__init__</code> + atributos + métodos.</li>
+          <li><code class="inline">saldo=0</code> é um <strong>valor padrão</strong>: se não informar, começa em zero.</li>
+          <li>Trocou o contexto, mas o raciocínio é idêntico.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 — ORGANIZAÇÃO DO PROJETO -->
+  <section class="slide">
+    <div class="kicker">Boas práticas</div>
+    <h2>Organizando o <em>projeto</em></h2>
+    <p class="lead">Por enquanto, sem pastas: separamos a <strong>classe</strong> em um arquivo e o <strong>programa principal</strong> em outro, na mesma pasta.</p>
+    <div class="split" style="margin-top:1rem;">
+      <div class="tree">
+<span class="dir">loja/</span>
+│
+├── <span class="file">classProduto.py</span>   <span class="note"># a classe Produto</span>
+└── <span class="file">main.py</span>            <span class="note"># programa principal</span>
+      </div>
+      <div>
+        <h3 style="margin-bottom:.4rem;">Em <span style="font-family:'Space Mono',monospace;">classProduto.py</span>:</h3>
+        <pre><span class="k">class</span> <span class="f">Produto</span>:
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="v">self</span>, nome, preco):
+        <span class="v">self</span>.nome = nome
+        <span class="v">self</span>.preco = preco
+
+    <span class="k">def</span> <span class="f">exibir</span>(<span class="v">self</span>):
+        <span class="k">return</span> <span class="s">f"{</span><span class="v">self</span><span class="s">.nome} — R$ {</span><span class="v">self</span><span class="s">.preco:.2f}"</span></pre>
+        <h3 style="margin:1rem 0 .4rem;">Em <span style="font-family:'Space Mono',monospace;">main.py</span>:</h3>
+        <pre class="teal-edge"><span class="k">from</span> classProduto <span class="k">import</span> <span class="f">Produto</span>
+
+p1 = <span class="f">Produto</span>(<span class="s">"Camiseta"</span>, <span class="n">49.90</span>)
+<span class="k">print</span>(p1.<span class="f">exibir</span>())</pre>
+      </div>
+    </div>
+    <div class="callout">
+      <b>Por que separar?</b> Manter a classe em <code class="inline">classProduto.py</code> e o código que a usa em <code class="inline">main.py</code> deixa tudo organizado. O <code class="inline">main.py</code> só precisa <strong>importar</strong> a classe com <code class="inline">from classProduto import Produto</code>.
+    </div>
+  </section>
+
+  <!-- 12 — ANATOMIA / RESUMO VISUAL -->
+  <section class="slide">
+    <div class="kicker">Visão geral</div>
+    <h2>A anatomia de uma <em>classe</em></h2>
+    <p class="lead">Tudo o que vimos, em um único mapa para consultar sempre.</p>
+    <div class="split wide-code" style="margin-top:1rem;">
+      <div>
+        <pre><span class="k">class</span> <span class="f">Produto</span>:                  <span class="c">← nome da classe (maiúscula)</span>
+
+    <span class="k">def</span> <span class="f">__init__</span>(<span class="v">self</span>, nome, preco): <span class="c">← construtor</span>
+        <span class="v">self</span>.nome = nome             <span class="c">← atributo</span>
+        <span class="v">self</span>.preco = preco           <span class="c">← atributo</span>
+
+    <span class="k">def</span> <span class="f">exibir</span>(<span class="v">self</span>):              <span class="c">← método</span>
+        <span class="k">return</span> <span class="s">f"{</span><span class="v">self</span><span class="s">.nome}: {</span><span class="v">self</span><span class="s">.preco}"</span>
+
+
+p1 = <span class="f">Produto</span>(<span class="s">"Camiseta"</span>, <span class="n">49.9</span>)   <span class="c">← objeto (instância)</span>
+p1.<span class="f">exibir</span>()                       <span class="c">← chamando o método</span></pre>
+      </div>
+      <div>
+        <div class="pill-row" style="flex-direction:column;align-items:flex-start;gap:.7rem;">
+          <span class="pill">class → declara a classe</span>
+          <span class="pill">__init__ → construtor</span>
+          <span class="pill">self → o próprio objeto</span>
+          <span class="pill">atributo → dado (self.x)</span>
+          <span class="pill">método → ação (def)</span>
+          <span class="pill">objeto → Produto(...)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 — RESUMO + DESAFIOS -->
+  <section class="slide">
+    <div class="kicker">Para fixar</div>
+    <h2>O que levamos <em>desta aula</em></h2>
+    <div class="cards three">
+      <div class="card">
+        <span class="tag">01</span>
+        <h3>Classe & Objeto</h3>
+        <p>Classe é o molde; objeto é a instância concreta criada a partir dela.</p>
+      </div>
+      <div class="card teal">
+        <span class="tag">02</span>
+        <h3>__init__ e self</h3>
+        <p>O construtor inicializa o objeto; <strong>self</strong> é a referência do objeto a si mesmo.</p>
+      </div>
+      <div class="card rust">
+        <span class="tag">03</span>
+        <h3>Atributos & Métodos</h3>
+        <p>Atributos guardam dados; métodos definem ações e podem mudar o estado.</p>
+      </div>
+    </div>
+    <div class="callout rust-note">
+      <b>Desafio 1 — Aluno:</b> crie uma classe <code class="inline">Aluno</code> com atributos <em>nome</em> e <em>nota</em> e um método <code class="inline">situacao()</code> que retorne "Aprovado" se a nota for ≥ 6, senão "Recuperação". Instancie três alunos diferentes.
+    </div>
+    <div class="callout">
+      <b>Desafio 2 — Carrinho:</b> crie a classe <code class="inline">Produto</code> (nome, preço) em <code class="inline">classProduto.py</code> e, no <code class="inline">main.py</code>, importe-a, monte uma lista com 3 produtos e some o valor total.
+    </div>
+  </section>
+
+</div>
+
+<div class="footer-tag">SENAC · TDS · POO Python</div>
+
+<div class="nav">
+  <button id="prev" aria-label="Anterior">‹</button>
+  <span class="counter" id="counter">1 / 13</span>
+  <button id="next" aria-label="Próximo">›</button>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  const counter=document.getElementById('counter');
+  const progress=document.getElementById('progress');
+  function show(n){
+    slides[i].classList.remove('active');
+    i=Math.max(0,Math.min(n,slides.length-1));
+    slides[i].classList.add('active');
+    slides[i].scrollTop=0;
+    counter.textContent=`${i+1} / ${slides.length}`;
+    progress.style.width=`${((i+1)/slides.length)*100}%`;
+  }
+  document.getElementById('next').onclick=()=>show(i+1);
+  document.getElementById('prev').onclick=()=>show(i-1);
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' ')show(i+1);
+    if(e.key==='ArrowLeft')show(i-1);
+  });
+  show(0);
+</script>
+</body>
+</html>
