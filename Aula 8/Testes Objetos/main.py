@@ -17,6 +17,17 @@ Ficha do Aluno:
 
 """)
 
+print(f"""
+Ficha do Aluno:
+      
+      Nome: {aluno2.nome}
+      Idade: {aluno2.idade}
+      Matricula: {aluno2.matricula}
+      Notas: {aluno2.notas}
+      Turma: {aluno2.turma}
+
+""")
+
 livro1 = Livro("Crônicas de Nárnia", "J.k Lewis", "Fantasia")
 
 print(f"""
