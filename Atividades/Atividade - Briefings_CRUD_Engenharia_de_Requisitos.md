@@ -1,55 +1,80 @@
 # Atividade — Engenharia de Requisitos
-## Briefings para Sorteio — Documentação de um CRUD simples
+## Etapa 1: Especificação e documentação de requisitos
 
-Cada equipe receberá, por sorteio, um dos seis briefings deste documento. O briefing é a **fala de um cliente**: ele descreve o problema e o que precisa, mas **não entrega os requisitos prontos**. O trabalho de vocês é ler com atenção, extrair os requisitos e iniciar o documento formal do sistema.
+Cada aluno receberá, por sorteio, um dos seis briefings deste documento. O briefing é a **fala de um cliente**: ele descreve o problema e o que precisa, mas **não entrega os requisitos prontos**. Seu trabalho é ler com atenção, interpretar e **especificar os requisitos** em um documento estruturado.
+
+> Esta é a **primeira etapa** da atividade, voltada apenas à **documentação**. Em uma etapa seguinte, uma das funcionalidades descritas será implementada em Python — por isso, ao especificar, pense em **operações simples sobre um cadastro** (criar, consultar, atualizar e excluir um registro).
 
 ---
 
 ## O que entregar
 
-**1. Documento formal de requisitos**
+Um **documento estruturado** contendo as seções abaixo.
 
-- **Introdução** — descrição breve do sistema, com base no briefing sorteado.
-- **Requisitos Funcionais** — as quatro operações do CRUD (criar, consultar, atualizar, excluir) e o que mais o texto exigir.
-- **Requisitos Não-Funcionais** — atributos de qualidade (validação, desempenho, usabilidade…).
-- **Regras de Negócio** — restrições e políticas do domínio (ex.: campo único, sem valor negativo, formato de dado).
-- **Especificação dos requisitos** — use o modelo: `Código`, `Nome`, `Prioridade`, `Descrição`, `Entradas` e `Saídas`.
+### 1. Introdução
 
-**2. Modelagem de uma classe**
+Apresente o projeto: qual é o sistema, para quem é, qual problema resolve e qual é o **objeto principal** que ele gerencia (aquilo que será cadastrado e mantido). Use o briefing como base.
 
-A partir do **objeto principal** do briefing (aquilo que o sistema cadastra e gerencia), modelem **uma classe** que o represente. A definição deve incluir:
+### 2. Requisitos Funcionais
 
-- O **nome** da classe.
-- Os **atributos**, com base nos campos que o cliente citou no briefing.
-- Os **métodos** correspondentes às operações do CRUD (criar, consultar, atualizar, excluir).
+O que o sistema **deve fazer**. Como o sistema é um cadastro, os requisitos funcionais giram em torno das quatro operações sobre o objeto principal:
 
-> A classe deve refletir os requisitos levantados — atributos vêm dos campos do briefing, métodos vêm das funcionalidades descritas.
+- **Criar** um novo registro.
+- **Consultar / listar** registros (incluindo busca por algum campo).
+- **Atualizar** os dados de um registro existente.
+- **Excluir** um registro.
 
-**3. Implementação de uma funcionalidade**
+Inclua também qualquer outra função que o texto do cliente exigir.
 
-Escolham **uma das funcionalidades** descritas no briefing (um dos requisitos funcionais) e **implementem-na** em código, de forma coerente com:
+### 3. Requisitos Não-Funcionais
 
-- O **requisito** correspondente (o que o documento especificou).
-- A **classe** modelada no item anterior.
+Atributos de **qualidade** do sistema: validação de campos obrigatórios, tempo de resposta, facilidade de uso, formato esperado dos dados, etc.
 
-A implementação deve demonstrar a funcionalidade funcionando para o objeto principal (por exemplo, cadastrar um item, ou buscar pelo campo de identificação).
+### 4. Regras de Negócio
+
+Restrições e políticas do **domínio**, derivadas do que o cliente descreveu. Exemplos do tipo que pode aparecer: um campo que não pode se repetir, um valor que não pode ser negativo, um formato obrigatório para certo dado.
+
+---
+
+## Modelo para descrição dos requisitos
+
+**Adote um modelo padrão** para descrever cada requisito — isso deixa o documento consistente e mais fácil de ler. Sugestão de modelo:
+
+| Campo | Descrição |
+|---|---|
+| **Código** | Identificador único (ex.: RF01, RNF01, RN01). |
+| **Nome** | Título curto do requisito. |
+| **Prioridade** | Alta, Média ou Baixa. |
+| **Descrição** | O que o requisito estabelece, de forma clara e objetiva. |
+| **Entradas** | Dados que o sistema recebe para atender o requisito. |
+| **Saídas** | Resultado esperado após a execução. |
+
+**Exemplo preenchido** (sistema de cadastro de livros):
+
+| Campo | Conteúdo |
+|---|---|
+| **Código** | RF01 |
+| **Nome** | Cadastrar livro |
+| **Prioridade** | Alta |
+| **Descrição** | O sistema deve permitir cadastrar um novo livro no acervo, informando seus dados. |
+| **Entradas** | Título, autor, categoria, ISBN e quantidade de exemplares. |
+| **Saídas** | Confirmação do cadastro e o livro registrado no sistema. |
 
 ---
 
 ## Lembretes
 
-- Um requisito **não está no texto literalmente** — vocês precisam interpretá-lo. Na dúvida, **anotem a suposição feita**.
-- O **objeto principal** do briefing é aquilo que o sistema cadastra e gerencia — é a classe principal sobre a qual o CRUD acontece.
-- A funcionalidade implementada deve ser **uma das que vocês mesmos documentaram** — requisito, classe e código precisam conversar entre si.
+- Um requisito **não está no texto literalmente** — você precisa interpretá-lo. Na dúvida, **anote a suposição feita**.
+- Mantenha os requisitos **simples e objetivos**: pense em uma operação por requisito.
+- Use o **modelo de descrição** de forma consistente em todos os requisitos.
 
 ---
 
 ## Entrega
 
-- **Formato:** atividade em **duplas**, sorteadas em sala.
+- **Formato:** atividade **individual**.
 - **Onde entregar:** pelo **Google Classroom**.
-- **O que incluir:** o **nome da dupla** no material entregue.
-- **Prazo:** **segunda-feira, 22/06**.
+- **Prazo:** **sexta-feira, 19/06**.
 
 ---
 
