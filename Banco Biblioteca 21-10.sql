@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS biblioteca;
+--CREATE DATABASE biblioteca;
 
 CREATE TABLE IF NOT EXISTS public.editora
 (
@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS public.emprestimo
     renovacoes_emprestimo integer NOT NULL DEFAULT 0,
     PRIMARY KEY (cod_emprestimo)
 );
+
+-- INSERÇÃO DE REGISTROS
 
 INSERT INTO public.editora (cod_editora, nome_editora, cidade_editora) VALUES
 (1, 'Editora Aurora', 'Recife'),
