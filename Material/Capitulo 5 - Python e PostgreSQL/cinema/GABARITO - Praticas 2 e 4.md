@@ -2,6 +2,9 @@
 
 As mensagens abaixo foram conferidas com psycopg 3.3 e PostgreSQL 15, no banco montado pelo `setup_cinema.py`.
 
+Nos trechos que passam pela classe `Banco`, o `except` genérico dela imprime antes a linha
+`Erro no banco: ...`, com a mesma mensagem, e repassa o erro com `raise`.
+
 ## Prática 2 · Encontre o erro
 
 | Trecho | O que acontece | Correção |
@@ -18,15 +21,16 @@ As mensagens abaixo foram conferidas com psycopg 3.3 e PostgreSQL 15, no banco m
 ## Prática 4 · Qual mensagem aparece?
 
 Programa: `cadastrar_filme.py`. Cada chamada termina com `---`, impresso pelo `finally`.
+Nas chamadas recusadas, a classe imprime antes a linha `Erro no banco: ...` (com o DETAIL).
 
-| Chamada | Saída | Por quê |
-|---|---|---|
-| **a** `("Maré Alta", 101, "12")` | `Filme cadastrado: Maré Alta` | Tudo dentro das regras. |
-| **b** `("Maré Alta", 0, "12")` | `Duração inválida.` | `CheckViolation` em `ck_duracao` (duração maior que zero). |
-| **c** `("Maré Alta", 101, "13")` | `Classificação inválida.` | `CheckViolation` em `ck_classificacao` (13 não está na lista). |
-| **d** `(None, 101, "L")` | `Faltou um dado obrigatório.` | `None` vira `NULL`, e o `NOT NULL` do título recusa: `NotNullViolation`. |
-| **e** `("Maré Alta", 101, "Livre")` | `Erro no banco.` | `"Livre"` não cabe em `varchar(2)`: `value too long for type character varying(2)`. É um `DataError` (`StringDataRightTruncation`), que nenhum `except` específico pega; o `psycopg.Error` pega. |
-| **f** `("Maré Alta", 101, "12")` | `Filme cadastrado: Maré Alta` | Nenhuma regra impede o título repetido. |
+| Chamada | O que a classe imprime | Mensagem do programa | Por quê |
+|---|---|---|---|
+| **a** `("Maré Alta", 101, "12")` | — | `Filme cadastrado: Maré Alta` | Tudo dentro das regras. |
+| **b** `("Maré Alta", 0, "12")` | `Erro no banco: new row for relation "filmes" violates check constraint "ck_duracao"` | `Duração inválida.` | `CheckViolation` em `ck_duracao` (duração maior que zero). |
+| **c** `("Maré Alta", 101, "13")` | `Erro no banco: new row for relation "filmes" violates check constraint "ck_classificacao"` | `Classificação inválida.` | `CheckViolation` em `ck_classificacao` (13 não está na lista). |
+| **d** `(None, 101, "L")` | `Erro no banco: null value in column "titulo_filme" of relation "filmes" violates not-null constraint` | `Faltou um dado obrigatório.` | `None` vira `NULL`, e o `NOT NULL` do título recusa: `NotNullViolation`. |
+| **e** `("Maré Alta", 101, "Livre")` | `Erro no banco: value too long for type character varying(2)` | `Não foi possível cadastrar.` | `"Livre"` não cabe em `varchar(2)`. É um `DataError` (`StringDataRightTruncation`), que nenhum `except` específico pega; o `psycopg.Error` pega. |
+| **f** `("Maré Alta", 101, "12")` | — | `Filme cadastrado: Maré Alta` | Nenhuma regra impede o título repetido. |
 
 **Pense e responda:** faltou um `UNIQUE` no título:
 `CONSTRAINT uq_titulo_filme UNIQUE (titulo_filme)`. Com ele, a chamada **f** daria `UniqueViolation`,

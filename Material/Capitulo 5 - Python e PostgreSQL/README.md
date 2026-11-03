@@ -25,6 +25,6 @@ O `.env` tem a sua senha e **não vai para o GitHub**: o `.gitignore` do reposit
 
 | Pasta | O que tem |
 |---|---|
-| `rh/` | Exemplos da exposição: `testar_conexao.py`, `setup_rh.py`, `classBanco.py`, `consultas_rh.py` e o CRUD `main.py` (o Sistema de Funcionários da UC 1, agora com banco). |
+| `rh/` | Exemplos da exposição: `testar_conexao.py`, `setup_rh.py`, `testar_erros.py` (um `except` para cada tipo de erro), `classBanco.py` (com um `except` genérico que mostra a mensagem do erro e repassa com `raise`), `consultas_rh.py` e o CRUD `main.py` (o Sistema de Funcionários da UC 1, agora com banco). |
 | `cinema/` | Gabaritos das Práticas 1 a 4: `setup_cinema.py`, `consultas_cinema.py`, `cadastrar_filme.py` e `GABARITO - Praticas 2 e 4.md`. Copie o `classBanco.py` da pasta `rh` para cá. |
 | `loja/` | Gabarito da prática guiada da Loja Conecta: `setup_loja.py`, `classBanco.py` (com o método `inserir`) e `main.py` (produtos, pedidos com RETURNING e transação). |

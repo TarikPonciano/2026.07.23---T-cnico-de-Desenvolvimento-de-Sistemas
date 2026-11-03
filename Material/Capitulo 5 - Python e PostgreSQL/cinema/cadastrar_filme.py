@@ -24,7 +24,7 @@ def cadastrar_filme(titulo, duracao, classificacao):
     except psycopg.errors.NotNullViolation:
         print("Faltou um dado obrigatório.")
     except psycopg.Error:
-        print("Erro no banco.")
+        print("Não foi possível cadastrar.")
     finally:
         print("---")
 

@@ -1,6 +1,9 @@
 # Capítulo 5 · classBanco.py
 # Abre a conexão, roda um comando e fecha: para consultas pontuais.
 # Os dados da conexão vêm do .env (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSLMODE).
+#
+# O except da classe é genérico (Exception): só mostra a mensagem do erro, para ajudar no debug,
+# e repassa o erro com raise. Quem chamou trata com os excepts específicos (UniqueViolation...).
 
 import os
 import psycopg
@@ -30,21 +33,31 @@ class Banco():
 
     # SELECT: devolve a lista de linhas (cada linha é uma tupla)
     def consultar(self, sql, parametros=None):
-        conexao = self.conectar()
+        conexao = None
         try:
+            conexao = self.conectar()
             cursor = conexao.cursor()
             cursor.execute(sql, parametros)
             return cursor.fetchall()
+        except Exception as erro:
+            print("Erro no banco:", erro)
+            raise   # repassa o mesmo erro para quem chamou
         finally:
-            conexao.close()
+            if conexao is not None:
+                conexao.close()
 
     # INSERT, UPDATE ou DELETE: grava e devolve quantas linhas mudaram
     def executar(self, sql, parametros=None):
-        conexao = self.conectar()
+        conexao = None
         try:
+            conexao = self.conectar()
             cursor = conexao.cursor()
             cursor.execute(sql, parametros)
             conexao.commit()
             return cursor.rowcount
+        except Exception as erro:
+            print("Erro no banco:", erro)
+            raise   # repassa o mesmo erro para quem chamou
         finally:
-            conexao.close()
+            if conexao is not None:
+                conexao.close()
