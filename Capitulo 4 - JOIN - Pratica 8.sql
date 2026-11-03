@@ -52,5 +52,16 @@ WHERE ped.cod_pedido is null;
 
 -- 7. Os produtos que nunca foram vendidos.
 
+SELECT DISTINCT pr.nome_produto
+FROM produtos pr
+LEFT JOIN itens_pedido ip ON ip.cod_produto = pr.cod_produto
+WHERE ip.cod_item is null;
+
+
 
 -- 8. Os pedidos sem nenhum item
+
+SELECT DISTINCT ped.cod_pedido
+FROM pedidos ped
+LEFT JOIN itens_pedido ip ON ip.cod_pedido = ped.cod_pedido
+WHERE ip.cod_item is null;
