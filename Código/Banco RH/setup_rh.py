@@ -63,6 +63,9 @@ VALUES ('Ana Souza', '12345678901', 'Analista de RH', 4200.00, 1),
 print("Dados inseridos.")
 
 conexaoDB.commit()
+
+
+
 # 3. Finalização do processo. Fechar cursor e conexaoDB
 cursor.close()
 
