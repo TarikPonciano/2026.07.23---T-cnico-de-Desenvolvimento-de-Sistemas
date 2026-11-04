@@ -46,6 +46,8 @@ cursor.execute('''
                );
                ''')
 print("TABELAS CRIADAS COM SUCESSO!")
+
+conexaoDB.commit()
 # 3. Finalização do processo. Fechar cursor e conexaoDB
 cursor.close()
 
