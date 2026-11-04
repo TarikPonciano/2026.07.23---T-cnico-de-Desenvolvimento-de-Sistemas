@@ -47,6 +47,21 @@ cursor.execute('''
                ''')
 print("TABELAS CRIADAS COM SUCESSO!")
 
+cursor.execute("""
+INSERT INTO setores (nome_setor)
+VALUES ('Administrativo'), ('Comercial'), ('Tecnologia')
+""")
+cursor.execute("""
+INSERT INTO funcionarios
+(nome_funcionario, cpf_funcionario, cargo_funcionario, salario_funcionario, cod_setor)
+VALUES ('Ana Souza', '12345678901', 'Analista de RH', 4200.00, 1),
+('Bruno Lima', '23456789012', 'Vendedor', 3100.00, 2),
+('Carla Mendes', '34567890123', 'Desenvolvedora', 6800.00, 3),
+('Diego Rocha', '45678901234', 'Suporte técnico', 3500.00, 3),
+('Elisa Martins', '56789012345', 'Gerente comercial', 7500.00, 2)
+""")
+print("Dados inseridos.")
+
 conexaoDB.commit()
 # 3. Finalização do processo. Fechar cursor e conexaoDB
 cursor.close()
