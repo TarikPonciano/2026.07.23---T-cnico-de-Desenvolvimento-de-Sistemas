@@ -8,6 +8,11 @@
 
 # 3. Criar a infraestrutura de conexão com o banco
 
+# 4. Expandir as funcionalidades com as opções de:
+
+    # 3 - Cadastrar Novo Funcionário
+    # 4 - Cadastrar Novo Departamento
+
 import os
 import psycopg
 from dotenv import load_dotenv
