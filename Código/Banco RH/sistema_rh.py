@@ -77,6 +77,44 @@ while True:
         
     elif (op == "2"):
         print("VER DEPARTAMENTOS")
+        
+        departamentos = None
+        conexaoDB = None
+        cursor = None
+        
+        try:
+            conexaoDB = psycopg.connect(
+                    host=os.getenv("DB_HOST"),
+                    port=os.getenv("DB_PORT"),
+                    dbname=os.getenv("DB_NAME"),
+                    user=os.getenv("DB_USER"),
+                    password=os.getenv("DB_PASSWORD"),
+                    sslmode=os.getenv("DB_SSL")
+                )
+            cursor = conexaoDB.cursor()
+            
+            cursor.execute("SELECT * FROM setores;")
+            
+            departamentos = cursor.fetchall()
+            
+            
+        except Exception as error:
+            print("OCORREU UM ERRO:",error)
+            if (conexaoDB is not None):
+                conexaoDB.rollback()
+        finally:
+            if (cursor is not None):
+                cursor.close()
+            
+            if (conexaoDB is not None):
+                conexaoDB.close()
+                
+        print("LISTA DE DEPARTAMENTOS")
+        print("ID | NOME")
+        
+        for dept in departamentos:
+            print(f"{dept[0]} | {dept[1]}")
+            
     elif (op == "0"):
         print("Saindo do programa...")
         break
