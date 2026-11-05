@@ -69,7 +69,11 @@ try:
     conexaoDB.commit()
     
 except Exception as erro:
+    
     print("ACONTECEU UM ERRO:", erro)
+    
+    if (conexaoDB is not None):
+        conexaoDB.rollback()
 
 
 finally:
