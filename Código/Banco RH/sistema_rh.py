@@ -171,7 +171,44 @@ while True:
         
         
     elif (op == "4"):
-        pass        
+        print("CADASTRAR NOVO DEPARTAMENTO")
+        
+        nome = input("DIGITE O NOME DO DEPARTAMENTO: ")
+        
+        if (not nome):
+            nome = None
+    
+        try:
+            conexaoDB = psycopg.connect(
+                                host=os.getenv("DB_HOST"),
+                                port=os.getenv("DB_PORT"),
+                                dbname=os.getenv("DB_NAME"),
+                                user=os.getenv("DB_USER"),
+                                password=os.getenv("DB_PASSWORD"),
+                                sslmode=os.getenv("DB_SSL")
+                                        )
+            cursor = conexaoDB.cursor()
+            
+            cursor.execute('''
+                           INSERT INTO setores
+                           VALUES (default, %s)
+                           
+                           ''', (nome,))
+            
+            conexaoDB.commit()
+        except Exception as error:
+            print("ERRO AO CRIAR DEPARTAMENTO")
+            print(error)
+            if (conexaoDB is not None):
+                conexaoDB.rollback()
+        finally:
+            if (cursor is not None):
+                cursor.close()
+            if (conexaoDB is not None):
+                conexaoDB.close()
+        
+        
+        
     elif (op == "0"):
         print("Saindo do programa...")
         break
