@@ -31,6 +31,8 @@ while True:
     
     1 - Ver Funcionários
     2 - Ver Departamentos
+    3 - Cadastrar Novo Funcionário
+    4 - Cadastrar Novo Departamento
     
     0 - Sair      
     
@@ -42,6 +44,7 @@ while True:
         print("VER FUNCIONÁRIOS")
         
         funcionarios = None
+        
         conexaoDB = None
         cursor = None
         
@@ -75,11 +78,12 @@ while True:
         print("LISTA DE FUNCIONÁRIOS")
         print("ID | NOME | CPF | CARGO | SALÁRIO | COD DEPT")
         
-        for func in funcionarios:
-            print(f"{func[0]} | {func[1]} | {func[2]} | {func[3]} | R$ {func[4]:,.2f} | {func[5]} ")
-        
-        
-        
+        if (funcionarios):
+            for func in funcionarios:
+                print(f"{func[0]} | {func[1]} | {func[2]} | {func[3]} | R$ {func[4]:,.2f} | {func[5]} ")
+        else:
+            print("ERRO NA CONSULTA")
+
     elif (op == "2"):
         print("VER DEPARTAMENTOS")
         
@@ -117,9 +121,57 @@ while True:
         print("LISTA DE DEPARTAMENTOS")
         print("ID | NOME")
         
-        for dept in departamentos:
-            print(f"{dept[0]} | {dept[1]}")
+        if(departamentos):
+            for dept in departamentos:
+                print(f"{dept[0]} | {dept[1]}")
+        else:
+            print("Erro na consulta!")
+    
+    elif (op == "3"):
+        print("CADASTRO DE FUNCIONÁRIO")
+        
+        nome = input("Digite o nome do Funcionário:")
+        cpf = input("Digite o cpf do Funcionário:")
+        cargo = input("Digite o cargo do Funcionário:")
+        salario = float(input("Digite o salário do Funcionário:"))
+        cod_setor = int(input("Digite o código do setor:"))
+        
+        conexaoDB = None
+        curso = None
+        
+        try:
+            conexaoDB = psycopg.connect(
+                    host=os.getenv("DB_HOST"),
+                    port=os.getenv("DB_PORT"),
+                    dbname=os.getenv("DB_NAME"),
+                    user=os.getenv("DB_USER"),
+                    password=os.getenv("DB_PASSWORD"),
+                    sslmode=os.getenv("DB_SSL")
+                            )
+            cursor = conexaoDB.cursor()
             
+            cursor.execute(f'''
+            INSERT INTO funcionarios
+            VALUES (default, %s, %s, %s, %s, %s);               
+                           ''', (nome, cpf, cargo, salario, cod_setor))
+            
+            conexaoDB.commit()
+            
+        except Exception as error:
+            print("Erro no cadastro do Funcionário")
+            print(error)
+            if (conexaoDB is not None):
+                conexaoDB.rollback()            
+        finally: 
+            if (cursor is not None):
+                cursor.close()
+            
+            if (conexaoDB is not None):
+                conexaoDB.close
+        
+        
+    elif (op == "4"):
+        pass        
     elif (op == "0"):
         print("Saindo do programa...")
         break
