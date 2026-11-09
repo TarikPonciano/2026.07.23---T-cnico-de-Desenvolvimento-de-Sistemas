@@ -1,5 +1,5 @@
 from classBanco import Banco
 
-banco = Banco("cinema")
+banco = Banco()
 
-print(banco.consultar("SELECT * FROM filmes"))
+print(banco.consultar("SELECT * FROM funcionarios"))
