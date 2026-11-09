@@ -23,3 +23,46 @@ class Banco ():
             dbname = self.dbname,
             sslmode = self.ssl
         )
+    
+    def consultar (self, sql, parametros=()):
+        conexao = None
+        
+        try:
+            
+            conexao = self.conectar()
+            cursor = conexao.cursor()
+            
+            cursor.execute(sql,parametros)
+            
+            return cursor.fetchall()
+        except Exception as error:
+            
+            print("ERRO DE CONSULTA:", error)
+            raise
+        
+        finally:
+            if (conexao is not None):
+                conexao.close()
+
+    def manipular (self, sql, parametros = ()):
+        conexao = None
+        
+        try:
+            
+            conexao = self.conectar()
+            cursor = conexao.cursor()
+            
+            resultado = cursor.execute(sql,parametros)
+            
+            return resultado.rowcount
+        
+        except Exception as error:
+            
+            print("ERRO DE CONSULTA:", error)
+            raise
+        
+        finally:
+            if (conexao is not None):
+                conexao.close()
+    
+    
