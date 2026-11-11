@@ -54,6 +54,8 @@ class Banco ():
             
             resultado = cursor.execute(sql,parametros)
             
+            conexao.commit()
+            
             return resultado.rowcount
         
         except Exception as error:
