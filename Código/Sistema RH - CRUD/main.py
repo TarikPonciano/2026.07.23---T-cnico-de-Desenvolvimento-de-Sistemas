@@ -56,6 +56,31 @@ def escolherFuncionario():
               Salário: {funcionario[4]}
               Setor: {funcionario[6]}
               ''')
+    
+def cadastrarFuncionario():
+    print("CADASTRO DE NOVO FUNCIONÁRIO")
+    
+    nome = input("Digite o nome do funcionário: ")
+    cpf = input("Digite o cpf do funcionário: ")
+    cargo = input("Digite o cargo do funcionário: ")
+    salario = float(input("Digite o salário do funcionário: "))
+    
+    verSetores()
+    
+    cod_setor = int(input("Digite o código do setor do funcionário: "))
+    
+    try:
+        banco.manipular('''
+        INSERT INTO funcionarios
+        VALUES (default, %s, %s, %s, %s, %s);                
+                        ''', (nome, cpf, cargo, salario, cod_setor))
+        print("FUNCIONÁRIO CADASTRADO COM SUCESSO!")
+    except Exception as error:
+        print("ERRO AO CADASTRAR FUNCIONÁRIO")
+    
+    
+    
+    
 
 def verSetores():
     print("LISTA DE SETORES")
@@ -97,6 +122,22 @@ def escolherSetor():
     for func in consulta:
         print(f"{func[2]} - {func[3]} - {func[4]}")
     
+def cadastrarSetor():
+    print("CADASTRO DE NOVO SETOR")
+    
+    nome = input("Digite o nome do setor: ").strip()
+    
+    if (len(nome) <= 0):
+        print("Insira um nome válido!")
+        return
+    
+    banco.manipular('''
+    INSERT INTO setores
+    VALUES (default, %s);                              
+                    ''', (nome,))
+    
+    print("SETOR CADASTRADO!")
+    
 while (True):
     print('''
           BEM VINDO AO SISTEMA RH XYZ
@@ -105,10 +146,11 @@ while (True):
           
           1. Ver Funcionários
           2. Escolher Funcionário
+          3. Cadastrar Funcionário
           
           11. Ver Setores
           12. Escolher Setor
-          
+          13. Cadastrar Setor
           
           0. Sair
           ''')
@@ -119,10 +161,14 @@ while (True):
         verFuncionarios()
     elif (op == "2"):
         escolherFuncionario()
+    elif (op == "3"):
+        cadastrarFuncionario()
     elif (op == "11"):
         verSetores()
     elif (op == "12"):
         escolherSetor()
+    elif (op == "13"):
+        cadastrarSetor()
     elif (op == "0"):
         print("Saindo do programa...")
         
