@@ -90,7 +90,7 @@ def escolherSetor():
         print("SETOR NÃO ENCONTRADO")
         return
     
-    print(consulta)
+    
     
     print(f"FUNCIONÁRIOS DO SETOR {consulta[0][0]} - {consulta[0][1]}:")
     
