@@ -45,7 +45,7 @@ def escolherFuncionario():
         return
     
     funcionario = consulta[0]
-
+    
     print(f'''
               Ficha do Funcionário:
               
@@ -56,6 +56,8 @@ def escolherFuncionario():
               Salário: {funcionario[4]}
               Setor: {funcionario[6]}
               ''')
+    
+    return funcionario
     
 def cadastrarFuncionario():
     print("CADASTRO DE NOVO FUNCIONÁRIO")
@@ -77,6 +79,67 @@ def cadastrarFuncionario():
         print("FUNCIONÁRIO CADASTRADO COM SUCESSO!")
     except Exception as error:
         print("ERRO AO CADASTRAR FUNCIONÁRIO")
+    
+def alterarFuncionario():
+    print("ATUALIZAÇÃO DE FUNCIONÁRIO")
+    
+    funcionario = escolherFuncionario()
+    
+    if (not funcionario):
+        print("Não é possível alterar o funcionário. Cheque o código escolhido...")
+        return
+    
+    
+    continuar = input("Deseja alterar as informações funcionário? (S/N)")
+    
+    if (continuar != "S"):
+        return    
+    
+    cod, nome, cpf, cargo, salario, cod_setor, nome_setor = funcionario
+    
+    print("ALTERAR DADOS:")
+    print("(Deixe vazio para manter o original)")
+    
+    novo_nome = input(f"Digite o novo nome ({nome}): ").strip()
+    
+    if (novo_nome):
+        nome = novo_nome
+        
+    novo_cpf = input(f"Digite o novo cpf ({cpf}): ").strip()
+    
+    if (novo_cpf):
+        cpf = novo_cpf
+        
+    novo_cargo = input(f"Digite o novo cargo ({cargo}): ").strip()
+    
+    if (novo_cargo):
+        cargo = novo_cargo
+        
+    novo_salario = input(f"Digite o novo salário (R$ {salario:,.2f}): ").strip()
+    
+    if (novo_salario):
+        salario = float(novo_salario)
+        
+    verSetores()
+    novo_setor = input(f"Digite o código do novo setor ({cod_setor}): ").strip()
+    if (novo_setor):
+        cod_setor = int(novo_setor)
+        
+    
+    try:
+        banco.manipular('''
+                        UPDATE funcionarios
+                        SET nome_funcionario = %s,
+                        cpf_funcionario = %s,
+                        cargo_funcionario = %s,
+                        salario_funcionario = %s,
+                        cod_setor = %s
+                        WHERE cod_funcionario = %s;
+                        ''', (nome, cpf, cargo, salario, cod_setor, cod))
+        
+    except Exception as error:
+        print("Ocorreu um erro na atualização!")
+        
     
     
     
@@ -147,6 +210,7 @@ while (True):
           1. Ver Funcionários
           2. Escolher Funcionário
           3. Cadastrar Funcionário
+          4. Alterar Funcionário
           
           11. Ver Setores
           12. Escolher Setor
@@ -163,6 +227,8 @@ while (True):
         escolherFuncionario()
     elif (op == "3"):
         cadastrarFuncionario()
+    elif (op == "4"):
+        alterarFuncionario()
     elif (op == "11"):
         verSetores()
     elif (op == "12"):
