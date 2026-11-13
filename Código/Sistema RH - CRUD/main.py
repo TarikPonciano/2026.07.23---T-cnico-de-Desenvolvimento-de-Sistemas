@@ -4,6 +4,8 @@
 # 4. Criar a função verFilmePorID, que deve pedir o ID de um filme a partir da lista de todos os filmes e exibir detalhes do filme. Desafio: Mostre as sessões daquele filme
 
 from classBanco import Banco
+import os
+
 
 banco = Banco()
 
@@ -193,7 +195,7 @@ def escolherSetor():
     
     consulta = banco.consultar('''
     SELECT s.cod_setor, s.nome_setor, f.cod_funcionario, f.nome_funcionario, f.cargo_funcionario FROM setores s
-    JOIN funcionarios f ON f.cod_setor = s.cod_setor
+    LEFT JOIN funcionarios f ON f.cod_setor = s.cod_setor
     WHERE s.cod_setor = %s;                                  
                                ''', (id_setor,))
     
@@ -205,8 +207,9 @@ def escolherSetor():
     
     print(f"FUNCIONÁRIOS DO SETOR {consulta[0][0]} - {consulta[0][1]}:")
     
-    for func in consulta:
-        print(f"{func[2]} - {func[3]} - {func[4]}")
+    if (consulta[0][2]):
+        for func in consulta:
+            print(f"{func[2]} - {func[3]} - {func[4]}")
         
     return [consulta[0][0], consulta[0][1]]
     
@@ -249,6 +252,36 @@ def alterarSetor():
         
     except Exception as error:
         print("Não foi possível atualizar setor!")
+        
+def removerSetor():
+    print("REMOÇÃO DE SETOR")
+    
+    setor = escolherSetor()
+    
+    if (not setor):
+        print("SETOR NÃO ENCONTRADO!")
+        return
+    
+    continuar = input("DESEJA APAGAR ESSE SETOR? (S/N) ")
+    
+    if (not continuar == "S"):
+        print("REMOÇÃO CANCELADA...")
+        return
+    
+    try:
+        banco.manipular('''
+                        DELETE FROM funcionarios
+                        WHERE cod_setor = %s;
+                        ''', (setor[0],))
+        
+        banco.manipular('''
+                        DELETE FROM setores
+                        WHERE cod_setor = %s;
+                        ''', (setor[0],))
+    except Exception as error:
+        print("Erro ao remover setor...")
+        
+    
 while (True):
     print('''
           BEM VINDO AO SISTEMA RH XYZ
@@ -265,6 +298,7 @@ while (True):
           12. Escolher Setor
           13. Cadastrar Setor
           14. Alterar Setor
+          15. Remover Setor
           
           0. Sair
           ''')
@@ -289,6 +323,8 @@ while (True):
         cadastrarSetor()
     elif (op == "14"):
         alterarSetor()
+    elif (op == "15"):
+        removerSetor()
     elif (op == "0"):
         print("Saindo do programa...")
         
