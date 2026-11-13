@@ -1,310 +1,307 @@
 # Capítulo 5 · Prática guiada · main.py · Sistema da Loja Conecta
-# Passos 3 a 6: CRUD de produtos, novo pedido (RETURNING + transação) e consultas.
-# Antes de rodar: setup_loja.py já rodou e o .env está nesta pasta.
+#
+# Requisito 1 · CRUD completo da tabela produtos:
+#     Ver produtos, Ver detalhes, Cadastrar, Alterar e Apagar
+# Requisito 2 · Fluxo de venda:
+#     escolher o cliente, montar a lista de itens e gravar o pedido e os itens
+#     com o método registrarVenda da classe Banco (uma transação só)
 
-import psycopg
 from classBanco import Banco
 
 banco = Banco()
 
 
-# ---- Funções ferramentas ----
+# ---------------- Requisito 1 · CRUD de produtos ----------------
 
-def ler_texto(mensagem):
-    while True:
-        texto = input(mensagem).strip()
-        if texto != "":
-            return texto
-        print("Preencha este campo.")
+def verCategorias():
+    print("CATEGORIAS")
+    for cod, nome in banco.consultar("SELECT * FROM categorias ORDER BY cod_categoria;"):
+        print(f"{cod} | {nome}")
 
 
-def ler_inteiro(mensagem):
-    while True:
-        try:
-            return int(input(mensagem))
-        except ValueError:
-            print("Digite apenas números inteiros.")
+def verProdutos():
+    print("LISTA DE PRODUTOS")
 
-
-def ler_decimal(mensagem):
-    while True:
-        try:
-            return float(input(mensagem).replace(",", "."))
-        except ValueError:
-            print("Digite apenas números.")
-
-
-def ler_inteiro_ou_vazio(mensagem):
-    # Devolve um número, ou None se a pessoa deixar vazio (None vira NULL no banco)
-    while True:
-        texto = input(mensagem).strip()
-        if texto == "":
-            return None
-        try:
-            return int(texto)
-        except ValueError:
-            print("Digite um número inteiro ou deixe vazio.")
-
-
-# ---- Produtos (Passos 3 e 4) ----
-
-def ver_categorias():
-    for cod, nome in banco.consultar("SELECT cod_categoria, nome_categoria FROM categorias ORDER BY cod_categoria"):
-        print(f"  {cod}. {nome}")
-
-
-def ver_produtos():
-    print("PRODUTOS")
-    linhas = banco.consultar("""
+    produtos = banco.consultar('''
         SELECT p.cod_produto, p.nome_produto, p.preco, p.estoque, c.nome_categoria
         FROM produtos p
         LEFT JOIN categorias c ON c.cod_categoria = p.cod_categoria
-        ORDER BY p.cod_produto
-    """)
-    for cod, nome, preco, estoque, categoria in linhas:
-        if categoria is None:
+        ORDER BY p.cod_produto;
+    ''')
+
+    if (len(produtos) == 0):
+        print("NÃO HÁ PRODUTOS CADASTRADOS")
+        return
+
+    print("Código | Produto | Preço | Estoque | Categoria")
+    for cod, nome, preco, estoque, categoria in produtos:
+        # LEFT JOIN: produto sem categoria chega com None
+        if (categoria is None):
             categoria = "sem categoria"
-        print(f"{cod}. {nome} - R$ {preco:,.2f} - estoque {estoque} - {categoria}")
+        print(f"{cod} | {nome} | R$ {preco:,.2f} | {estoque} | {categoria}")
 
 
-def buscar_produto(cod_produto):
-    # Devolve (cod, nome, preco, estoque) ou None se o produto não existe
-    linhas = banco.consultar(
-        "SELECT cod_produto, nome_produto, preco, estoque FROM produtos WHERE cod_produto = %s",
-        (cod_produto,),
-    )
-    if len(linhas) == 0:
+def escolherProduto():
+    verProdutos()
+
+    cod_escolhido = int(input("Digite o código do produto desejado: "))
+
+    consulta = banco.consultar('''
+        SELECT p.cod_produto, p.nome_produto, p.preco, p.estoque, p.cod_categoria, c.nome_categoria
+        FROM produtos p
+        LEFT JOIN categorias c ON c.cod_categoria = p.cod_categoria
+        WHERE p.cod_produto = %s;
+    ''', (cod_escolhido,))
+
+    if (len(consulta) == 0):
+        print("Produto não encontrado!")
         return None
-    return linhas[0]
+
+    produto = consulta[0]
+
+    print(f'''
+    Ficha do Produto:
+
+    Código: {produto[0]}
+    Nome: {produto[1]}
+    Preço: R$ {produto[2]:,.2f}
+    Estoque: {produto[3]}
+    Categoria: {produto[5] if produto[5] else "sem categoria"}
+    ''')
+
+    return produto
 
 
-def cadastrar_produto():
-    print("CADASTRO DE PRODUTO")
-    nome = ler_texto("Nome: ")
-    preco = ler_decimal("Preço: R$ ")
-    estoque = ler_inteiro("Estoque: ")
-    print("Categorias:")
-    ver_categorias()
-    cod_categoria = ler_inteiro_ou_vazio("Código da categoria (vazio = sem categoria): ")
+def cadastrarProduto():
+    print("CADASTRO DE NOVO PRODUTO")
+
+    nome = input("Digite o nome do produto: ")
+    preco = float(input("Digite o preço: "))
+    estoque = int(input("Digite o estoque: "))
+
+    verCategorias()
+    categoria = input("Digite o código da categoria (vazio = sem categoria): ").strip()
+
+    # Vazio vira None, e o banco grava NULL: a FK aceita
+    cod_categoria = None
+    if (categoria):
+        cod_categoria = int(categoria)
 
     try:
-        cod = banco.inserir(
-            """INSERT INTO produtos (nome_produto, preco, estoque, cod_categoria)
-               VALUES (%s, %s, %s, %s)
-               RETURNING cod_produto""",
-            (nome, preco, estoque, cod_categoria),
-        )
-        print(f"Produto cadastrado com o código {cod}.")
-    except psycopg.errors.ForeignKeyViolation:
-        print("Essa categoria não existe.")
-    except psycopg.errors.CheckViolation:
-        print("Preço e estoque não podem ser negativos.")
+        banco.manipular('''
+            INSERT INTO produtos
+            VALUES (default, %s, %s, %s, %s);
+        ''', (nome, preco, estoque, cod_categoria))
+        print("PRODUTO CADASTRADO COM SUCESSO!")
+    except Exception as error:
+        print("ERRO AO CADASTRAR PRODUTO")
 
 
-def alterar_produto():
-    print("ALTERAR PREÇO E ESTOQUE")
-    ver_produtos()
-    produto = buscar_produto(ler_inteiro("Código do produto: "))
-    if produto is None:
-        print("Produto não encontrado.")
+def alterarProduto():
+    print("ATUALIZAÇÃO DE PRODUTO")
+
+    produto = escolherProduto()
+
+    if (not produto):
+        print("Não é possível alterar o produto. Cheque o código escolhido...")
         return
-    cod, nome, preco, estoque = produto
 
-    print("Deixe vazio para manter o valor atual.")
-    novo_preco = input(f"Preço [{preco}]: ").strip()
-    novo_estoque = input(f"Estoque [{estoque}]: ").strip()
+    continuar = input("Deseja alterar as informações do produto? (S/N) ")
+
+    if (continuar != "S"):
+        return
+
+    cod, nome, preco, estoque, cod_categoria, nome_categoria = produto
+
+    print("ALTERAR DADOS:")
+    print("(Deixe vazio para manter o original)")
+
+    novo_nome = input(f"Digite o novo nome ({nome}): ").strip()
+    if (novo_nome):
+        nome = novo_nome
+
+    novo_preco = input(f"Digite o novo preço (R$ {preco:,.2f}): ").strip()
+    if (novo_preco):
+        preco = float(novo_preco)
+
+    novo_estoque = input(f"Digite o novo estoque ({estoque}): ").strip()
+    if (novo_estoque):
+        estoque = int(novo_estoque)
+
+    verCategorias()
+    nova_categoria = input(f"Digite o código da nova categoria ({cod_categoria}): ").strip()
+    if (nova_categoria):
+        cod_categoria = int(nova_categoria)
+
     try:
-        if novo_preco != "":
-            preco = float(novo_preco.replace(",", "."))
-        if novo_estoque != "":
-            estoque = int(novo_estoque)
-    except ValueError:
-        print("Preço e estoque precisam ser números. Nada foi alterado.")
+        banco.manipular('''
+            UPDATE produtos
+            SET nome_produto = %s,
+                preco = %s,
+                estoque = %s,
+                cod_categoria = %s
+            WHERE cod_produto = %s;
+        ''', (nome, preco, estoque, cod_categoria, cod))
+        print("PRODUTO ATUALIZADO!")
+    except Exception as error:
+        print("Ocorreu um erro na atualização!")
+
+
+def removerProduto():
+    print("REMOÇÃO DE PRODUTO")
+
+    produto = escolherProduto()
+
+    if (not produto):
+        print("Produto não encontrado!")
+        return
+
+    continuar = input("DESEJA REALMENTE APAGAR ESSE PRODUTO? (S/N) ")
+
+    if (continuar != "S"):
+        print("Cancelando operação...")
         return
 
     try:
-        banco.executar(
-            "UPDATE produtos SET preco = %s, estoque = %s WHERE cod_produto = %s",
-            (preco, estoque, cod),
-        )
-        print(f"{nome} atualizado.")
-    except psycopg.errors.CheckViolation:
-        print("Preço e estoque não podem ser negativos.")
+        banco.manipular('''
+            DELETE FROM produtos
+            WHERE cod_produto = %s;
+        ''', (produto[0],))
+        print("Produto removido com sucesso!")
+    except Exception as error:
+        # Produto que já foi vendido não sai: a FK fk_item_produto recusa
+        print("Não foi possível remover o produto! Ele já foi vendido?")
 
 
-def remover_produto():
-    print("REMOVER PRODUTO")
-    ver_produtos()
-    cod = ler_inteiro("Código do produto: ")
-    try:
-        quantidade = banco.executar("DELETE FROM produtos WHERE cod_produto = %s", (cod,))
-        if quantidade == 0:
-            print("Produto não encontrado.")
-        else:
-            print("Produto removido.")
-    except psycopg.errors.ForeignKeyViolation:
-        print("Esse produto já foi vendido: ele fica no cadastro, por causa dos pedidos.")
+# ---------------- Requisito 2 · Fluxo de venda ----------------
+
+def verClientes():
+    print("CLIENTES")
+    for cod, nome in banco.consultar("SELECT cod_cliente, nome_cliente FROM clientes ORDER BY cod_cliente;"):
+        print(f"{cod} | {nome}")
 
 
-# ---- Pedidos (Passos 5 e 6) ----
+def cadastrarVenda():
+    print("NOVA VENDA")
 
-def ver_clientes():
-    for cod, nome in banco.consultar("SELECT cod_cliente, nome_cliente FROM clientes ORDER BY cod_cliente"):
-        print(f"  {cod}. {nome}")
+    # 1. O cliente
+    verClientes()
+    cod_cliente = int(input("Digite o código do cliente: "))
 
-
-def novo_pedido():
-    print("NOVO PEDIDO")
-    print("Clientes:")
-    ver_clientes()
-    cod_cliente = ler_inteiro("Código do cliente: ")
-
-    # 1) Montar a lista de itens na memória, antes de gravar qualquer coisa
+    # 2. Os itens: montados numa lista, antes de gravar qualquer coisa
     itens = []
-    while True:
-        cod_produto = ler_inteiro("Código do produto (0 para fechar o pedido): ")
-        if cod_produto == 0:
+    verProdutos()
+
+    while (True):
+        cod_produto = int(input("Código do produto (0 para fechar a venda): "))
+
+        if (cod_produto == 0):
             break
-        produto = buscar_produto(cod_produto)
-        if produto is None:
-            print("Produto não encontrado.")
+
+        consulta = banco.consultar('''
+            SELECT cod_produto, nome_produto, preco FROM produtos
+            WHERE cod_produto = %s;
+        ''', (cod_produto,))
+
+        if (len(consulta) == 0):
+            print("Produto não encontrado!")
             continue
-        qtd = ler_inteiro(f"Quantidade de {produto[1]}: ")
-        itens.append((cod_produto, qtd, produto[2]))
 
-    if len(itens) == 0:
-        print("Pedido sem itens: nada foi gravado.")
+        cod, nome, preco = consulta[0]
+        qtd = int(input(f"Quantidade de {nome}: "))
+
+        # O preço do dia vai junto: é o preco_unit do item
+        itens.append((cod, qtd, preco))
+        print(f"{qtd} x {nome} na venda.")
+
+    if (len(itens) == 0):
+        print("Venda sem itens. Nada foi gravado.")
         return
 
-    # 2) Gravar tudo numa transação só: pedido, itens e baixa no estoque
-    conexao = banco.conectar()
+    # 3. Gravar: o pedido e os itens juntos, pelo método da classe
     try:
-        cursor = conexao.cursor()
-        cursor.execute(
-            "INSERT INTO pedidos (cod_cliente) VALUES (%s) RETURNING cod_pedido",
-            (cod_cliente,),
-        )
-        cod_pedido = cursor.fetchone()[0]
-
-        for cod_produto, qtd, preco in itens:
-            cursor.execute(
-                """INSERT INTO itens_pedido (cod_pedido, cod_produto, qtd, preco_unit)
-                   VALUES (%s, %s, %s, %s)""",
-                (cod_pedido, cod_produto, qtd, preco),
-            )
-            cursor.execute(
-                "UPDATE produtos SET estoque = estoque - %s WHERE cod_produto = %s",
-                (qtd, cod_produto),
-            )
-
-        conexao.commit()
-        print(f"Pedido {cod_pedido} gravado com {len(itens)} item(ns).")
-
-    except psycopg.errors.ForeignKeyViolation:
-        conexao.rollback()
-        print("Cliente não encontrado. Nada foi gravado.")
-    except psycopg.errors.CheckViolation as erro:
-        conexao.rollback()
-        if erro.diag.constraint_name == "ck_estoque":
-            print("Estoque insuficiente. Nada foi gravado.")
-        else:
-            print("A quantidade precisa ser maior que zero. Nada foi gravado.")
-    except psycopg.errors.UniqueViolation:
-        conexao.rollback()
-        print("O mesmo produto entrou duas vezes: some as quantidades. Nada foi gravado.")
-    finally:
-        conexao.close()
+        cod_pedido = banco.registrarVenda(cod_cliente, itens)
+        print(f"VENDA {cod_pedido} REGISTRADA COM {len(itens)} ITEM(NS)!")
+    except Exception as error:
+        print("Não foi possível registrar a venda. Nada foi gravado.")
 
 
-def ver_pedido():
-    print("VER PEDIDO")
-    cod_pedido = ler_inteiro("Código do pedido: ")
-    cabecalho = banco.consultar(
-        """SELECT p.cod_pedido, c.nome_cliente, p.data_pedido, p.status
-           FROM pedidos p
-           JOIN clientes c ON c.cod_cliente = p.cod_cliente
-           WHERE p.cod_pedido = %s""",
-        (cod_pedido,),
-    )
-    if len(cabecalho) == 0:
-        print("Pedido não encontrado.")
+def verVenda():
+    print("DETALHES DA VENDA")
+
+    cod_pedido = int(input("Digite o código da venda: "))
+
+    consulta = banco.consultar('''
+        SELECT p.cod_pedido, c.nome_cliente, p.data_pedido, p.status
+        FROM pedidos p
+        JOIN clientes c ON c.cod_cliente = p.cod_cliente
+        WHERE p.cod_pedido = %s;
+    ''', (cod_pedido,))
+
+    if (len(consulta) == 0):
+        print("Venda não encontrada!")
         return
-    cod, cliente, data, status = cabecalho[0]
-    print(f"Pedido {cod} · {cliente} · {data:%d/%m/%Y} · {status}")
 
-    itens = banco.consultar(
-        """SELECT pr.nome_produto, i.qtd, i.preco_unit, i.qtd * i.preco_unit AS subtotal
-           FROM itens_pedido i
-           JOIN produtos pr ON pr.cod_produto = i.cod_produto
-           WHERE i.cod_pedido = %s
-           ORDER BY i.cod_item""",
-        (cod_pedido,),
-    )
+    cod, cliente, data, status = consulta[0]
+    print(f"Venda {cod} | {cliente} | {data:%d/%m/%Y} | {status}")
+
+    itens = banco.consultar('''
+        SELECT pr.nome_produto, i.qtd, i.preco_unit, i.qtd * i.preco_unit
+        FROM itens_pedido i
+        JOIN produtos pr ON pr.cod_produto = i.cod_produto
+        WHERE i.cod_pedido = %s
+        ORDER BY i.cod_item;
+    ''', (cod_pedido,))
+
     total = 0
     for nome, qtd, preco_unit, subtotal in itens:
         print(f"  {qtd} x {nome} (R$ {preco_unit:,.2f}) = R$ {subtotal:,.2f}")
         total = total + subtotal
-    if len(itens) == 0:
+
+    if (len(itens) == 0):
         print("  (sem itens)")
-    print(f"Total: R$ {total:,.2f}")
+
+    print(f"TOTAL: R$ {total:,.2f}")
 
 
-def pedidos_do_cliente():
-    print("PEDIDOS DE UM CLIENTE")
-    ver_clientes()
-    cod_cliente = ler_inteiro("Código do cliente: ")
-    linhas = banco.consultar(
-        """SELECT cod_pedido, data_pedido, status
-           FROM pedidos
-           WHERE cod_cliente = %s
-           ORDER BY data_pedido""",
-        (cod_cliente,),
-    )
-    if len(linhas) == 0:
-        print("Nenhum pedido para esse cliente.")
-    for cod, data, status in linhas:
-        print(f"Pedido {cod} - {data:%d/%m/%Y} - {status}")
+while (True):
+    print('''
+    LOJA CONECTA
 
+    MENU:
 
-# ---- Menu principal ----
+    1. Ver Produtos
+    2. Ver Detalhes do Produto
+    3. Cadastrar Produto
+    4. Alterar Produto
+    5. Apagar Produto
 
-while True:
-    print("""
-LOJA CONECTA · SISTEMA
+    11. Nova Venda
+    12. Ver Venda
 
-1. Ver produtos
-2. Cadastrar produto
-3. Alterar preço e estoque
-4. Remover produto
-5. Novo pedido
-6. Ver pedido
-7. Pedidos de um cliente
+    0. Sair
+    ''')
 
-0. Sair
-""")
-    op = input("Digite a opção desejada: ")
+    op = input("DIGITE O NÚMERO DA OPÇÃO DESEJADA: ")
 
-    try:
-        if op == "1":
-            ver_produtos()
-        elif op == "2":
-            cadastrar_produto()
-        elif op == "3":
-            alterar_produto()
-        elif op == "4":
-            remover_produto()
-        elif op == "5":
-            novo_pedido()
-        elif op == "6":
-            ver_pedido()
-        elif op == "7":
-            pedidos_do_cliente()
-        elif op == "0":
-            print("Saindo do programa...")
-            break
-        else:
-            print("Opção inválida.")
-    except psycopg.OperationalError:
-        print("Sem conexão com o banco. Confira a internet e o arquivo .env.")
+    if (op == "1"):
+        verProdutos()
+    elif (op == "2"):
+        escolherProduto()
+    elif (op == "3"):
+        cadastrarProduto()
+    elif (op == "4"):
+        alterarProduto()
+    elif (op == "5"):
+        removerProduto()
+    elif (op == "11"):
+        cadastrarVenda()
+    elif (op == "12"):
+        verVenda()
+    elif (op == "0"):
+        print("Saindo do programa...")
+        break
+    else:
+        print("ESCOLHA UMA OPÇÃO VÁLIDA")
 
-    input("Tecle ENTER para continuar")
+    input("TECLE ENTER PARA CONTINUAR")

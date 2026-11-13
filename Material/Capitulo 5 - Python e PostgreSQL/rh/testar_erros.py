@@ -1,4 +1,4 @@
-# Capítulo 5 · testar_erros.py
+# Capítulo 5 · Para saber · testar_erros.py
 # Os tipos de erro do psycopg na prática: um except para cada regra do banco.
 # Rode depois do setup_rh.py. Troque os valores do INSERT para ver cada except em ação:
 #   CPF da Ana ('12345678901') · salário 0 · setor 9 · CPF '123' · coluna "salario" (escrita errada)
@@ -18,7 +18,7 @@ try:
         dbname=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
-        sslmode=os.getenv("DB_SSLMODE"),
+        sslmode=os.getenv("DB_SSL"),
     )
     cursor = conexao.cursor()
     cursor.execute("""

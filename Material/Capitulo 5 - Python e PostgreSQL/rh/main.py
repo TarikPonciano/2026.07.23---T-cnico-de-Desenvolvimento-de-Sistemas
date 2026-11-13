@@ -1,215 +1,306 @@
-# Capítulo 5 · main.py · Sistema RH com banco de dados
-# O Sistema de Funcionários da UC 1, agora guardando os dados no PostgreSQL.
-# A lista de dicionários e o dados.json saem; cada operação vira um comando SQL.
-# Antes de rodar: setup_rh.py já rodou e o .env está nesta pasta.
+# Capítulo 5 · Etapa 3 · main.py · CRUD do Sistema RH com a classe Banco
+# Funcionários: ver, escolher (ver detalhes), cadastrar, alterar e remover.
+# Setores: ver, escolher, cadastrar e alterar.
 
-import psycopg
 from classBanco import Banco
 
 banco = Banco()
 
 
-# ---- Funções ferramentas ----
-
-def ler_texto(mensagem):
-    while True:
-        texto = input(mensagem).strip()
-        if texto != "":
-            return texto
-        print("Preencha este campo.")
-
-
-def ler_inteiro(mensagem):
-    while True:
-        try:
-            return int(input(mensagem))
-        except ValueError:
-            print("Digite apenas números inteiros.")
-
-
-def ler_decimal(mensagem):
-    while True:
-        try:
-            return float(input(mensagem).replace(",", "."))
-        except ValueError:
-            print("Digite apenas números.")
-
-
-def gravar(sql, parametros):
-    # Roda o INSERT ou o UPDATE e traduz as regras do banco em mensagens
-    try:
-        banco.executar(sql, parametros)
-        return True
-    except psycopg.errors.UniqueViolation:
-        print("CPF já cadastrado. Tente outro número.")
-    except psycopg.errors.ForeignKeyViolation:
-        print("Esse setor não existe.")
-    except psycopg.errors.CheckViolation as erro:
-        if erro.diag.constraint_name == "ck_cpf_tamanho":
-            print("O CPF precisa ter 11 dígitos.")
-        else:
-            print("O salário precisa ser maior que zero.")
-    return False
-
-
-# ---- Operações CRUD ----
-
-def ver_setores():
-    for cod, nome in banco.consultar("SELECT cod_setor, nome_setor FROM setores ORDER BY cod_setor"):
-        print(f"  {cod}. {nome}")
-
-
-def cadastrar_funcionario():
-    print("CADASTRO DE FUNCIONÁRIOS")
-    nome = ler_texto("Nome: ")
-    cpf = ler_texto("CPF (só números): ")
-    cargo = ler_texto("Cargo: ")
-    salario = ler_decimal("Salário: R$ ")
-    print("Setores:")
-    ver_setores()
-    cod_setor = ler_inteiro("Código do setor: ")
-
-    ok = gravar(
-        """INSERT INTO funcionarios
-             (nome_funcionario, cpf_funcionario, cargo_funcionario, salario_funcionario, cod_setor)
-           VALUES (%s, %s, %s, %s, %s)""",
-        (nome, cpf, cargo, salario, cod_setor),
-    )
-    if ok:
-        print(f"{nome} foi cadastrado(a)!")
-
-
-def ver_funcionarios():
+def verFuncionarios():
     print("LISTA DE FUNCIONÁRIOS")
-    linhas = banco.consultar("""
-        SELECT f.cod_funcionario, f.nome_funcionario, f.cargo_funcionario,
-               f.salario_funcionario, s.nome_setor
+
+    funcionarios = banco.consultar('''
+        SELECT f.cod_funcionario, f.nome_funcionario, f.cpf_funcionario, f.cargo_funcionario,
+               f.salario_funcionario, f.cod_setor, s.nome_setor
         FROM funcionarios f
-        JOIN setores s ON s.cod_setor = f.cod_setor
-        ORDER BY f.nome_funcionario
-    """)
-    if len(linhas) == 0:
-        print("Nenhum funcionário cadastrado.")
-    for cod, nome, cargo, salario, setor in linhas:
-        print(f"{cod}. {nome} - {cargo} - R$ {salario:,.2f} - {setor}")
+        JOIN setores s ON f.cod_setor = s.cod_setor
+        ORDER BY f.cod_funcionario ASC;
+    ''')
+
+    print("Código | Nome | CPF | Cargo | Salário | Cod Setor | Setor")
+
+    if (len(funcionarios) == 0):
+        print("NÃO HÁ FUNCIONÁRIOS CADASTRADOS")
+        return
+
+    # Alternativa: for func in funcionarios, e func[0], func[1]...
+    for cod_func, nome_func, cpf_func, cargo_func, salario_func, cod_setor, nome_setor in funcionarios:
+        print(f"{cod_func} | {nome_func} | {cpf_func} | {cargo_func} | R$ {salario_func:,.2f} | {cod_setor} | {nome_setor}")
 
 
-def escolher_funcionario():
-    # Devolve a linha do funcionário escolhido, ou None se o código não existe
-    ver_funcionarios()
-    cod = ler_inteiro("Código do funcionário: ")
-    linhas = banco.consultar(
-        """SELECT cod_funcionario, nome_funcionario, cargo_funcionario,
-                  salario_funcionario, cod_setor
-           FROM funcionarios
-           WHERE cod_funcionario = %s""",
-        (cod,),
-    )
-    if len(linhas) == 0:
-        print("Nenhum funcionário com esse código.")
+def escolherFuncionario():
+    verFuncionarios()
+
+    cod_escolhido = int(input("Digite o código do funcionário desejado: "))
+
+    consulta = banco.consultar('''
+        SELECT f.cod_funcionario, f.nome_funcionario, f.cpf_funcionario, f.cargo_funcionario,
+               f.salario_funcionario, f.cod_setor, s.nome_setor
+        FROM funcionarios f
+        JOIN setores s ON f.cod_setor = s.cod_setor
+        WHERE f.cod_funcionario = %s;
+    ''', (cod_escolhido,))
+
+    if (len(consulta) == 0):
+        print("Funcionário não encontrado!")
         return None
-    return linhas[0]
+
+    funcionario = consulta[0]
+
+    print(f'''
+    Ficha do Funcionário:
+
+    Código: {funcionario[0]}
+    Nome: {funcionario[1]}
+    CPF: {funcionario[2]}
+    Cargo: {funcionario[3]}
+    Salário: R$ {funcionario[4]:,.2f}
+    Setor: {funcionario[6]}
+    ''')
+
+    return funcionario
 
 
-def alterar_funcionario():
-    print("ALTERAR FUNCIONÁRIO")
-    funcionario = escolher_funcionario()
-    if funcionario is None:
+def cadastrarFuncionario():
+    print("CADASTRO DE NOVO FUNCIONÁRIO")
+
+    nome = input("Digite o nome do funcionário: ")
+    cpf = input("Digite o cpf do funcionário: ")
+    cargo = input("Digite o cargo do funcionário: ")
+    salario = float(input("Digite o salário do funcionário: "))
+
+    verSetores()
+
+    cod_setor = int(input("Digite o código do setor do funcionário: "))
+
+    try:
+        banco.manipular('''
+            INSERT INTO funcionarios
+            VALUES (default, %s, %s, %s, %s, %s);
+        ''', (nome, cpf, cargo, salario, cod_setor))
+        print("FUNCIONÁRIO CADASTRADO COM SUCESSO!")
+    except Exception as error:
+        print("ERRO AO CADASTRAR FUNCIONÁRIO")
+
+
+def alterarFuncionario():
+    print("ATUALIZAÇÃO DE FUNCIONÁRIO")
+
+    funcionario = escolherFuncionario()
+
+    if (not funcionario):
+        print("Não é possível alterar o funcionário. Cheque o código escolhido...")
         return
-    cod, nome, cargo, salario, cod_setor = funcionario
-    print("Deixe vazio para manter o valor atual.")
-    novo_nome = input(f"Nome [{nome}]: ").strip()
-    novo_cargo = input(f"Cargo [{cargo}]: ").strip()
-    novo_salario = input(f"Salário [{salario}]: ").strip()
-    novo_setor = input(f"Setor [{cod_setor}]: ").strip()
 
-    if novo_nome != "":
+    continuar = input("Deseja alterar as informações do funcionário? (S/N) ")
+
+    if (continuar != "S"):
+        return
+
+    cod, nome, cpf, cargo, salario, cod_setor, nome_setor = funcionario
+
+    print("ALTERAR DADOS:")
+    print("(Deixe vazio para manter o original)")
+
+    novo_nome = input(f"Digite o novo nome ({nome}): ").strip()
+    if (novo_nome):
         nome = novo_nome
-    if novo_cargo != "":
+
+    novo_cpf = input(f"Digite o novo cpf ({cpf}): ").strip()
+    if (novo_cpf):
+        cpf = novo_cpf
+
+    novo_cargo = input(f"Digite o novo cargo ({cargo}): ").strip()
+    if (novo_cargo):
         cargo = novo_cargo
+
+    novo_salario = input(f"Digite o novo salário (R$ {salario:,.2f}): ").strip()
+    if (novo_salario):
+        salario = float(novo_salario)
+
+    verSetores()
+    novo_setor = input(f"Digite o código do novo setor ({cod_setor}): ").strip()
+    if (novo_setor):
+        cod_setor = int(novo_setor)
+
     try:
-        if novo_salario != "":
-            salario = float(novo_salario.replace(",", "."))
-        if novo_setor != "":
-            cod_setor = int(novo_setor)
-    except ValueError:
-        print("Salário e setor precisam ser números. Nada foi alterado.")
+        banco.manipular('''
+            UPDATE funcionarios
+            SET nome_funcionario = %s,
+                cpf_funcionario = %s,
+                cargo_funcionario = %s,
+                salario_funcionario = %s,
+                cod_setor = %s
+            WHERE cod_funcionario = %s;
+        ''', (nome, cpf, cargo, salario, cod_setor, cod))
+        print("FUNCIONÁRIO ATUALIZADO!")
+    except Exception as error:
+        print("Ocorreu um erro na atualização!")
+
+
+def removerFuncionario():
+    print("REMOÇÃO DE FUNCIONÁRIO")
+
+    funcionario = escolherFuncionario()
+
+    if (not funcionario):
+        print("Funcionário não encontrado!")
         return
-    ok = gravar(
-        """UPDATE funcionarios SET nome_funcionario = %s, cargo_funcionario = %s,
-               salario_funcionario = %s, cod_setor = %s WHERE cod_funcionario = %s""",
-        (nome, cargo, salario, cod_setor, cod),
-    )
-    if ok:
-        print("Dados atualizados!")
 
+    continuar = input("DESEJA REALMENTE APAGAR ESSE FUNCIONÁRIO? (S/N) ")
 
-def remover_funcionario():
-    print("REMOVER FUNCIONÁRIO")
-    funcionario = escolher_funcionario()
-    if funcionario is None:
+    if (continuar != "S"):
+        print("Cancelando operação...")
         return
-    cod = funcionario[0]
-    nome = funcionario[1]
 
-    resposta = input(f"Remover {nome}? (s/n) ").strip().lower()
-    if resposta == "s":
-        banco.executar("DELETE FROM funcionarios WHERE cod_funcionario = %s", (cod,))
-        print(f"{nome} foi removido(a).")
+    try:
+        banco.manipular('''
+            DELETE FROM funcionarios
+            WHERE cod_funcionario = %s;
+        ''', (funcionario[0],))
+        print("Funcionário removido com sucesso!")
+    except Exception as error:
+        print("Não foi possível remover o funcionário!")
+
+
+def verSetores():
+    print("LISTA DE SETORES")
+
+    setores = banco.consultar("SELECT * FROM setores ORDER BY cod_setor;")
+
+    print("Código | Nome")
+
+    if (len(setores) == 0):
+        print("NÃO HÁ SETORES CADASTRADOS")
+        return
+
+    for cod_setor, nome_setor in setores:
+        print(f"{cod_setor} | {nome_setor}")
+
+
+def escolherSetor():
+    verSetores()
+
+    id_setor = int(input("DIGITE O CÓDIGO DO SETOR DESEJADO: "))
+
+    consulta = banco.consultar('''
+        SELECT cod_setor, nome_setor FROM setores
+        WHERE cod_setor = %s;
+    ''', (id_setor,))
+
+    if (len(consulta) == 0):
+        print("SETOR NÃO ENCONTRADO")
+        return None
+
+    setor = consulta[0]
+
+    funcionarios = banco.consultar('''
+        SELECT cod_funcionario, nome_funcionario, cargo_funcionario FROM funcionarios
+        WHERE cod_setor = %s;
+    ''', (id_setor,))
+
+    print(f"FUNCIONÁRIOS DO SETOR {setor[0]} - {setor[1]}:")
+
+    if (len(funcionarios) == 0):
+        print("(nenhum funcionário)")
+
+    for func in funcionarios:
+        print(f"{func[0]} - {func[1]} - {func[2]}")
+
+    return setor
+
+
+def cadastrarSetor():
+    print("CADASTRO DE NOVO SETOR")
+
+    nome = input("Digite o nome do setor: ").strip()
+
+    if (len(nome) <= 0):
+        print("Insira um nome válido!")
+        return
+
+    try:
+        banco.manipular('''
+            INSERT INTO setores
+            VALUES (default, %s);
+        ''', (nome,))
+        print("SETOR CADASTRADO!")
+    except Exception as error:
+        print("Não foi possível cadastrar o setor!")
+
+
+def alterarSetor():
+    print("ATUALIZAÇÃO DE SETOR")
+
+    setor = escolherSetor()
+
+    if (not setor):
+        print("Setor inválido!")
+        return
+
+    cod_setor, nome_setor = setor
+
+    novo_nome = input(f"Digite o novo nome do setor ({nome_setor}): ").strip()
+
+    if (novo_nome):
+        nome_setor = novo_nome
+
+    try:
+        banco.manipular('''
+            UPDATE setores
+            SET nome_setor = %s
+            WHERE cod_setor = %s;
+        ''', (nome_setor, cod_setor))
+        print("SETOR ATUALIZADO!")
+    except Exception as error:
+        print("Não foi possível atualizar o setor!")
+
+
+while (True):
+    print('''
+    BEM VINDO AO SISTEMA RH XYZ
+
+    MENU:
+
+    1. Ver Funcionários
+    2. Escolher Funcionário
+    3. Cadastrar Funcionário
+    4. Alterar Funcionário
+    5. Remover Funcionário
+
+    11. Ver Setores
+    12. Escolher Setor
+    13. Cadastrar Setor
+    14. Alterar Setor
+
+    0. Sair
+    ''')
+
+    op = input("DIGITE O NÚMERO DA OPÇÃO DESEJADA: ")
+
+    if (op == "1"):
+        verFuncionarios()
+    elif (op == "2"):
+        escolherFuncionario()
+    elif (op == "3"):
+        cadastrarFuncionario()
+    elif (op == "4"):
+        alterarFuncionario()
+    elif (op == "5"):
+        removerFuncionario()
+    elif (op == "11"):
+        verSetores()
+    elif (op == "12"):
+        escolherSetor()
+    elif (op == "13"):
+        cadastrarSetor()
+    elif (op == "14"):
+        alterarSetor()
+    elif (op == "0"):
+        print("Saindo do programa...")
+        break
     else:
-        print("Nada foi removido.")
+        print("ESCOLHA UMA OPÇÃO VÁLIDA")
 
-
-# ---- Funcionalidade extra ----
-
-def buscar_por_nome():
-    termo = ler_texto("Parte do nome: ")
-    linhas = banco.consultar(
-        """SELECT nome_funcionario, cargo_funcionario
-           FROM funcionarios
-           WHERE nome_funcionario ILIKE %s
-           ORDER BY nome_funcionario""",
-        ("%" + termo + "%",),
-    )
-    if len(linhas) == 0:
-        print("Ninguém encontrado.")
-    for nome, cargo in linhas:
-        print(f"{nome} - {cargo}")
-
-
-# ---- Menu principal ----
-
-while True:
-    print("""
-SISTEMA RH · BANCO DE DADOS
-
-1. Cadastrar funcionário
-2. Ver funcionários
-3. Alterar funcionário
-4. Remover funcionário
-5. Buscar por nome
-
-0. Sair
-""")
-    op = input("Digite a opção desejada: ")
-
-    try:
-        if op == "1":
-            cadastrar_funcionario()
-        elif op == "2":
-            ver_funcionarios()
-        elif op == "3":
-            alterar_funcionario()
-        elif op == "4":
-            remover_funcionario()
-        elif op == "5":
-            buscar_por_nome()
-        elif op == "0":
-            print("Saindo do programa...")
-            break
-        else:
-            print("Opção inválida.")
-    except psycopg.OperationalError:
-        print("Sem conexão com o banco. Confira a internet e o arquivo .env.")
-
-    input("Tecle ENTER para continuar")
+    input("TECLE ENTER PARA CONTINUAR")

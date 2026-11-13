@@ -1,9 +1,6 @@
-# Capítulo 5 · Prática guiada · Passo 2 · classBanco.py
-# A mesma classe do Sistema RH, com um método a mais: inserir, que devolve o código gerado.
-# Os dados da conexão vêm do .env (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSLMODE).
-#
-# O except da classe é genérico (Exception): só mostra a mensagem do erro, para ajudar no debug,
-# e repassa o erro com raise. Quem chamou trata com os excepts específicos (UniqueViolation...).
+# Capítulo 5 · Prática guiada · classBanco.py
+# A mesma classe do Sistema RH, com um método a mais: registrarVenda, que grava o pedido
+# e os itens numa transação só (tudo ou nada).
 
 import os
 import psycopg
@@ -14,67 +11,104 @@ load_dotenv()
 
 class Banco():
     def __init__(self):
-        self.servidor = os.getenv("DB_HOST")
-        self.porta = os.getenv("DB_PORT")
-        self.nome_banco = os.getenv("DB_NAME")
-        self.usuario = os.getenv("DB_USER")
-        self.senha = os.getenv("DB_PASSWORD")
-        self.ssl = os.getenv("DB_SSLMODE")
+        self.host = os.getenv("DB_HOST")
+        self.port = os.getenv("DB_PORT")
+        self.user = os.getenv("DB_USER")
+        self.password = os.getenv("DB_PASSWORD")
+        self.dbname = os.getenv("DB_NAME")
+        self.ssl = os.getenv("DB_SSL")
 
+    # Esse método deveria ser privado, ou seja, executado somente dentro da classe
     def conectar(self):
         return psycopg.connect(
-            host=self.servidor,
-            port=self.porta,
-            dbname=self.nome_banco,
-            user=self.usuario,
-            password=self.senha,
-            sslmode=self.ssl,
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            dbname=self.dbname,
+            sslmode=self.ssl
         )
 
     # SELECT: devolve a lista de linhas (cada linha é uma tupla)
-    def consultar(self, sql, parametros=None):
+    def consultar(self, sql, parametros=()):
         conexao = None
+
         try:
             conexao = self.conectar()
             cursor = conexao.cursor()
+
             cursor.execute(sql, parametros)
+
             return cursor.fetchall()
-        except Exception as erro:
-            print("Erro no banco:", erro)
-            raise   # repassa o mesmo erro para quem chamou
+
+        except Exception as error:
+            print("ERRO DE CONSULTA:", error)
+            raise
+
         finally:
-            if conexao is not None:
+            if (conexao is not None):
                 conexao.close()
 
     # INSERT, UPDATE ou DELETE: grava e devolve quantas linhas mudaram
-    def executar(self, sql, parametros=None):
+    def manipular(self, sql, parametros=()):
         conexao = None
+
         try:
             conexao = self.conectar()
             cursor = conexao.cursor()
-            cursor.execute(sql, parametros)
+
+            resultado = cursor.execute(sql, parametros)
+
             conexao.commit()
-            return cursor.rowcount
-        except Exception as erro:
-            print("Erro no banco:", erro)
-            raise   # repassa o mesmo erro para quem chamou
+
+            return resultado.rowcount
+
+        except Exception as error:
+            print("ERRO DE MANIPULAÇÃO:", error)
+            raise
+
         finally:
-            if conexao is not None:
+            if (conexao is not None):
                 conexao.close()
 
-    # INSERT ... RETURNING: grava e devolve o código que o banco gerou
-    def inserir(self, sql, parametros=None):
+    # Venda: o pedido e os itens numa transação só. Devolve o código do pedido.
+    # itens é uma lista de tuplas (cod_produto, qtd, preco_unit)
+    def registrarVenda(self, cod_cliente, itens):
         conexao = None
+
         try:
             conexao = self.conectar()
             cursor = conexao.cursor()
-            cursor.execute(sql, parametros)
-            codigo = cursor.fetchone()[0]
+
+            # 1. O pedido. O RETURNING devolve o código que o banco gerou
+            cursor.execute('''
+                INSERT INTO pedidos
+                VALUES (default, %s, default, default)
+                RETURNING cod_pedido;
+            ''', (cod_cliente,))
+
+            cod_pedido = cursor.fetchone()[0]
+
+            # 2. Os itens, todos com o código do pedido que acabou de nascer
+            for cod_produto, qtd, preco_unit in itens:
+                cursor.execute('''
+                    INSERT INTO itens_pedido
+                    VALUES (default, %s, %s, %s, %s);
+                ''', (cod_pedido, cod_produto, qtd, preco_unit))
+
+            # 3. Tudo certo: o pedido e os itens são gravados juntos
             conexao.commit()
-            return codigo
-        except Exception as erro:
-            print("Erro no banco:", erro)
-            raise   # repassa o mesmo erro para quem chamou
+
+            return cod_pedido
+
+        except Exception as error:
+            print("ERRO NA VENDA:", error)
+
+            # Algum passo falhou: nem o pedido nem os itens ficam gravados
+            if (conexao is not None):
+                conexao.rollback()
+            raise
+
         finally:
-            if conexao is not None:
+            if (conexao is not None):
                 conexao.close()

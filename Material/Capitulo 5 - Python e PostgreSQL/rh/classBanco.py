@@ -1,9 +1,7 @@
-# Capítulo 5 · classBanco.py
-# Abre a conexão, roda um comando e fecha: para consultas pontuais.
-# Os dados da conexão vêm do .env (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SSLMODE).
-#
-# O except da classe é genérico (Exception): só mostra a mensagem do erro, para ajudar no debug,
-# e repassa o erro com raise. Quem chamou trata com os excepts específicos (UniqueViolation...).
+# Capítulo 5 · Etapa 3 · classBanco.py
+# A conexão num lugar só: abre, roda o SQL e fecha.
+# O except é genérico (Exception): mostra a mensagem do erro, para ajudar no debug,
+# e repassa o erro com raise. Quem chamou decide a mensagem para o usuário.
 
 import os
 import psycopg
@@ -14,50 +12,62 @@ load_dotenv()
 
 class Banco():
     def __init__(self):
-        self.servidor = os.getenv("DB_HOST")
-        self.porta = os.getenv("DB_PORT")
-        self.nome_banco = os.getenv("DB_NAME")
-        self.usuario = os.getenv("DB_USER")
-        self.senha = os.getenv("DB_PASSWORD")
-        self.ssl = os.getenv("DB_SSLMODE")
+        self.host = os.getenv("DB_HOST")
+        self.port = os.getenv("DB_PORT")
+        self.user = os.getenv("DB_USER")
+        self.password = os.getenv("DB_PASSWORD")
+        self.dbname = os.getenv("DB_NAME")
+        self.ssl = os.getenv("DB_SSL")
 
+    # Esse método deveria ser privado, ou seja, executado somente dentro da classe
     def conectar(self):
         return psycopg.connect(
-            host=self.servidor,
-            port=self.porta,
-            dbname=self.nome_banco,
-            user=self.usuario,
-            password=self.senha,
-            sslmode=self.ssl,
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            dbname=self.dbname,
+            sslmode=self.ssl
         )
 
     # SELECT: devolve a lista de linhas (cada linha é uma tupla)
-    def consultar(self, sql, parametros=None):
+    def consultar(self, sql, parametros=()):
         conexao = None
+
         try:
             conexao = self.conectar()
             cursor = conexao.cursor()
+
             cursor.execute(sql, parametros)
+
             return cursor.fetchall()
-        except Exception as erro:
-            print("Erro no banco:", erro)
-            raise   # repassa o mesmo erro para quem chamou
+
+        except Exception as error:
+            print("ERRO DE CONSULTA:", error)
+            raise
+
         finally:
-            if conexao is not None:
+            if (conexao is not None):
                 conexao.close()
 
     # INSERT, UPDATE ou DELETE: grava e devolve quantas linhas mudaram
-    def executar(self, sql, parametros=None):
+    def manipular(self, sql, parametros=()):
         conexao = None
+
         try:
             conexao = self.conectar()
             cursor = conexao.cursor()
-            cursor.execute(sql, parametros)
+
+            resultado = cursor.execute(sql, parametros)
+
             conexao.commit()
-            return cursor.rowcount
-        except Exception as erro:
-            print("Erro no banco:", erro)
-            raise   # repassa o mesmo erro para quem chamou
+
+            return resultado.rowcount
+
+        except Exception as error:
+            print("ERRO DE MANIPULAÇÃO:", error)
+            raise
+
         finally:
-            if conexao is not None:
+            if (conexao is not None):
                 conexao.close()
