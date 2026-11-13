@@ -140,7 +140,30 @@ def alterarFuncionario():
     except Exception as error:
         print("Ocorreu um erro na atualização!")
         
+def removerFuncionario():
+    print("Remoção de Funcionário")
     
+    funcionario = escolherFuncionario()
+    
+    if (not funcionario):
+        print("Funcionário não encontrado!")
+        return
+
+    continuar = input("DESEJA REALMENTE APAGAR ESSE FUNCIONÁRIO?(S/N) ")
+    
+    if (continuar != "S"):
+        print("Cancelando operação...")
+        return
+    
+    try:
+        banco.manipular('''
+                        DELETE FROM funcionarios
+                        WHERE cod_funcionario = %s;
+                        
+                        ''', (funcionario[0],))
+        print("Funcionário removido com sucesso!")
+    except Exception as error:
+        print("Não foi possível remover o funcionário!")
     
     
     
@@ -184,6 +207,8 @@ def escolherSetor():
     
     for func in consulta:
         print(f"{func[2]} - {func[3]} - {func[4]}")
+        
+    return [consulta[0][0], consulta[0][1]]
     
 def cadastrarSetor():
     print("CADASTRO DE NOVO SETOR")
@@ -201,6 +226,29 @@ def cadastrarSetor():
     
     print("SETOR CADASTRADO!")
     
+def alterarSetor():
+    print("ATUALIZAÇÃO DE SETOR")
+    
+    cod_setor, nome_setor = escolherSetor()
+    
+    if (not cod_setor):
+        print("Setor inválido!")
+        return
+    
+    novo_nome = input(f"Digite o novo nome do setor ({nome_setor}): ").strip()
+    
+    if (novo_nome):
+        nome_setor = novo_nome
+    
+    try:
+        banco.manipular('''
+                        UPDATE setores
+                        SET nome_setor = %s
+                        WHERE cod_setor = %s;
+                        ''', (nome_setor, cod_setor))
+        
+    except Exception as error:
+        print("Não foi possível atualizar setor!")
 while (True):
     print('''
           BEM VINDO AO SISTEMA RH XYZ
@@ -211,10 +259,12 @@ while (True):
           2. Escolher Funcionário
           3. Cadastrar Funcionário
           4. Alterar Funcionário
+          5. Remover Funcionário
           
           11. Ver Setores
           12. Escolher Setor
           13. Cadastrar Setor
+          14. Alterar Setor
           
           0. Sair
           ''')
@@ -229,12 +279,16 @@ while (True):
         cadastrarFuncionario()
     elif (op == "4"):
         alterarFuncionario()
+    elif (op == "5"):
+        removerFuncionario()
     elif (op == "11"):
         verSetores()
     elif (op == "12"):
         escolherSetor()
     elif (op == "13"):
         cadastrarSetor()
+    elif (op == "14"):
+        alterarSetor()
     elif (op == "0"):
         print("Saindo do programa...")
         
