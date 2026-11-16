@@ -67,4 +67,41 @@ class Banco ():
             if (conexao is not None):
                 conexao.close()
     
+    def registrarVenda(self, cod_cliente, itens):
+        conexao = None
+        try:
+            conexao = self.conectar()
+            cursor = conexao.cursor()
+            
+            cursor.execute('''
+            INSERT INTO pedidos
+            VALUES(default, %s, default, default)
+            RETURNING cod_pedido;
+                           ''', (cod_cliente,))  
+            
+            cod_pedido = cursor.fetchall()[0][0]
+            
+            for item in itens:
+                
+                cursor.execute('''
+                INSERT INTO itens_pedido
+                VALUES (default, %s, %s, %s, %s);               
+                               ''', (cod_pedido, item[0], item[1], item[2]))
+            
+                
+            conexao.commit()
+            
+            return cod_pedido
+            
+            
+            
+        except Exception as error:
+            print("OCORREU UM ERRO AO REGISTRAR A VENDA")
+            print(error)
+            if (conexao is not None):
+                conexao.rollback()
+            raise
+        finally:
+            if (conexao is not None):
+                conexao.close()
     

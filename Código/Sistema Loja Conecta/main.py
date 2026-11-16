@@ -78,6 +78,11 @@ def cadastrarVenda():
         print("Erro ao cadastrar venda! Por favor recomece o processo de venda...")
         
         
+def verVendas():
+    
+    print(banco.consultar("SELECT * FROM pedidos"))
+    
+    print(banco.consultar("SELECT * FROM itens_pedido"))
         
         
         
@@ -103,7 +108,7 @@ while (True):
     if (op == "1"):
         cadastrarVenda()
     elif (op == "2"):
-        pass
+        verVendas()
     elif (op == "0"):
         print("SAINDO DO PROGRAMA...")
         break
