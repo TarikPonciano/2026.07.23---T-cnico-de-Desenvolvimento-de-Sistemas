@@ -3,7 +3,8 @@ from classBanco import Banco
 banco = Banco()
 
 def cadastrarVenda():
-    # Mostrar os clientes
+    # Mostrar os clientes 
+    
     # verClientes()
     clientes = None
     try:
@@ -79,10 +80,43 @@ def cadastrarVenda():
         
         
 def verVendas():
+    print("LISTA DE PEDIDOS")
+    pedidos = None
+    try:
+        pedidos = banco.consultar("SELECT p.cod_pedido, c.nome_cliente, p.data_pedido, p.status FROM PEDIDOS p JOIN clientes c ON c.cod_cliente = p.cod_cliente;")
+        
+    except Exception as error:
+        print("ERRO AO CONSULTAR PEDIDOS")
+        
+    if (not pedidos):
+        print("NÃO HÁ PEDIDOS")
+        return
+    print("Código | Cliente | Data | Status")
+    for pedido in pedidos:
+        print(f"{pedido[0]} | {pedido[1]} | {pedido[2]} | {pedido[3]}")
+        
+        
+    id_escolhido = int(input("Escolha um dos pedidos para ver mais detalhes: "))
+    pedido_escolhido = None
+    try:
+        pedido_escolhido = banco.consultar("SELECT * FROM itens_pedido WHERE cod_pedido = %s", (id_escolhido,))
+    except Exception as error:
+        print("Não foi possível encontrar o pedido")
+        print(error)
+        
+    if (not pedido_escolhido):
+        return
     
-    print(banco.consultar("SELECT * FROM pedidos"))
+    print("NOTA FISCAL")
+    total = 0
+    for item in pedido_escolhido:
+        print(f"{item[0]} - {item[2]} - {item[3]} - R$ {item[4]:.2f} - R$ {(item[3] * item[4]):.2f}")
+        total += item[3] * item[4]
+
     
-    print(banco.consultar("SELECT * FROM itens_pedido"))
+    print(f"VALOR TOTAL A PAGAR: R$ {total:.2f}")
+        
+
         
         
         

@@ -84,9 +84,18 @@ class Banco ():
             for item in itens:
                 
                 cursor.execute('''
+                UPDATE produtos
+                SET
+                estoque = estoque - %s
+                WHERE
+                cod_produto = %s;
+                               ''', (item[1], item[0]))
+                
+                cursor.execute('''
                 INSERT INTO itens_pedido
                 VALUES (default, %s, %s, %s, %s);               
                                ''', (cod_pedido, item[0], item[1], item[2]))
+                
             
                 
             conexao.commit()
