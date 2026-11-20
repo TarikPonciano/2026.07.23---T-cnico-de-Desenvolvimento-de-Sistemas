@@ -1,7 +1,6 @@
 from classBanco import Banco
 
 banco = Banco()
-
 def cadastrarVenda():
     # Mostrar os clientes 
     
