@@ -1,6 +1,14 @@
 import {input, number, select, confirm} from "@inquirer/prompts";
 
-const nome = await input({message:"Digite o seu nome completo: ", required: true})
+const nome = await input({message:"Digite o seu nome completo: ", required: true, validate: (valor) => {
+    let palavras = valor.trim().split(" ")
+
+    if (palavras.length >= 2){
+        return true
+    }else{
+        return "DIGITE NOME E SOBRENOME"
+    }
+}})
 
 const idade = await number({message: "Digite sua idade: ", required: true, min:14, max:99})
 
