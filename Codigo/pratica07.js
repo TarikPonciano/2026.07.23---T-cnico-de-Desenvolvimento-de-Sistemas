@@ -1,6 +1,6 @@
 import {number} from "@inquirer/prompts"
 
-const secreto = 7
+const secreto = Math.floor(Math.random() * 20) + 1
 
 let tentativas = 0
 
@@ -25,3 +25,5 @@ while (true) {
         break
     }
 }
+
+console.log("O número secreto era:", secreto)
