@@ -7,3 +7,33 @@
 // 3. Falar com um atendente
 
 // 0. Sair
+
+import {select, input} from "@inquirer/prompts"
+
+while (true){
+    const op = await select({
+        message:"MENU DE OPÇÕES:",
+        choices: [
+            {name:"1. Conhecer novas promoções", value: 1},
+            {name:"2. Receber Segunda Via do Boleto", value: 2},
+            {name:"3. Falar com um atendente", value: 3},
+            {name:"0. SAIR", value: 0}
+        ]
+    })
+
+    if (op === 1){
+        console.log("CONHECENDO PROMOÇÕES!")
+    } else if (op === 2){
+        console.log("EMITINDO SEGUNDA VIA DO BOLETO!")
+    } else if (op === 3){
+        console.log("FALANDO COM ATENDENTE")
+    } else if (op === 0){
+        console.log("SAINDO DO PROGRAMA...")
+        break
+    } else{
+        console.log("VOCÊ ESCOLHEU UMA OPÇÃO INVÁLIDA!")
+    }
+
+    await input({message:"TECLE ENTER PARA CONTINUAR"})
+
+}
