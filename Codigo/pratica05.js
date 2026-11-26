@@ -19,11 +19,11 @@ const formaPagamento = await select({
 let desconto = 0
 
 if (valorCompra >= 50){
-    desconto = 0.1
+    desconto += 0.1
 } else if (valorCompra > 20 && valorCompra < 50){
-    desconto = 0.05
+    desconto += 0.05
 } else{
-    desconto = 0
+    desconto += 0
 }
 
 if (formaPagamento === 2){
